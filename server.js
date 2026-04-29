@@ -72,34 +72,28 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
         if (!rows || rows.length < 2) return res.status(400).json({status: "error", message: "Tabel tidak ditemui."});
         
         let insertData = [];
-        // Mulai dari baris ke-2 (mengabaikan judul tabel Bimasoft)
         for(let i = 1; i < rows.length; i++) {
             const cells = rows[i].match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
-            if (cells && cells.length >= 11) { // Memastikan ini format 11 Kolom Bimasoft
+            if (cells && cells.length >= 11) { 
                 const textCells = cells.map(c => c.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
                 
-                // Menerjemahkan Kolom 2 (Jenis Soal Angka 1-5)
-                const jenisAngka = textCells[1];
+                // MENGUBAH SANDI ANGKA BIMASOFT
+                const jenisAngka = textCells[1].replace(/[^0-9]/g, ''); // Mengambil angka saja
                 let tipe = 'PG';
-                if (jenisAngka === '2') tipe = 'PGK'; // Pilihan Ganda Kompleks
+                if (jenisAngka === '2') tipe = 'PGK'; // PG Kompleks
                 else if (jenisAngka === '3') tipe = 'JODOH'; // Menjodohkan
                 else if (jenisAngka === '4') tipe = 'ISIAN'; // Isian Singkat
-                else if (jenisAngka === '5') tipe = 'ESAI'; // Uraian
+                else if (jenisAngka === '5') tipe = 'ESAI'; // Uraian / Essay
+                else if (jenisAngka === '1') tipe = 'PG'; // Pilihan Ganda atau B/S Tunggal
 
-                const tanya = textCells[3]; // Kolom 4: Pertanyaan
-                const fileSoal = textCells[4]; // Kolom 5: Media (Disimpan di kolom gform_url)
+                const tanya = textCells[3]; 
+                const fileSoal = textCells[4]; 
                 
-                // Kolom 6-10: Pilihan A, B, C, D, E (Dipisah dengan simbol ||| agar koma dalam jawaban tidak error)
-                let opsi = [textCells[5], textCells[6], textCells[7], textCells[8], textCells[9]].filter(Boolean);
-                const kunci = textCells[10]; // Kolom 11: Kunci Jawaban
+                let opsi = [textCells[5], textCells[6], textCells[7], textCells[8], textCells[9]].filter(o => o && o.trim() !== '');
+                const kunci = textCells[10]; 
                 
                 if (tanya !== '') {
-                    insertData.push({ 
-                        exam_id, tipe, tanya, 
-                        opsi_json: opsi.join('|||'), 
-                        kunci: kunci, 
-                        gform_url: fileSoal 
-                    });
+                    insertData.push({ exam_id, tipe, tanya, opsi_json: opsi.join('|||'), kunci: kunci, gform_url: fileSoal });
                 }
             }
         }
