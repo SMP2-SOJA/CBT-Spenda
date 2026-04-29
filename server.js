@@ -234,8 +234,4 @@ app.post('/api/siswa/flag-curang', async (req, res) => {
     res.json({status: "success"});
 });
 
-app.listen(3000, () => {
-    console.log("CBT PRO RUNNING PORT 3000");
-    console.log("© r4hmad-digital | Rahmat Hidayat H. - SMP Negeri 2 Soyo Jaya");
-    console.log("Database terkoneksi ke Supabase Cloud!");
-});
+module.exports = app;;
