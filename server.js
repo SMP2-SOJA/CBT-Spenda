@@ -4,6 +4,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const mammoth = require('mammoth'); 
 const { createClient } = require('@supabase/supabase-js');
+const path = require('path'); // PENTING: Kunci untuk membaca index.html
 
 // ==========================================
 // KONFIGURASI SUPABASE (CBT SMPN 2 SOYO JAYA)
@@ -16,9 +17,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ==========================================
-// PERBAIKAN VERCEL (MENGGUNAKAN FOLDER /tmp)
-// ==========================================
+// Mengizinkan server membaca file statis (HTML & Logo) di awan Vercel
+app.use(express.static(path.join(__dirname)));
+
+// Menggunakan folder sementara /tmp agar tidak di-block oleh Vercel
 const upload = multer({ dest: '/tmp' });
 
 // Filter Akses Guru
@@ -75,13 +77,12 @@ app.delete('/api/admin/delete-soal/:id', async (req, res) => {
 app.post('/api/admin/add-soal-bulk', async (req, res) => {
     const { questions } = req.body;
     if (!questions || questions.length === 0) return res.status(400).json({status: "error", message: "Data kosong"});
-
     const { data, error } = await supabase.from('questions').insert(questions);
     if (error) return res.status(500).json({status: "error", message: error.message});
     res.json({ status: "success" });
 });
 
-// Import Word (Memakai path /tmp dari Multer)
+// Import Word 
 app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) => {
     try {
         const exam_id = req.body.exam_id;
@@ -89,7 +90,6 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
         const result = await mammoth.convertToHtml({path: req.file.path});
         const rows = result.value.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
         if (!rows || rows.length < 2) return res.status(400).json({status: "error", message: "Tabel tidak ditemui di Word."});
-        
         let insertData = [];
         for(let i = 1; i < rows.length; i++) {
             const cells = rows[i].match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
@@ -105,19 +105,17 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
     } catch (e) { res.status(500).json({status: 'error', message: 'Gagal memproses fail Word.'}); }
 });
 
-// Import Excel (Memakai path /tmp dari Multer)
+// Import Excel
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => {
     try {
         const exam_id = req.body.exam_id;
         if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"});
         const workbook = XLSX.readFile(req.file.path);
         const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-        
         let insertData = data.map(row => {
             let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String);
             return { exam_id, tipe: (row.Tipe || 'PG').toUpperCase(), tanya: row.Pertanyaan || '', opsi_json: opsi.join(','), kunci: row.Kunci ? String(row.Kunci).trim() : '' };
         });
-        
         if(insertData.length > 0) await supabase.from('questions').insert(insertData);
         res.json({ status: "success", message: `${insertData.length} Soal CBT berjaya di-generate!` });
     } catch(e) { res.status(500).json({status: "error", message: "Gagal membaca Excel"}); }
@@ -151,10 +149,8 @@ app.get('/api/admin/stats', async (req, res) => {
     const stats = { total_siswa: 0, sedang_kerja: 0, selesai: 0, curang: 0 };
     const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).ilike('role', 'siswa');
     stats.total_siswa = count || 0;
-
     let { data: acts } = await supabase.from('activity').select('*');
     if (req.query.role === 'guru') acts = (acts || []).filter(a => isAuthorizedMapel(req.query.mapel, a.exam_name));
-    
     (acts || []).forEach(a => {
         if (a.status === 'Mengerjakan') stats.sedang_kerja++;
         else if (a.status === 'Selesai') stats.selesai++;
@@ -198,9 +194,7 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
         const time = new Date().toLocaleTimeString('id-ID'); 
         await supabase.from('activity').insert([{ student_name, exam_name: row.mapel, status: 'Mengerjakan', last_seen: time }]);
         res.json({status: "success", exam: row});
-    } else { 
-        res.status(404).json({status: "error", message: "PIN Tidak Sah atau Ujian Belum Aktif!"}); 
-    }
+    } else { res.status(404).json({status: "error", message: "PIN Tidak Sah atau Ujian Belum Aktif!"}); }
 });
 
 app.post('/api/siswa/get-soal', async (req, res) => {
@@ -211,12 +205,9 @@ app.post('/api/siswa/get-soal', async (req, res) => {
 app.post('/api/siswa/submit', async (req, res) => {
     const { student_name, mapel, nilai, benar, salah, detail_jawaban, is_curang } = req.body; 
     const time = new Date().toLocaleTimeString('id-ID'); 
-    
     await supabase.from('results').insert([{ student_name, mapel, nilai, benar, salah, detail_jawaban, tanggal: new Date().toLocaleDateString('id-ID') }]); 
-    
     const finalStatus = is_curang ? 'Curang' : 'Selesai';
     await supabase.from('activity').update({ status: finalStatus, score: nilai, last_seen: time }).eq('student_name', student_name).eq('exam_name', mapel).eq('status', 'Mengerjakan'); 
-    
     res.json({status: "success"});
 });
 
@@ -226,12 +217,10 @@ app.post('/api/siswa/flag-curang', async (req, res) => {
     res.json({status: "success"});
 });
 
-// ==========================================
-// EXPORT UNTUK VERCEL (WAJIB)
-// ==========================================
-// --- TAMBAHKAN KODE INI ---
-
-// -------------------------
+// PENTING: Ini yang menampilkan index.html ke layar HP/Laptop pengguna
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // EXPORT UNTUK VERCEL (WAJIB)
 module.exports = app;
