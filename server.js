@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
 const XLSX = require('xlsx');
 const mammoth = require('mammoth'); 
 const { createClient } = require('@supabase/supabase-js');
@@ -10,24 +8,18 @@ const { createClient } = require('@supabase/supabase-js');
 // ==========================================
 // KONFIGURASI SUPABASE (CBT SMPN 2 SOYO JAYA)
 // ==========================================
-// URL dasar aplikasi Supabase
 const supabaseUrl = 'https://uftiednbhdmexxlabhad.supabase.co';
-// Menggunakan Publish Key (Anon Key)
 const supabaseKey = 'sb_publishable_TAEkdHBM3n5nY-I4bm-zaA_C5y9sEwH';
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); 
 
-if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
-const storage = multer.diskStorage({
-    destination: './uploads/',
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
-});
-const upload = multer({ storage });
+// ==========================================
+// PERBAIKAN VERCEL (MENGGUNAKAN FOLDER /tmp)
+// ==========================================
+const upload = multer({ dest: '/tmp' });
 
 // Filter Akses Guru
 function isAuthorizedMapel(reqMapelStr, examName) {
@@ -79,7 +71,7 @@ app.delete('/api/admin/delete-soal/:id', async (req, res) => {
     }
 });
 
-// FITUR BARU: SIMPAN SOAL BERUNTUN SEKALIGUS (BULK INSERT)
+// SIMPAN SOAL BERUNTUN SEKALIGUS (BULK INSERT)
 app.post('/api/admin/add-soal-bulk', async (req, res) => {
     const { questions } = req.body;
     if (!questions || questions.length === 0) return res.status(400).json({status: "error", message: "Data kosong"});
@@ -89,7 +81,7 @@ app.post('/api/admin/add-soal-bulk', async (req, res) => {
     res.json({ status: "success" });
 });
 
-// Import Word
+// Import Word (Memakai path /tmp dari Multer)
 app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) => {
     try {
         const exam_id = req.body.exam_id;
@@ -113,7 +105,7 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
     } catch (e) { res.status(500).json({status: 'error', message: 'Gagal memproses fail Word.'}); }
 });
 
-// Import Excel
+// Import Excel (Memakai path /tmp dari Multer)
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => {
     try {
         const exam_id = req.body.exam_id;
@@ -234,4 +226,7 @@ app.post('/api/siswa/flag-curang', async (req, res) => {
     res.json({status: "success"});
 });
 
-module.exports = app;;
+// ==========================================
+// EXPORT UNTUK VERCEL (WAJIB)
+// ==========================================
+module.exports = app;
