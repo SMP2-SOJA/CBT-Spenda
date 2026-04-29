@@ -75,11 +75,25 @@
                 <div id="page-jadwal" class="page-content hidden space-y-4"><div class="bg-white p-4 rounded-xl shadow-sm border"><div class="grid grid-cols-1 md:grid-cols-4 gap-3"><select id="j_mapel" class="p-3 border rounded-lg text-sm"></select><input type="date" id="j_tgl" class="p-3 border rounded-lg text-sm"><input type="number" id="j_durasi" placeholder="Durasi (Menit)" class="p-3 border rounded-lg text-sm"><button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-3 rounded-lg text-sm">BUAT JADWAL</button></div></div><div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div></div>
                 
                 <div id="page-banksoal" class="page-content hidden space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-blue-50 p-4 rounded-xl border border-blue-200"><h3 class="font-bold text-blue-800 text-xs mb-3">Import Word (.docx)</h3><input type="text" id="w_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-xs"><input type="file" id="w_file" class="w-full p-2 mb-2 border rounded bg-white text-[10px]"><button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-xs">GENERATE</button></div><div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200"><h3 class="font-bold text-emerald-800 text-xs mb-3">Import Excel</h3><input type="text" id="ex_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-xs"><input type="file" id="ex_file" class="w-full p-2 mb-2 border rounded bg-white text-[10px]"><button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-xs">GENERATE</button></div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 shadow-sm relative overflow-hidden">
+                            <span class="absolute top-0 right-0 bg-blue-500 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg">TEMPLATE BIMASOFT</span>
+                            <h3 class="font-bold text-blue-800 text-xs mb-3">Import Template Word (.docx)</h3>
+                            <input type="text" id="w_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-xs font-bold">
+                            <input type="file" id="w_file" class="w-full p-2 mb-2 border rounded bg-white text-[10px]">
+                            <button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-xs shadow hover:bg-blue-700">EKSTRAK SOAL</button>
+                        </div>
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                            <h3 class="font-bold text-emerald-800 text-xs mb-3">Import Excel</h3>
+                            <input type="text" id="ex_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-xs">
+                            <input type="file" id="ex_file" class="w-full p-2 mb-2 border rounded bg-white text-[10px]">
+                            <button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-xs shadow">GENERATE</button>
+                        </div>
+                    </div>
                     
                     <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm border mt-4">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 mb-4 gap-2">
-                            <h3 class="font-bold text-slate-700 text-sm md:text-base">Input Soal Beruntun</h3>
+                            <h3 class="font-bold text-slate-700 text-sm md:text-base">Input Soal Manual Beruntun</h3>
                             <div class="w-full md:w-1/3">
                                 <input type="text" id="s_judul_bulk" placeholder="KODE UJIAN (Cth: MTK-UAS)" class="w-full p-2 border-2 border-blue-200 bg-blue-50 rounded-lg outline-none text-sm font-bold focus:border-blue-500">
                             </div>
@@ -91,18 +105,28 @@
                                 <div class="grid grid-cols-1 gap-3">
                                     <div><label class="text-[10px] font-bold text-blue-500">LINK GAMBAR DRIVE (Opsional)</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://googleusercontent.com/..."></div>
                                     <div class="grid grid-cols-2 gap-2">
-                                        <div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs"><option value="PG">Pilihan Ganda</option><option value="GFORM">G-Form Link</option><option value="ESAI">Esai</option></select></div>
-                                        <div><label class="text-[10px] font-bold text-slate-500">KUNCI (Khusus PG)</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Cth: A"></div>
+                                        <div>
+                                            <label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label>
+                                            <select class="q-tipe w-full p-2 border rounded-lg text-xs">
+                                                <option value="PG">1 - Pilihan Ganda</option>
+                                                <option value="PGK">2 - PG Kompleks (Centang)</option>
+                                                <option value="JODOH">3 - Menjodohkan</option>
+                                                <option value="ISIAN">4 - Isian Singkat</option>
+                                                <option value="ESAI">5 - Uraian (Esai)</option>
+                                                <option value="GFORM">Link G-Form</option>
+                                            </select>
+                                        </div>
+                                        <div><label class="text-[10px] font-bold text-slate-500">KUNCI (Khusus PG/PGK/Isian)</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Cth: A atau A,C,D"></div>
                                     </div>
                                     <div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN / LINK G-FORM</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16" placeholder="Ketik soal di sini..."></textarea></div>
-                                    <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI JAWABAN (Pisahkan dengan koma)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Jakarta, Bandung, Bali, Papua"></div>
+                                    <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI JAWABAN (Gunakan ||| sebagai pemisah opsi)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Opsi A ||| Opsi B ||| Opsi C"></div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-6 flex flex-col md:flex-row gap-3">
                             <button onclick="tambahBarisSoal()" class="flex-1 bg-blue-50 text-blue-600 border-2 border-dashed border-blue-200 py-3 rounded-xl font-bold hover:bg-blue-100 transition"><i class="fa fa-plus-circle mr-2"></i> TAMBAH NOMOR BERIKUTNYA</button>
-                            <button onclick="simpanSoalBulk()" class="flex-1 bg-slate-800 text-white py-3 rounded-xl font-black shadow-xl hover:bg-slate-900 transition"><i class="fa fa-save mr-2"></i> SIMPAN SEMUA SOAL KE DATABASE</button>
+                            <button onclick="simpanSoalBulk()" class="flex-1 bg-slate-800 text-white py-3 rounded-xl font-black shadow-xl hover:bg-slate-900 transition"><i class="fa fa-save mr-2"></i> SIMPAN SEMUA SOAL</button>
                         </div>
                     </div>
 
@@ -134,15 +158,13 @@
         function toggleAdminSidebar() { document.getElementById('admin-sidebar').classList.toggle('-translate-x-full'); document.getElementById('admin-overlay').classList.toggle('hidden'); }
         function toggleCbtNav() { document.getElementById('cbt-nav-panel').classList.toggle('translate-x-full'); document.getElementById('cbt-nav-overlay').classList.toggle('hidden'); }
 
-        // FITUR ANTI CURANG (TAB SWITCH DETECTOR)
         document.addEventListener("visibilitychange", () => {
             const isExamActive = !document.getElementById('view-siswa-ujian').classList.contains('hidden');
             if(document.visibilityState === 'hidden' && isExamActive && navigator.onLine) {
                 curangCount++;
                 fetch(API + '/siswa/flag-curang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel}) });
-                if(curangCount >= 3) {
-                    Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Keluar aplikasi 3 kali. Terkunci!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); });
-                } else { Swal.fire('PERINGATAN KECURANGAN!', `Kembali ke ujian! (Peringatan ${curangCount}/3)`, 'warning'); }
+                if(curangCount >= 3) { Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Terkunci!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); }); } 
+                else { Swal.fire('PERINGATAN KECURANGAN!', `Kembali ke ujian! (Peringatan ${curangCount}/3)`, 'warning'); }
             }
         });
 
@@ -162,8 +184,7 @@
             } catch (e) { Swal.fire('Error', 'Server mati.', 'error'); }
         }
         function logout() { location.reload(); }
-
-        function saveToLocal() { if(currentExam && activeUser) { localStorage.setItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`, JSON.stringify(cbtAnswers)); } }
+        function saveToLocal() { if(currentExam && activeUser) localStorage.setItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`, JSON.stringify(cbtAnswers)); }
         function loadFromLocal() { if(currentExam && activeUser) { const saved = localStorage.getItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); if(saved) cbtAnswers = JSON.parse(saved); } }
 
         async function mulaiUjian() {
@@ -205,26 +226,51 @@
             document.getElementById('cbt-grid').innerHTML = html;
         }
 
+        // TAMPILAN 5 JENIS SOAL BARU UNTUK SISWA
         function showCbtQuestion(index) {
             cbtCurrentIndex = index; const q = cbtQuestions[index]; const savedAns = cbtAnswers[index].ans || "";
             document.getElementById('cbt-no-soal').innerText = index + 1; document.getElementById('cbt-tipe-soal').innerText = q.tipe; document.getElementById('cbt-ragu').checked = cbtAnswers[index].ragu;
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
-            // Link gambar tersimpan di gform_url jika tipenya BUKAN GFORM
-            if (q.gform_url && q.tipe !== 'GFORM') divMedia.innerHTML = `<img src="${q.gform_url}" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-4">`;
+            if (q.gform_url && q.tipe !== 'GFORM' && q.gform_url.startsWith('http')) divMedia.innerHTML = `<img src="${q.gform_url}" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-4">`;
 
             if(q.tipe === 'GFORM') {
                 divOpsi.innerHTML = `<div class="gform-container"><iframe src="${q.tanya || q.gform_url}"></iframe></div>`;
                 cbtSaveAnswer("COMPLETED"); 
             } else {
                 divTanya.innerHTML = q.tanya || "";
-                let htmlOpsi = ""; let opsiArray = q.opsi_json ? q.opsi_json.split(',').map(o=>o.trim()).filter(o=>o) : [];
-                if(q.tipe === 'PG') { htmlOpsi += `<div class="space-y-2 md:space-y-3">`; opsiArray.forEach(val => { let isChecked = (savedAns === val) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-3 border-2 rounded-xl cursor-pointer bg-white"><input type="radio" name="cbt_ans" value="${val}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="w-5 h-5 text-blue-600 mr-3"><span class="font-bold text-sm">${val}</span></label>`; }); htmlOpsi += `</div>`; }
-                else if(q.tipe === 'ESAI') { htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" class="w-full p-4 border-2 rounded-xl h-32 text-sm">${savedAns}</textarea>`; }
+                let htmlOpsi = ""; 
+                // Sistem pemisah opsi (mendukung koma lama atau garis tegak ||| Bimasoft)
+                let opsiArray = q.opsi_json ? q.opsi_json.split(/\|\|\|/).map(o=>o.trim()).filter(o=>o) : [];
+                
+                if (q.tipe === 'PG') { 
+                    htmlOpsi += `<div class="space-y-2 md:space-y-3">`; 
+                    opsiArray.forEach(val => { let isChecked = (savedAns === val) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-3 border-2 rounded-xl cursor-pointer bg-white"><input type="radio" name="cbt_ans" value="${val}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="w-5 h-5 text-blue-600 mr-3"><span class="font-bold text-sm">${val}</span></label>`; }); 
+                    htmlOpsi += `</div>`; 
+                }
+                else if (q.tipe === 'PGK') {
+                    // Pilihan Ganda Kompleks (Kotak Centang)
+                    let savedArr = savedAns ? savedAns.split('|||') : [];
+                    htmlOpsi += `<div class="space-y-2 md:space-y-3">`; 
+                    opsiArray.forEach(val => { let isChecked = savedArr.includes(val) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-3 border-2 rounded-xl cursor-pointer bg-white"><input type="checkbox" value="${val}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb w-5 h-5 text-purple-600 mr-3 rounded"><span class="font-bold text-sm">${val}</span></label>`; }); 
+                    htmlOpsi += `</div>`;
+                }
+                else if (q.tipe === 'ISIAN' || q.tipe === 'JODOH') {
+                    // Isian Pendek / Jawaban Menjodohkan
+                    htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 rounded-xl text-sm font-bold bg-white" placeholder="Ketik jawaban Anda di sini...">`;
+                }
+                else if (q.tipe === 'ESAI') { 
+                    htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" class="w-full p-4 border-2 rounded-xl h-32 text-sm bg-white" placeholder="Uraikan jawaban Anda di sini...">${savedAns}</textarea>`; 
+                }
                 divOpsi.innerHTML = htmlOpsi; 
             }
             renderCbtGrid();
+        }
+
+        function cbtSaveCheckbox() {
+            let checked = []; document.querySelectorAll('.cbt-pgk-cb:checked').forEach(cb => checked.push(cb.value));
+            cbtSaveAnswer(checked.join('|||'));
         }
 
         function cbtSaveAnswer(val) { cbtAnswers[cbtCurrentIndex].ans = val; saveToLocal(); renderCbtGrid(); }
@@ -244,7 +290,7 @@
                         await fetch(API + '/siswa/submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                         localStorage.removeItem(`pending_submit_${activeUser.username}`); document.getElementById('offline-pending-alert').classList.add('hidden');
                         localStorage.removeItem(`cbt_ans_${payload.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${payload.mapel}_${activeUser.username}`);
-                        Swal.fire('Sinkronisasi Berhasil!', 'Jawaban terkirim.', 'success').then(() => location.reload());
+                        Swal.fire('Berhasil!', 'Jawaban terkirim.', 'success').then(() => location.reload());
                     } catch(e) { if(showFeedback) Swal.fire('Gagal', 'Sinyal belum stabil.', 'error'); }
                 } else { if(showFeedback) Swal.fire('Offline', 'Cari sinyal lalu coba lagi.', 'warning'); }
             }
@@ -256,16 +302,22 @@
             let nilaiAkhir = 0;
 
             if(!isGformOnly) {
-                let totalPG = 0;
+                let totalObjektif = 0;
                 cbtQuestions.forEach((q, index) => {
                     let ans = cbtAnswers[index].ans; let status = 'Salah'; let poin = 0;
-                    if(q.tipe === 'PG') {
-                        totalPG++;
+                    if(q.tipe === 'PG' || q.tipe === 'ISIAN' || q.tipe === 'JODOH') {
+                        totalObjektif++;
                         if(ans && ans.trim().toLowerCase() === (q.kunci || "").trim().toLowerCase()) { status = 'Benar'; poin = 1; benar++; } else { salah++; }
+                    } else if (q.tipe === 'PGK') {
+                        totalObjektif++;
+                        // Pencocokan mutlak PG Kompleks (Harus urut abjad untuk amannya)
+                        let kunciArr = (q.kunci||"").split(',').map(x=>x.trim().toLowerCase()).sort().join(',');
+                        let ansArr = (ans||"").split('|||').map(x=>x.trim().toLowerCase()).sort().join(',');
+                        if(ansArr === kunciArr && ansArr !== "") { status = 'Benar'; poin = 1; benar++; } else { salah++; }
                     } else if (q.tipe === 'ESAI') { status = 'Menunggu Koreksi Guru'; poin = 0; }
-                    detail.push({ no: index+1, tanya: q.tanya, jawab: ans, kunci: q.kunci, status: status, poin: poin });
+                    detail.push({ no: index+1, tanya: q.tanya, jawab: ans.replace(/\|\|\|/g, ', '), kunci: q.kunci, status: status, poin: poin });
                 });
-                nilaiAkhir = totalPG > 0 ? ((benar / totalPG) * 100).toFixed(2) : 0;
+                nilaiAkhir = totalObjektif > 0 ? ((benar / totalObjektif) * 100).toFixed(2) : 0;
             } else { nilaiAkhir = 'Cek G-Form'; }
 
             const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang };
@@ -274,7 +326,7 @@
                 clearInterval(examTimerInterval);
                 if(!navigator.onLine) {
                     localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload));
-                    Swal.fire('Sinyal Terputus!', 'Jawaban disimpan di HP. Cari sinyal lalu klik "Coba Kirim".', 'warning');
+                    Swal.fire('Sinyal Terputus!', 'Jawaban disimpan di HP.', 'warning');
                     document.getElementById('offline-pending-alert').classList.remove('hidden'); return;
                 }
                 Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
@@ -283,14 +335,11 @@
                     if(document.exitFullscreen) document.exitFullscreen();
                     localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`);
                     Swal.fire('Selesai!', isGformOnly ? 'Terkirim.' : `Nilai Anda: ${nilaiAkhir}`, 'success').then(() => location.reload());
-                } catch(e) {
-                    localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload));
-                    document.getElementById('offline-pending-alert').classList.remove('hidden'); Swal.fire('Error Server', 'Jawaban diamankan di HP.', 'warning');
-                }
+                } catch(e) { localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload)); document.getElementById('offline-pending-alert').classList.remove('hidden'); Swal.fire('Error Server', 'Disimpan di HP.', 'warning'); }
             };
 
             if (showConfirm && !isForceCurang) {
-                let kosong = cbtAnswers.filter(a => a.ans === "").length; let text = isGformOnly ? "Pastikan sudah menekan 'Kirim' di GForm!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Kumpulkan?` : "Kirim sekarang?");
+                let kosong = cbtAnswers.filter(a => a.ans === "").length; let text = isGformOnly ? "Pastikan sudah Submit G-Form!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Yakin?` : "Kirim sekarang?");
                 Swal.fire({ title: 'Kumpulkan Ujian?', html: text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya!' }).then((r) => { if(r.isConfirmed) sendLogic(); });
             } else sendLogic();
         }
@@ -300,52 +349,39 @@
         async function loadStats() { if(!activeUser || activeUser.role === 'siswa') return; const res = await fetch(API + '/admin/stats' + getAuthParams()); const data = await res.json(); document.getElementById('stat-siswa').innerText = data.total_siswa; document.getElementById('stat-kerja').innerText = data.sedang_kerja; document.getElementById('stat-selesai').innerText = data.selesai; document.getElementById('stat-curang').innerText = data.curang; const resA = await fetch(API + '/admin/recent-activity' + getAuthParams()); const acts = await resA.json(); document.getElementById('monitor-table').innerHTML = acts.map(a => `<tr class="hover:bg-slate-50"><td class="p-3 font-bold">${a.student_name}</td><td class="p-3">${a.exam_name}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${a.status==='Selesai'?'bg-emerald-100 text-emerald-600': (a.status==='Curang'?'bg-red-100 text-red-600':'bg-orange-100 text-orange-600')}">${a.status}</span></td><td class="p-3 font-black">${a.score||'-'}</td><td class="p-3 text-[10px]">${a.last_seen}</td></tr>`).join(''); }
         async function loadMaster() { const resC = await fetch(API + '/admin/config'); const conf = await resC.json(); document.getElementById('app-name-display').innerText = conf.find(c => c.key === 'app_name').value; }
         
-        async function loadNilai() { 
-            const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); 
-            document.getElementById('nilai-body').innerHTML = data.map(n => `<tr><td class="p-3 font-medium">${n.student_name}</td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]")})' class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-[10px] font-bold">Detail</button></td></tr>`).join(''); 
-        }
-
-        function lihatDetail(detailJson) {
-            let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; }
-            if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info');
-            let html = details.map(d => `<div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700">Soal No. ${d.no}</span><span class="px-2 py-1 text-[10px] font-bold rounded-full ${d.status === 'Benar' ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')}">${d.status} (Poin: ${d.poin})</span></div><div class="text-sm text-slate-600 mb-3">${d.tanya.substring(0, 100)}...</div><div class="flex gap-4 text-xs bg-slate-50 p-2 rounded"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><strong class="${d.status==='Salah'?'text-red-600':'text-slate-800'}">${d.jawab || '-'}</strong></div><div class="flex-1 border-l pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600">${d.kunci || '-'}</strong></div></div></div>`).join('');
-            document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden');
-        }
-
-        async function clearResults() { Swal.fire({title: 'Bersihkan Data Nilai?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-results', {method:'DELETE'}); loadNilai(); loadStats(); Swal.fire('Bersih!', '', 'success'); } }); }
+        async function loadNilai() { const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); document.getElementById('nilai-body').innerHTML = data.map(n => `<tr><td class="p-3 font-medium">${n.student_name}</td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]")})' class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-[10px] font-bold">Detail</button></td></tr>`).join(''); }
+        function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => `<div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700">Soal No. ${d.no}</span><span class="px-2 py-1 text-[10px] font-bold rounded-full ${d.status === 'Benar' ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')}">${d.status} (Poin: ${d.poin})</span></div><div class="text-sm text-slate-600 mb-3">${d.tanya.substring(0, 100)}...</div><div class="flex gap-4 text-xs bg-slate-50 p-2 rounded"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><strong class="${d.status==='Salah'?'text-red-600':'text-slate-800'}">${d.jawab || '-'}</strong></div><div class="flex-1 border-l pl-4"><span class="text-slate-400 block mb-1">Kunci:</span><strong class="text-emerald-600">${d.kunci || '-'}</strong></div></div></div>`).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); }
+        async function clearResults() { Swal.fire({title: 'Hapus Nilai?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-results', {method:'DELETE'}); loadNilai(); loadStats(); Swal.fire('Bersih!', '', 'success'); } }); }
         function exportExcel(id, fn) { let csv = []; let r = document.querySelectorAll(`#${id} tr`); for(let i=0; i<r.length; i++) { let row=[], c=r[i].querySelectorAll("td:not(:last-child), th:not(:last-child)"); for(let j=0; j<c.length; j++) row.push(c[j].innerText); csv.push(row.join(",")); } const a=document.createElement('a'); a.href=window.URL.createObjectURL(new Blob([csv.join('\n')], {type:'text/csv'})); a.download=fn+'.csv'; a.click(); }
 
-        // --- SISTEM INPUT SOAL BERUNTUN (BULK) ---
+        // --- SISTEM INPUT MANUAL & IMPORT BIMASOFT ---
+        async function importWord() {
+            const file = document.getElementById('w_file').files[0]; const exam_id = document.getElementById('w_judul').value;
+            if(!file || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Word Bimasoft!', 'warning');
+            const fd = new FormData(); fd.append('file_word', file); fd.append('exam_id', exam_id);
+            Swal.fire({ title: 'Mengekstrak Bimasoft...', didOpen: () => Swal.showLoading() });
+            try { const res = await fetch(API + '/admin/import-word', { method: 'POST', body: fd }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil', data.message, 'success'); loadBankSoal(); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); }
+        }
+
         let questionCount = 1;
         function tambahBarisSoal() {
             questionCount++; const container = document.getElementById('bulk-questions-container');
-            const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div><label class="text-[10px] font-bold text-blue-500">LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://googleusercontent.com/..."></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs"><option value="PG">Pilihan Ganda</option><option value="GFORM">G-Form Link</option><option value="ESAI">Esai</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI (Khusus PG)</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Cth: A"></div></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN / LINK G-FORM</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16" placeholder="Ketik soal..."></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI JAWABAN</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Pisahkan dengan koma"></div></div></div>`;
+            const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div><label class="text-[10px] font-bold text-blue-500">LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs"><option value="PG">1 - PG</option><option value="PGK">2 - PG Kompleks</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian</option><option value="ESAI">5 - Uraian</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs"></div></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI JAWABAN</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Gunakan ||| sebagai pemisah"></div></div></div>`;
             container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
         async function simpanSoalBulk() {
-            const kodeUjian = document.getElementById('s_judul_bulk').value;
-            if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN dulu!', 'warning');
+            const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN!', 'warning');
             const items = document.querySelectorAll('.question-item'); let dataSoal = [];
-            items.forEach(el => {
-                dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value, gform_url: el.querySelector('.q-image').value });
-            });
-            if(dataSoal.length === 0) return; Swal.fire({ title: 'Menyimpan Semua Soal...', didOpen: () => Swal.showLoading() });
-            try {
-                const res = await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) });
-                const data = await res.json();
-                if(data.status === 'success') { Swal.fire('Berhasil!', `${dataSoal.length} Soal masuk database.`, 'success').then(() => location.reload()); } else Swal.fire('Gagal', data.message, 'error');
-            } catch(e) { Swal.fire('Error', 'Gagal', 'error'); }
+            items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value, gform_url: el.querySelector('.q-image').value }); });
+            if(dataSoal.length === 0) return; Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+            try { const res = await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil!', `${dataSoal.length} Soal disimpan.`, 'success').then(() => location.reload()); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); }
         }
 
         async function loadBankSoal() { const res = await fetch(API + '/admin/questions' + getAuthParams()); const data = await res.json(); document.getElementById('banksoal-table').innerHTML = data.map(q => { let det = q.tipe === 'GFORM' ? `<span class="text-purple-600 font-bold">Link G-Form</span>` : (q.tanya ? q.tanya.substring(0,40)+'...' : '-'); return `<tr><td class="p-3 font-bold text-blue-900">${q.exam_id}</td><td><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[8px] font-black">${q.tipe}</span></td><td class="text-[10px] text-slate-600">${det}</td><td class="p-3"><button onclick="hapusSoal(${q.id})" class="text-red-500 hover:text-red-700"><i class="fa fa-trash"></i></button></td></tr>`; }).join(''); }
         async function hapusSoal(id) { Swal.fire({title: 'Hapus Soal?', icon:'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/delete-soal/'+id, {method:'DELETE'}); loadBankSoal(); loadJadwal(); } }); }
-        
         async function saveJadwal() { const b = { mapel: document.getElementById('j_mapel').value, tanggal: document.getElementById('j_tgl').value, durasi: document.getElementById('j_durasi').value }; if(!b.mapel) return Swal.fire('Oops','Pilih Mapel!','warning'); await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(b) }); Swal.fire('Sukses!', '', 'success'); loadJadwal(); }
         async function loadJadwal() { const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); document.getElementById('list-jadwal').innerHTML = data.map(j => `<div class="bg-white p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center"><div><h4 class="font-bold text-sm text-blue-900">${j.mapel}</h4><p class="text-[10px] text-slate-400">${j.tanggal} • ${j.durasi} Menit</p></div><div class="text-center"><p class="text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div></div>`).join(''); }
-        async function clearSchedules() { Swal.fire({title: 'Hapus Semua Jadwal?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-schedules', {method:'DELETE'}); loadJadwal(); Swal.fire('Bersih!', '', 'success'); } }); }
-
-        function downloadTemplateUsers() { const csv = "Nama,Username,Password,Role,Kelas,Mapel\nGuru Fulan,guru1,123,guru,,PAI,MTK\nSiswa 1,user1,pass1,siswa,VII-A,"; const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'Template_User_dan_Guru.csv'; a.click(); }
         async function importUsers(inp) { if(!inp.files[0]) return; Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('file_excel', inp.files[0]); await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); Swal.fire('Selesai', 'Import berhasil', 'success'); loadUsers(); }
         async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[10px]">${u.role}</span></td></tr>`).join(''); }
 
