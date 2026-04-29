@@ -23,7 +23,7 @@
                 <div><label class="text-xs font-bold text-slate-500">PASSWORD</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-lock"></i></span><input type="password" id="login-pass" class="w-full pl-11 p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div></div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black shadow-lg hover:bg-blue-700">MASUK APLIKASI</button>
             </div>
-            <p class="text-center text-[10px] md:text-xs text-slate-400 mt-6 font-medium tracking-wide">r4hmad-digital | SMP Negeri 2 Soyo Jaya</p>
+            <p class="text-center text-[10px] md:text-xs text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @Copyright spenda-digital</p>
         </div>
     </div>
 
@@ -215,11 +215,11 @@
             let html = "";
             for(let i = 0; i < cbtQuestions.length; i++) {
                 let statusClass = "bg-white text-slate-600 border-slate-300"; 
-                // Cek apakah soal ini sudah dijawab sepenuhnya (terutama untuk B/S)
+                // Cek apakah soal ini sudah dijawab sepenuhnya
                 let isAnswered = false;
                 if (cbtAnswers[i].ans !== "") {
                     if (cbtQuestions[i].tipe === 'BS') {
-                        isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; // Pastikan tidak ada strip (kosong)
+                        isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; // Pastikan tidak ada strip
                     } else { isAnswered = true; }
                 }
 
@@ -232,7 +232,6 @@
             document.getElementById('cbt-grid').innerHTML = html;
         }
 
-        // TAMPILAN KHUSUS UNTUK SISWA (REVISI B/S & PGK)
         function showCbtQuestion(index) {
             cbtCurrentIndex = index; const q = cbtQuestions[index]; const savedAns = cbtAnswers[index].ans || "";
             document.getElementById('cbt-no-soal').innerText = index + 1; 
@@ -260,7 +259,6 @@
                     htmlOpsi += `</div>`; 
                 }
                 else if (q.tipe === 'PGK') {
-                    // Pilihan Ganda Kompleks (HANYA CEKLIS, TANPA A/B/C/D)
                     let savedArr = savedAns ? savedAns.split(',') : [];
                     htmlOpsi += `<div class="space-y-2 md:space-y-3">`; 
                     opsiArray.forEach((val, idx) => { 
@@ -270,7 +268,6 @@
                     htmlOpsi += `</div>`;
                 }
                 else if (q.tipe === 'BS') {
-                    // BENAR / SALAH (WUJUD TABEL RAPI)
                     let savedArr = savedAns ? savedAns.split(',') : [];
                     htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
                         <table class="w-full text-sm text-left">
@@ -311,19 +308,8 @@
             renderCbtGrid();
         }
 
-        // Fungsi Simpan khusus Checkbox PGK
         function cbtSaveCheckbox() { let checked = []; document.querySelectorAll('.cbt-pgk-cb:checked').forEach(cb => checked.push(cb.value)); cbtSaveAnswer(checked.join(',')); }
-        
-        // Fungsi Simpan khusus Tabel B/S
-        function cbtSaveBS(length) {
-            let arr = [];
-            for(let i=0; i<length; i++) {
-                let selected = document.querySelector(`input[name="bs_${i}"]:checked`);
-                arr.push(selected ? selected.value : '-');
-            }
-            cbtSaveAnswer(arr.join(','));
-        }
-
+        function cbtSaveBS(length) { let arr = []; for(let i=0; i<length; i++) { let selected = document.querySelector(`input[name="bs_${i}"]:checked`); arr.push(selected ? selected.value : '-'); } cbtSaveAnswer(arr.join(',')); }
         function cbtSaveAnswer(val) { cbtAnswers[cbtCurrentIndex].ans = val; saveToLocal(); renderCbtGrid(); }
         function cbtToggleRagu() { cbtAnswers[cbtCurrentIndex].ragu = document.getElementById('cbt-ragu').checked; saveToLocal(); renderCbtGrid(); }
         function cbtNext() { if(cbtCurrentIndex < cbtQuestions.length - 1) showCbtQuestion(cbtCurrentIndex + 1); }
@@ -344,33 +330,21 @@
             }
         }
 
-        // SISTEM PENILAIAN OTOMATIS BERDASARKAN SKOR BOBOT
         async function submitUjian(showConfirm = true, isForceCurang = false) {
             let benar = 0; let salah = 0; let detail = [];
             let isGformOnly = cbtQuestions.length > 0 && cbtQuestions[0].tipe === 'GFORM';
-            let nilaiAkhir = 0;
-            let totalSkorMaksimal = 0;
-            let totalSkorDiperoleh = 0;
+            let nilaiAkhir = 0; let totalSkorMaksimal = 0; let totalSkorDiperoleh = 0;
 
             if(!isGformOnly) {
                 cbtQuestions.forEach((q, index) => {
-                    let ans = cbtAnswers[index].ans; let status = 'Salah'; 
-                    let bobot = q.skor ? parseFloat(q.skor) : 1; 
-                    let poin = 0;
-
+                    let ans = cbtAnswers[index].ans; let status = 'Salah'; let bobot = q.skor ? parseFloat(q.skor) : 1; let poin = 0;
                     if(q.tipe === 'PG' || q.tipe === 'ISIAN' || q.tipe === 'JODOH') {
-                        totalSkorMaksimal += bobot;
-                        let kunciBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase();
-                        let ansBersih = (ans || "").replace(/\s/g, '').toLowerCase();
+                        totalSkorMaksimal += bobot; let kunciBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let ansBersih = (ans || "").replace(/\s/g, '').toLowerCase();
                         if(ansBersih && ansBersih === kunciBersih) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; }
                     } else if (q.tipe === 'PGK' || q.tipe === 'BS') {
-                        totalSkorMaksimal += bobot;
-                        let kunciArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').sort().join(',');
-                        let ansArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').sort().join(',');
-                        // Khusus BS, pastikan semua baris sudah dijawab (tidak ada - )
+                        totalSkorMaksimal += bobot; let kunciArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').sort().join(','); let ansArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').sort().join(',');
                         if(ansArr === kunciArr && ansArr !== "" && ansArr.indexOf('-') === -1) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; }
                     } else if (q.tipe === 'ESAI') { status = 'Menunggu Koreksi Guru'; poin = 0; }
-                    
                     detail.push({ no: index+1, tanya: q.tanya, jawab: ans.replace(/\|\|\|/g, ', '), kunci: q.kunci, status: status, poin: poin });
                 });
                 nilaiAkhir = totalSkorMaksimal > 0 ? ((totalSkorDiperoleh / totalSkorMaksimal) * 100).toFixed(2) : 0;
@@ -390,12 +364,7 @@
             };
 
             if (showConfirm && !isForceCurang) {
-                // Peringatkan jika ada soal yang bolong
-                let kosong = cbtQuestions.filter((q, i) => {
-                    let a = cbtAnswers[i].ans;
-                    if(q.tipe === 'BS') return a === "" || a.indexOf('-') !== -1;
-                    return a === "";
-                }).length;
+                let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS') return a === "" || a.indexOf('-') !== -1; return a === ""; }).length;
                 let text = isGformOnly ? "Pastikan sudah Submit G-Form!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Yakin?` : "Kirim sekarang?");
                 Swal.fire({ title: 'Kumpulkan Ujian?', html: text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya!' }).then((r) => { if(r.isConfirmed) sendLogic(); });
             } else sendLogic();
@@ -412,9 +381,7 @@
             let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } 
             if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); 
             let html = details.map(d => {
-                let jawabTampil = d.jawab || '-';
-                // Rapikan koma untuk tampilan detail
-                if(jawabTampil.includes(',')) jawabTampil = jawabTampil.split(',').join(', ');
+                let jawabTampil = d.jawab || '-'; if(jawabTampil.includes(',')) jawabTampil = jawabTampil.split(',').join(', ');
                 return `<div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700">Soal No. ${d.no}</span><span class="px-2 py-1 text-[10px] font-bold rounded-full ${d.status === 'Benar' ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')}">${d.status} (Skor: ${d.poin})</span></div><div class="text-sm text-slate-600 mb-3">${d.tanya.substring(0, 100)}...</div><div class="flex gap-4 text-xs bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><strong class="${d.status==='Salah'?'text-red-600':'text-slate-800'}">${jawabTampil}</strong></div><div class="flex-1 border-l pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600">${d.kunci || '-'}</strong></div></div></div>`
             }).join(''); 
             document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); 
@@ -467,7 +434,18 @@
 
         async function hapusSoal(id) { Swal.fire({title: 'Hapus Soal?', icon:'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/delete-soal/'+id, {method:'DELETE'}); loadBankSoal(); loadJadwal(); } }); }
         async function saveJadwal() { const b = { mapel: document.getElementById('j_mapel').value, tanggal: document.getElementById('j_tgl').value, durasi: document.getElementById('j_durasi').value }; if(!b.mapel) return Swal.fire('Oops','Pilih Mapel!','warning'); await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(b) }); Swal.fire('Sukses!', '', 'success'); loadJadwal(); }
-        async function loadJadwal() { const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); document.getElementById('list-jadwal').innerHTML = data.map(j => `<div class="bg-white p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center"><div><h4 class="font-bold text-sm text-blue-900">${j.mapel}</h4><p class="text-[10px] text-slate-400">${j.tanggal} • ${j.durasi} Menit</p></div><div class="text-center"><p class="text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div></div>`).join(''); }
+        
+        async function loadJadwal() { 
+            const res = await fetch(API + '/admin/schedules' + getAuthParams()); 
+            const data = await res.json(); 
+            document.getElementById('list-jadwal').innerHTML = data.map(j => `<div class="bg-white p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center"><div><h4 class="font-bold text-sm text-blue-900">${j.mapel}</h4><p class="text-[10px] text-slate-400">${j.tanggal} • ${j.durasi} Menit</p></div><div class="text-center"><p class="text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div></div>`).join(''); 
+            
+            const resExams = await fetch(API + '/admin/available-exams' + getAuthParams());
+            const exams = await resExams.json();
+            const selectMapel = document.getElementById('j_mapel');
+            selectMapel.innerHTML = '<option value="">-- Pilih Kode Soal --</option>' + exams.map(e => `<option value="${e}">${e}</option>`).join('');
+        }
+        
         async function importUsers(inp) { if(!inp.files[0]) return; Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('file_excel', inp.files[0]); await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); Swal.fire('Selesai', 'Import berhasil', 'success'); loadUsers(); }
         async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[10px]">${u.role}</span></td></tr>`).join(''); }
 
