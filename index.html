@@ -9,10 +9,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style> 
-        body { font-family: 'Inter', sans-serif; } .hidden { display: none !important; } ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; } .drawer-transition { transition: transform 0.3s ease-in-out; } .gform-container { position: relative; width: 100%; height: 75vh; overflow: hidden; border-radius: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); } .gform-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        body { font-family: 'Inter', sans-serif; } 
+        .hidden { display: none !important; } 
+        ::-webkit-scrollbar { width: 4px; height: 4px; } 
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; } 
+        .drawer-transition { transition: transform 0.3s ease-in-out; } 
+        .gform-container { position: relative; width: 100%; height: 75vh; overflow: hidden; border-radius: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); } 
+        .gform-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        /* ANTI COPY PASTE UNTUK SISWA */
+        .anti-copas { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
     </style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden">
+<body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
 
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
@@ -23,7 +31,7 @@
                 <div><label class="text-xs font-bold text-slate-500">PASSWORD</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-lock"></i></span><input type="password" id="login-pass" class="w-full pl-11 p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div></div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black shadow-lg hover:bg-blue-700">MASUK APLIKASI</button>
             </div>
-            <p class="text-center text-[10px] md:text-xs text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @Copyright spenda-digital</p>
+            <p class="text-center text-[10px] md:text-xs text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @Copyright Rahmat Hidayat H.</p>
         </div>
     </div>
 
@@ -38,7 +46,7 @@
         </div>
     </div>
 
-    <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative">
+    <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative anti-copas">
         <header class="bg-blue-800 text-white shadow-md flex justify-between items-center px-4 py-3 flex-shrink-0 z-20 relative">
             <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm md:text-lg tracking-wider uppercase">MAPEL</h1><p class="text-[10px] md:text-xs text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
             <div class="flex items-center space-x-2"><div class="bg-blue-900 rounded-lg px-2 py-1 text-center shadow-inner relative overflow-hidden"><div id="network-status" class="bg-emerald-500 text-white text-[8px] font-bold uppercase mb-1 rounded-sm text-center">ONLINE</div><div id="exam-countdown" class="font-mono font-black text-sm text-yellow-400">00:00:00</div></div><button onclick="toggleCbtNav()" class="md:hidden bg-blue-700 hover:bg-blue-600 text-white p-2 rounded-lg shadow"><i class="fa fa-th-large"></i></button></div>
@@ -48,7 +56,7 @@
                 <div id="offline-pending-alert" class="hidden bg-orange-100 border-b border-orange-200 p-2 text-center flex justify-between items-center px-4"><p class="text-xs text-orange-800 font-bold"><i class="fa fa-wifi text-red-500"></i> Offline! Jawaban tertunda.</p><button onclick="checkPendingSubmit(true)" class="bg-orange-500 text-white text-[10px] px-3 py-1 rounded">Coba Kirim</button></div>
                 <div class="flex justify-between items-center p-3 border-b bg-slate-50"><div class="font-bold text-blue-800 text-sm">Soal <span id="cbt-no-soal" class="text-xl font-black">1</span></div><span id="cbt-tipe-soal" class="bg-blue-100 text-blue-800 text-[10px] font-bold px-3 py-1 rounded-full">PG</span></div>
                 <div class="flex-1 overflow-y-auto p-4 flex flex-col">
-                    <div id="cbt-media-area" class="w-full mb-4"></div>
+                    <div id="cbt-media-area" class="w-full mb-4 text-center"></div>
                     <div id="cbt-tanya" class="prose max-w-none text-base text-slate-800 mb-6 font-medium whitespace-pre-wrap"></div>
                     <div id="cbt-opsi-area" class="space-y-3 w-full mt-auto"></div>
                 </div>
@@ -100,22 +108,13 @@
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                                         <div>
                                             <label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label>
-                                            <select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500">
-                                                <option value="PG">1 - Pilihan Ganda Biasa</option>
-                                                <option value="PGK">2 - PG Kompleks (Kotak Centang)</option>
-                                                <option value="JODOH">3 - Menjodohkan</option>
-                                                <option value="ISIAN">4 - Isian Singkat</option>
-                                                <option value="ESAI">5 - Uraian (Esai)</option>
-                                                <option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Tabel)</option>
-                                                <option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option>
-                                            </select>
+                                            <select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Tabel)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select>
                                         </div>
-                                        <div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div>
+                                        <div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau 1B,2C"></div>
                                         <div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div>
                                     </div>
-                                    
-                                    <div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE (Opsional)</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://googleusercontent.com/..."></div>
-                                    <div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN / PASTE LINK G-FORM</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16" placeholder="Ketik soal atau Link GForm..."></textarea></div>
+                                    <div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div>
+                                    <div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN / PASTE LINK G-FORM</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div>
                                     <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PERNYATAAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Pilihan A ||| Pilihan B  -Atau- Pernyataan 1 ||| Pernyataan 2"></div>
                                 </div>
                             </div>
@@ -150,19 +149,33 @@
         const API = "/api";
         let activeUser = null; let currentExam = null; let examTimerInterval = null;
         let cbtQuestions = []; let cbtAnswers = []; let cbtCurrentIndex = 0; let curangCount = 0;
+        let isExamActive = false;
 
         function getAuthParams() { return !activeUser ? "" : `?role=${activeUser.role}&mapel=${activeUser.mapel || ''}`; }
         function toggleAdminSidebar() { document.getElementById('admin-sidebar').classList.toggle('-translate-x-full'); document.getElementById('admin-overlay').classList.toggle('hidden'); }
         function toggleCbtNav() { document.getElementById('cbt-nav-panel').classList.toggle('translate-x-full'); document.getElementById('cbt-nav-overlay').classList.toggle('hidden'); }
 
-        document.addEventListener("visibilitychange", () => {
-            const isExamActive = !document.getElementById('view-siswa-ujian').classList.contains('hidden');
-            if(document.visibilityState === 'hidden' && isExamActive && navigator.onLine) {
-                curangCount++; fetch(API + '/siswa/flag-curang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel}) });
-                if(curangCount >= 3) { Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Terkunci!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); }); } 
-                else { Swal.fire('PERINGATAN KECURANGAN!', `Kembali ke ujian! (Peringatan ${curangCount}/3)`, 'warning'); }
-            }
+        // MENCEGAH SHORTCUT KEYBOARD (CTRL+C, ALT+TAB dll sebisa mungkin di browser)
+        document.addEventListener('keydown', function(e) {
+            if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); }
         });
+
+        // SISTEM DETEKSI KECURANGAN SUPER KETAT
+        function deteksiKecurangan() {
+            if (!isExamActive || !navigator.onLine) return;
+            curangCount++; 
+            fetch(API + '/siswa/flag-curang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel}) });
+            if (curangCount >= 3) { 
+                isExamActive = false;
+                Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Anda terdeteksi keluar dari aplikasi ujian lebih dari 3 kali. Ujian Anda otomatis dikunci dan dikumpulkan!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); }); 
+            } else { 
+                Swal.fire('PERINGATAN KECURANGAN!', `Sistem mendeteksi Anda membuka tab/aplikasi lain! DILARANG KERAS KELUAR DARI HALAMAN UJIAN! (Peringatan ${curangCount}/3)`, 'warning'); 
+            }
+        }
+
+        // Tangkap event saat ganti tab, buka aplikasi lain, atau layar ditarik (notifikasi)
+        document.addEventListener("visibilitychange", () => { if (document.visibilityState === 'hidden') { deteksiKecurangan(); } });
+        window.addEventListener("blur", () => { deteksiKecurangan(); });
 
         window.addEventListener('offline', () => { const el = document.getElementById('network-status'); if(el) { el.innerText = 'OFFLINE'; el.classList.replace('bg-emerald-500', 'bg-red-500'); } });
         window.addEventListener('online', () => { const el = document.getElementById('network-status'); if(el) { el.innerText = 'ONLINE'; el.classList.replace('bg-red-500', 'bg-emerald-500'); } checkPendingSubmit(); });
@@ -192,9 +205,11 @@
                     if(!dataSoal.questions || dataSoal.questions.length === 0) return Swal.fire('Oops', 'Kosong!', 'error');
                     document.getElementById('view-siswa-token').classList.add('hidden'); document.getElementById('view-siswa-ujian').classList.remove('hidden');
                     document.getElementById('ujian-mapel-title').innerText = currentExam.mapel; document.getElementById('ujian-nama-siswa').innerText = activeUser.name;
+                    
                     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+                    
                     cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '', ragu: false })); cbtCurrentIndex = 0;
-                    loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; Swal.close();
+                    loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; Swal.close();
                 } else Swal.fire('Gagal', data.message, 'error');
             } catch(e) { Swal.fire('Error', 'Terputus', 'error'); }
         }
@@ -215,12 +230,10 @@
             let html = "";
             for(let i = 0; i < cbtQuestions.length; i++) {
                 let statusClass = "bg-white text-slate-600 border-slate-300"; 
-                // Cek apakah soal ini sudah dijawab sepenuhnya
                 let isAnswered = false;
                 if (cbtAnswers[i].ans !== "") {
-                    if (cbtQuestions[i].tipe === 'BS') {
-                        isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; // Pastikan tidak ada strip
-                    } else { isAnswered = true; }
+                    if (cbtQuestions[i].tipe === 'BS') { isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; } 
+                    else { isAnswered = true; }
                 }
 
                 if(cbtAnswers[i].ragu) statusClass = "bg-yellow-400 text-yellow-900 border-yellow-500 shadow-inner"; 
@@ -240,7 +253,7 @@
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
-            if (q.gform_url && q.tipe !== 'GFORM' && q.gform_url.startsWith('http')) divMedia.innerHTML = `<img src="${q.gform_url}" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-4">`;
+            if (q.gform_url && q.tipe !== 'GFORM' && q.gform_url.startsWith('http')) divMedia.innerHTML = `<img src="${q.gform_url}" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-4 object-contain">`;
 
             if(q.tipe === 'GFORM') {
                 divOpsi.innerHTML = `<div class="gform-container"><iframe src="${q.tanya || q.gform_url}"></iframe></div>`; cbtSaveAnswer("COMPLETED"); 
@@ -271,31 +284,38 @@
                     let savedArr = savedAns ? savedAns.split(',') : [];
                     htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-slate-100 text-slate-600">
-                                <tr>
-                                    <th class="p-4 border-b">Pernyataan</th>
-                                    <th class="p-4 border-b text-center w-24">Benar</th>
-                                    <th class="p-4 border-b text-center w-24">Salah</th>
-                                </tr>
-                            </thead>
+                            <thead class="bg-slate-100 text-slate-600"><tr><th class="p-4 border-b">Pernyataan</th><th class="p-4 border-b text-center w-24">Benar</th><th class="p-4 border-b text-center w-24">Salah</th></tr></thead>
                             <tbody class="divide-y divide-slate-100 bg-white">`;
                     opsiArray.forEach((val, idx) => {
-                        let isB = savedArr[idx] === 'B' ? 'checked' : '';
-                        let isS = savedArr[idx] === 'S' ? 'checked' : '';
-                        htmlOpsi += `<tr class="hover:bg-slate-50 transition">
-                            <td class="p-4 text-slate-700 font-medium">${val}</td>
-                            <td class="p-4 text-center bg-emerald-50/30 border-l"><input type="radio" name="bs_${idx}" value="B" ${isB} onchange="cbtSaveBS(${opsiArray.length})" class="w-6 h-6 accent-emerald-600 cursor-pointer"></td>
-                            <td class="p-4 text-center bg-red-50/30 border-l"><input type="radio" name="bs_${idx}" value="S" ${isS} onchange="cbtSaveBS(${opsiArray.length})" class="w-6 h-6 accent-red-600 cursor-pointer"></td>
-                        </tr>`;
+                        let isB = savedArr[idx] === 'B' ? 'checked' : ''; let isS = savedArr[idx] === 'S' ? 'checked' : '';
+                        htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-slate-700 font-medium">${val}</td><td class="p-4 text-center bg-emerald-50/30 border-l"><input type="radio" name="bs_${idx}" value="B" ${isB} onchange="cbtSaveBS(${opsiArray.length})" class="w-6 h-6 accent-emerald-600 cursor-pointer"></td><td class="p-4 text-center bg-red-50/30 border-l"><input type="radio" name="bs_${idx}" value="S" ${isS} onchange="cbtSaveBS(${opsiArray.length})" class="w-6 h-6 accent-red-600 cursor-pointer"></td></tr>`;
                     });
                     htmlOpsi += `</tbody></table></div>`;
                 }
                 else if (q.tipe === 'JODOH') {
-                    htmlOpsi += `<div class="mb-3 p-4 bg-blue-50 rounded-xl text-sm border border-blue-100 shadow-inner"><b class="text-blue-800">Daftar Pilihan Jawaban:</b><br><ul class="mt-2 space-y-1">`;
-                    opsiArray.forEach((val, idx) => { let huruf = abjad[idx] || ''; htmlOpsi += `<li><strong class="text-blue-700 mr-2">${huruf}.</strong> ${val}</li>`; });
+                    // DESAIN BARU MENJODOHKAN: Tampilan Dropdown agar sejajar tanpa ketik keyboard
+                    htmlOpsi += `<div class="mb-4 p-4 bg-blue-50 rounded-xl text-sm border border-blue-100 shadow-inner"><b class="text-blue-800"><i class="fa fa-list"></i> Pilihan Jawaban yang Tersedia:</b><br><ul class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">`;
+                    opsiArray.forEach((val, idx) => { let huruf = abjad[idx] || ''; htmlOpsi += `<li><strong class="text-blue-700 mr-2 bg-blue-200 px-2 py-1 rounded">${huruf}</strong> ${val}</li>`; });
                     htmlOpsi += `</ul></div>`;
-                    htmlOpsi += `<p class="text-[10px] font-bold text-slate-500 mb-1">Ketikkan pasangan jawaban Anda di bawah (Contoh ketik: 1A, 2B, 3C):</p>`;
-                    htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 border-slate-300 rounded-xl text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Jawaban...">`;
+                    
+                    let totalPairs = q.kunci ? q.kunci.split(',').length : 4; 
+                    let savedArr = savedAns ? savedAns.split(',') : [];
+
+                    htmlOpsi += `<p class="text-[10px] font-bold text-slate-500 mb-2 uppercase">Pilih pasangan yang tepat untuk masing-masing nomor di bawah ini:</p><div class="space-y-3">`;
+                    
+                    for(let i=0; i<totalPairs; i++) {
+                        let currentSaved = savedArr[i] ? savedArr[i].replace(/[0-9]/g, '') : ''; 
+                        htmlOpsi += `<div class="flex items-center justify-between p-3 border-2 border-slate-200 rounded-xl bg-white shadow-sm">
+                            <span class="font-bold text-slate-700">Pasangan No. ${i+1}</span>
+                            <select class="jodoh-select p-2 border-2 border-blue-300 rounded-lg text-sm font-bold text-blue-800 bg-blue-50 outline-none focus:ring-2 focus:ring-blue-500 w-1/2 md:w-1/3" onchange="cbtSaveJodoh(${totalPairs})">
+                                <option value="">- Pilih Jawaban -</option>`;
+                        opsiArray.forEach((val, idx) => {
+                            let huruf = abjad[idx]; let isSel = (currentSaved === huruf) ? "selected" : "";
+                            htmlOpsi += `<option value="${huruf}" ${isSel}>Pilihan ${huruf}</option>`;
+                        });
+                        htmlOpsi += `</select></div>`;
+                    }
+                    htmlOpsi += `</div>`;
                 }
                 else if (q.tipe === 'ISIAN') {
                     htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 rounded-xl text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`;
@@ -310,6 +330,7 @@
 
         function cbtSaveCheckbox() { let checked = []; document.querySelectorAll('.cbt-pgk-cb:checked').forEach(cb => checked.push(cb.value)); cbtSaveAnswer(checked.join(',')); }
         function cbtSaveBS(length) { let arr = []; for(let i=0; i<length; i++) { let selected = document.querySelector(`input[name="bs_${i}"]:checked`); arr.push(selected ? selected.value : '-'); } cbtSaveAnswer(arr.join(',')); }
+        function cbtSaveJodoh(totalPairs) { let arr = []; let selects = document.querySelectorAll('.jodoh-select'); selects.forEach((sel, idx) => { if(sel.value) arr.push(`${idx+1}${sel.value}`); }); cbtSaveAnswer(arr.join(',')); }
         function cbtSaveAnswer(val) { cbtAnswers[cbtCurrentIndex].ans = val; saveToLocal(); renderCbtGrid(); }
         function cbtToggleRagu() { cbtAnswers[cbtCurrentIndex].ragu = document.getElementById('cbt-ragu').checked; saveToLocal(); renderCbtGrid(); }
         function cbtNext() { if(cbtCurrentIndex < cbtQuestions.length - 1) showCbtQuestion(cbtCurrentIndex + 1); }
@@ -338,12 +359,15 @@
             if(!isGformOnly) {
                 cbtQuestions.forEach((q, index) => {
                     let ans = cbtAnswers[index].ans; let status = 'Salah'; let bobot = q.skor ? parseFloat(q.skor) : 1; let poin = 0;
-                    if(q.tipe === 'PG' || q.tipe === 'ISIAN' || q.tipe === 'JODOH') {
+                    if(q.tipe === 'PG' || q.tipe === 'ISIAN') {
                         totalSkorMaksimal += bobot; let kunciBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let ansBersih = (ans || "").replace(/\s/g, '').toLowerCase();
                         if(ansBersih && ansBersih === kunciBersih) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; }
-                    } else if (q.tipe === 'PGK' || q.tipe === 'BS') {
+                    } else if (q.tipe === 'PGK' || q.tipe === 'BS' || q.tipe === 'JODOH') {
                         totalSkorMaksimal += bobot; let kunciArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').sort().join(','); let ansArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').sort().join(',');
-                        if(ansArr === kunciArr && ansArr !== "" && ansArr.indexOf('-') === -1) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; }
+                        // Khusus BS & Jodoh, pastikan jumlah format jawabannya lengkap
+                        let totalHarusDijawab = (q.kunci||"").split(',').length;
+                        let totalSiswaJawab = (ans||"").split(',').filter(x => x && x!=='-').length;
+                        if(ansArr === kunciArr && ansArr !== "" && totalSiswaJawab === totalHarusDijawab) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; }
                     } else if (q.tipe === 'ESAI') { status = 'Menunggu Koreksi Guru'; poin = 0; }
                     detail.push({ no: index+1, tanya: q.tanya, jawab: ans.replace(/\|\|\|/g, ', '), kunci: q.kunci, status: status, poin: poin });
                 });
@@ -353,7 +377,7 @@
             const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang };
 
             const sendLogic = async () => {
-                clearInterval(examTimerInterval);
+                clearInterval(examTimerInterval); isExamActive = false; // Matikan anti-cheat agar bisa keluar
                 if(!navigator.onLine) { localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload)); Swal.fire('Sinyal Terputus!', 'Jawaban disimpan di HP.', 'warning'); document.getElementById('offline-pending-alert').classList.remove('hidden'); return; }
                 Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
                 try {
@@ -364,7 +388,12 @@
             };
 
             if (showConfirm && !isForceCurang) {
-                let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS') return a === "" || a.indexOf('-') !== -1; return a === ""; }).length;
+                let kosong = cbtQuestions.filter((q, i) => { 
+                    let a = cbtAnswers[i].ans; 
+                    if(q.tipe === 'BS') return a === "" || a.indexOf('-') !== -1; 
+                    if(q.tipe === 'JODOH') { let h = (q.kunci||"").split(',').length; return a.split(',').length < h; }
+                    return a === ""; 
+                }).length;
                 let text = isGformOnly ? "Pastikan sudah Submit G-Form!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Yakin?` : "Kirim sekarang?");
                 Swal.fire({ title: 'Kumpulkan Ujian?', html: text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya!' }).then((r) => { if(r.isConfirmed) sendLogic(); });
             } else sendLogic();
@@ -410,7 +439,7 @@
         let questionCount = 1;
         function tambahBarisSoal() {
             questionCount++; const container = document.getElementById('bulk-questions-container');
-            const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Tabel)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN / PASTE LINK G-FORM</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PERNYATAAN B-S</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Gunakan ||| sebagai pemisah"></div></div></div>`;
+            const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Tabel)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN / PASTE LINK G-FORM</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PERNYATAAN B-S</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Gunakan ||| sebagai pemisah"></div></div></div>`;
             container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
