@@ -230,9 +230,7 @@ app.post('/api/siswa/flag-curang', async (req, res) => {
 // EXPORT UNTUK VERCEL (WAJIB)
 // ==========================================
 // --- TAMBAHKAN KODE INI ---
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+
 // -------------------------
 
 // EXPORT UNTUK VERCEL (WAJIB)
