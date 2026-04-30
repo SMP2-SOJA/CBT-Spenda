@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Inter', sans-serif; } .hidden { display: none !important; } ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; } .drawer-transition { transition: transform 0.3s ease-in-out; } .gform-container { position: relative; width: 100%; height: 75vh; overflow: hidden; border-radius: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); } .gform-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        /* ANTI COPAS DAN PROTEKSI DASAR */
         .anti-copas { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-touch-callout: none; }
         @media print { body { display: none !important; } }
         img { pointer-events: none; }
@@ -45,7 +44,7 @@
         <div class="w-full max-w-sm bg-white p-6 md:p-8 rounded-3xl shadow-xl text-center border-t-8 border-emerald-500">
             <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa fa-unlock-alt text-lg md:text-xl"></i></div>
             <h2 class="text-base md:text-lg font-bold text-slate-800">Halo, <span id="nama-siswa-welcome" class="text-emerald-600 font-black">Siswa</span>!</h2>
-            <p class="text-[10px] md:text-xs text-slate-500 mb-6">Masukkan PIN ujian dari pengawas</p>
+            <p class="text-xs text-slate-500 mb-6">Masukkan PIN ujian dari pengawas</p>
             <input type="text" id="input-pin" class="w-full p-2 md:p-3 border-2 border-emerald-200 bg-emerald-50 rounded-xl text-center text-xl md:text-2xl font-black uppercase mb-6 tracking-widest outline-none">
             <button onclick="mulaiUjian()" class="w-full bg-emerald-600 text-white py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 text-sm md:text-base">MULAI UJIAN</button>
             <button onclick="logout()" class="w-full mt-4 text-slate-400 text-xs hover:text-red-500"><i class="fa fa-sign-out-alt"></i> Keluar</button>
@@ -55,7 +54,7 @@
     <!-- AREA UJIAN SISWA -->
     <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative anti-copas">
         <header class="bg-blue-800 text-white shadow-md flex justify-between items-center px-4 py-2 md:py-3 flex-shrink-0 z-20 relative">
-            <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm md:text-lg tracking-wider uppercase">MAPEL</h1><p class="text-[9px] md:text-xs text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
+            <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm md:text-lg tracking-wider uppercase">MAPEL</h1><p class="text-[10px] md:text-xs text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
             <div class="flex items-center space-x-2"><div class="bg-blue-900 rounded-lg px-2 py-1 text-center shadow-inner relative overflow-hidden"><div id="network-status" class="bg-emerald-500 text-white text-[7px] md:text-[8px] font-bold uppercase mb-0.5 md:mb-1 rounded-sm text-center">ONLINE</div><div id="exam-countdown" class="font-mono font-black text-xs md:text-sm text-yellow-400">00:00:00</div></div><button onclick="toggleCbtNav()" class="md:hidden bg-blue-700 hover:bg-blue-600 text-white p-1.5 md:p-2 rounded-lg shadow"><i class="fa fa-th-large"></i></button></div>
         </header>
         <div class="flex-1 flex overflow-hidden max-w-7xl mx-auto w-full relative">
@@ -85,27 +84,38 @@
                 <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
                 <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
             </div>
-            <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm"><button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-home w-6"></i> Dashboard</button><button onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button><button onclick="showPage('banksoal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-database w-6"></i> Bank Soal</button><button onclick="showPage('nilai')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-chart-bar w-6"></i> Hasil Nilai</button><button id="menu-users" onclick="showPage('users')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-users w-6"></i> Manajemen Siswa</button></nav><div class="p-4 border-t border-slate-800"><button onclick="logout()" class="w-full flex justify-center p-3 rounded-lg bg-red-600/10 text-red-500 font-bold text-xs md:text-sm">Keluar</button></div>
+            <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
+                <button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-home w-6"></i> Dashboard</button>
+                <button id="menu-jadwal" onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button>
+                <button id="menu-banksoal" onclick="showPage('banksoal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-database w-6"></i> Bank Soal</button>
+                <button onclick="showPage('nilai')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-chart-bar w-6"></i> Hasil Nilai</button>
+                <button id="menu-users" onclick="showPage('users')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-users w-6"></i> Manajemen Siswa</button>
+            </nav>
+            <div class="p-4 border-t border-slate-800"><button onclick="logout()" class="w-full flex justify-center p-3 rounded-lg bg-red-600/10 text-red-500 font-bold text-xs md:text-sm">Keluar</button></div>
         </aside>
         <main class="flex-1 flex flex-col overflow-hidden relative w-full">
             <header class="h-14 md:h-16 bg-white border-b flex items-center justify-between px-4 shadow-sm z-10 flex-shrink-0"><div class="flex items-center"><button onclick="toggleAdminSidebar()" class="md:hidden mr-3 text-slate-600 p-2"><i class="fa fa-bars text-lg"></i></button><h3 id="page-title" class="font-bold text-slate-700 uppercase tracking-widest text-[10px] md:text-xs">Dashboard</h3><span id="role-badge" class="ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase hidden">Guru</span></div></header>
             <div class="flex-1 overflow-y-auto p-3 md:p-8" id="content">
-                <div id="page-dashboard" class="page-content space-y-3 md:space-y-4"><div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-[8px] font-bold text-slate-400">TOTAL SISWA</p><h1 id="stat-siswa" class="text-base md:text-xl font-black text-slate-700">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-[8px] font-bold text-slate-400">MENGERJAKAN</p><h1 id="stat-kerja" class="text-base md:text-xl font-black text-orange-500">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-emerald-500"><p class="text-[8px] font-bold text-slate-400">SELESAI</p><h1 id="stat-selesai" class="text-base md:text-xl font-black text-emerald-500">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-red-500"><p class="text-[8px] font-bold text-slate-400">CURANG</p><h1 id="stat-curang" class="text-base md:text-xl font-black text-red-500">0</h1></div></div>
-                
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
-                    <div class="bg-slate-50 p-3 md:p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3">
-                        <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center">
-                            <i class="fa fa-desktop mr-2 text-blue-500"></i> Live Monitoring 
-                            <span class="ml-2 flex h-2 w-2 md:h-3 md:w-3 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 md:h-3 md:w-3 bg-red-500"></span></span>
-                        </h3>
-                        <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                            <button onclick="clearMonitoring()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-2 py-1 md:px-3 md:py-1.5 rounded font-bold hover:bg-red-200 transition"><i class="fa fa-broom"></i> Bersihkan Layar</button>
-                            <select id="filter-mapel" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Mapel</option></select>
-                            <select id="filter-kelas" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
+                <div id="page-dashboard" class="page-content space-y-3 md:space-y-4">
+                    <!-- TEMPAT TOKEN MUNCUL DI DASHBOARD -->
+                    <div id="dashboard-tokens" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-3 md:mb-4"></div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-[8px] font-bold text-slate-400">TOTAL SISWA</p><h1 id="stat-siswa" class="text-base md:text-xl font-black text-slate-700">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-[8px] font-bold text-slate-400">MENGERJAKAN</p><h1 id="stat-kerja" class="text-base md:text-xl font-black text-orange-500">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-emerald-500"><p class="text-[8px] font-bold text-slate-400">SELESAI</p><h1 id="stat-selesai" class="text-base md:text-xl font-black text-emerald-500">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-red-500"><p class="text-[8px] font-bold text-slate-400">CURANG</p><h1 id="stat-curang" class="text-base md:text-xl font-black text-red-500">0</h1></div></div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                        <div class="bg-slate-50 p-3 md:p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3">
+                            <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center">
+                                <i class="fa fa-desktop mr-2 text-blue-500"></i> Live Monitoring 
+                                <span class="ml-2 flex h-2 w-2 md:h-3 md:w-3 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 md:h-3 md:w-3 bg-red-500"></span></span>
+                            </h3>
+                            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                                <button onclick="clearMonitoring()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-2 py-1 md:px-3 md:py-1.5 rounded font-bold hover:bg-red-200 transition"><i class="fa fa-broom"></i> Bersihkan Layar</button>
+                                <select id="filter-mapel" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Mapel</option></select>
+                                <select id="filter-kelas" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
+                            </div>
                         </div>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap"><thead class="bg-slate-100 text-[8px] md:text-[9px] text-slate-500 uppercase"><tr><th class="p-2 md:p-3">Nama Siswa</th><th>Ujian</th><th>Status (Aksi)</th><th class="p-2 md:p-3">Skor / Waktu</th><th>Jam Update</th></tr></thead><tbody id="monitor-table" class="divide-y bg-white"></tbody></table></div>
                     </div>
-                    <div class="overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap"><thead class="bg-slate-100 text-[8px] md:text-[9px] text-slate-500 uppercase"><tr><th class="p-2 md:p-3">Nama Siswa</th><th>Ujian</th><th>Status (Aksi)</th><th>Skor</th><th>Jam Update</th></tr></thead><tbody id="monitor-table" class="divide-y bg-white"></tbody></table></div>
-                </div>
                 </div>
                 
                 <div id="page-jadwal" class="page-content hidden space-y-4">
@@ -141,13 +151,13 @@
                                 <div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">1</div>
                                 <div class="grid grid-cols-1 gap-2 md:gap-3">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Kesesuaian)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
-                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,C,B"></div>
+                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
+                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div>
                                         <div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div>
                                     </div>
                                     <div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div>
-                                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Teks instruksi soal)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
-                                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="Isi Pilihan A ||| Pilihan B ATAU Pernyataan 1 ||| Pernyataan 2"></div>
+                                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
+                                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div>
                                 </div>
                             </div>
                         </div>
@@ -176,7 +186,7 @@
                         <button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button>
                         <button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3">Nama Siswa</th><th>Mapel</th><th>Benar</th><th>Salah</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3">Nama Siswa</th><th>Mapel</th><th>Waktu</th><th>Benar</th><th>Salah</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
                 </div>
                 
                 <div id="page-users" class="page-content hidden space-y-4">
@@ -255,6 +265,8 @@
                         document.getElementById('view-admin').classList.remove('hidden'); 
                         if (activeUser.role.toLowerCase() === 'guru') { 
                             document.getElementById('menu-users').classList.add('hidden'); 
+                            document.getElementById('menu-jadwal').classList.add('hidden'); 
+                            document.getElementById('menu-banksoal').classList.add('hidden'); 
                             document.getElementById('role-badge').classList.remove('hidden'); 
                             document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`; 
                         } 
@@ -284,6 +296,11 @@
                     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
                     
                     cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '' })); cbtCurrentIndex = 0;
+                    
+                    // Inisiasi Waktu Mulai (Live Duration Tracking)
+                    let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`;
+                    if (!localStorage.getItem(startTimeKey)) { localStorage.setItem(startTimeKey, Date.now()); }
+
                     loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; Swal.close();
                 } else Swal.fire('Gagal', data.message, 'error');
             } catch(e) { Swal.fire('Error', 'Terputus', 'error'); }
@@ -300,6 +317,19 @@
                 timerDisplay.innerText = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
             }, 1000);
         }
+
+        // MESIN DETAK WAKTU REAL-TIME KE DASHBOARD GURU SETIAP 15 DETIK
+        setInterval(() => {
+            if (isExamActive && navigator.onLine) {
+                let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`;
+                let start = localStorage.getItem(startTimeKey);
+                if (start) {
+                    let mins = Math.floor((Date.now() - parseInt(start)) / 60000);
+                    let text = mins > 0 ? `${mins} Menit` : `< 1 Menit`;
+                    fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: text}) }).catch(e=>console.log(e));
+                }
+            }
+        }, 15000);
 
         function renderCbtGrid() {
             let html = "";
@@ -324,7 +354,6 @@
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
-            // PERBAIKAN GAMBAR DRIVE: JALUR GANDA ANTI-BLANK DENGAN LAZY LOAD
             let imgUrl = q.gform_url;
             let fallbackUrl = '';
             if(imgUrl && imgUrl.includes('drive.google.com')) {
@@ -371,7 +400,6 @@
                     else if (q.tipe === 'BS' || q.tipe === 'TS') {
                         let savedArr = savedAns ? savedAns.split(',') : []; 
                         
-                        // SETTING HEADERS (Jika TS/BS Kustom, bisa diubah di kode admin. Defaultnya ini:)
                         let headers = q.tipe === 'BS' ? ['Benar', 'Salah'] : ['Sesuai', 'Tidak Sesuai'];
                         let statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
 
@@ -382,7 +410,7 @@
                         statements.forEach((val, idx) => { 
                             htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-3 md:p-4 text-slate-700 font-medium whitespace-normal min-w-[150px] md:min-w-[200px] leading-snug">${val}</td>`;
                             headers.forEach((h, hIdx) => {
-                                let huruf = abjad[hIdx]; // A = kolom 1, B = kolom 2 dst
+                                let huruf = abjad[hIdx]; 
                                 let isChecked = savedArr[idx] === huruf ? 'checked' : '';
                                 htmlOpsi += `<td class="p-3 md:p-4 text-center border-l"><input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked} onchange="cbtSaveMatrix(${statements.length})" class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer"></td>`;
                             });
@@ -420,13 +448,11 @@
             }
         }
 
-        // FUNGSI PEWARNAAN OTOMATIS JAWABAN (DETAIL & EXCEL)
         function colorizeAnswer(jawab, kunci, tipe) {
             if (!jawab || jawab === '-') return '-';
             if (jawab === kunci) return `<span style="color:#2563eb; font-weight:bold;">${jawab}</span>`; 
             
-            let jArr = jawab.split(/, | \| /);
-            let kArr = (kunci||"").split(/, | \| /);
+            let jArr = jawab.split(/, | \| /); let kArr = (kunci||"").split(/, | \| /);
             
             if (jArr.length > 1 && ['BS', 'TS', 'JODOH', 'PGK', 'ISIAN', 'ESAI'].includes(tipe)) {
                 let res = [];
@@ -452,12 +478,10 @@
                 let headers = q.tipe === 'BS' ? ['Benar', 'Salah'] : ['Sesuai', 'Tidak Sesuai'];
                 let ansArr = rawAnswer.split(','); let texts = []; 
                 ansArr.forEach((a, i) => { 
-                    // MAP KEMBALI A/B/C KE TEKS (A=Benar, B=Salah)
                     let idx = abjad.indexOf(a); 
-                    if(a === 'B' && headers.length === 2 && idx === 1) { /* Legacy B/S catch */ }
-                    else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } // Fallback B = Benar
-                    else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } // Fallback S = Salah
-                    
+                    if(a === 'B' && headers.length === 2 && idx === 1) { }
+                    else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } 
+                    else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } 
                     if(idx !== -1 && headers[idx]) texts.push(`No.${i+1}:${headers[idx]}`); else texts.push(`No.${i+1}:-`); 
                 }); 
                 return texts.join(', '); 
@@ -494,13 +518,9 @@
                     else if (q.tipe === 'BS' || q.tipe === 'TS') {
                         totalSkorMaksimal += bobot;
                         let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x);
-                        
-                        // PENERJEMAH OTOMATIS B/S KUNCI LAMA KE A/B
-                        if (kArr.some(k => k === 'S')) {
-                            kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k));
-                        }
-
+                        if (kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); }
                         let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(',');
+                        
                         let correctCount = 0; let totalItems = kArr.length;
                         for(let j=0; j<totalItems; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correctCount++; } }
                         
@@ -539,7 +559,17 @@
                 nilaiAkhir = totalSkorMaksimal > 0 ? Math.round((totalSkorDiperoleh / totalSkorMaksimal) * 100) : 0;
             } else { nilaiAkhir = 'Cek G-Form'; }
 
-            const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang };
+            // PENGHITUNGAN DURASI FINAL SAAT SUBMIT
+            let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`;
+            let start = localStorage.getItem(startTimeKey);
+            let durasiText = '-';
+            if (start) {
+                let diffMs = Date.now() - parseInt(start);
+                let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000);
+                durasiText = `${dMins}m ${dSecs}s`;
+            }
+
+            const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
 
             const sendLogic = async () => {
                 clearInterval(examTimerInterval); isExamActive = false;
@@ -548,7 +578,7 @@
                 try {
                     await fetch(API + '/siswa/submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                     if(document.exitFullscreen) document.exitFullscreen(); 
-                    if(!isForceCurang) { localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`); }
+                    if(!isForceCurang) { localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(startTimeKey); }
                     Swal.fire('Selesai!', isGformOnly ? 'Terkirim.' : `Nilai Anda: ${nilaiAkhir}`, 'success').then(() => location.reload());
                 } catch(e) { localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload)); document.getElementById('offline-pending-alert').classList.remove('hidden'); Swal.fire('Error Server', 'Disimpan di HP.', 'warning'); }
             };
@@ -561,13 +591,17 @@
         }
 
         // --- FUNGSI ADMIN / GURU ---
-        function showPage(p) { document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden'); if(window.innerWidth < 768) { document.getElementById('admin-sidebar').classList.add('-translate-x-full'); document.getElementById('admin-overlay').classList.add('hidden'); } if(p === 'dashboard') loadStats(); if(p === 'jadwal') loadJadwal(); if(p === 'nilai') loadNilai(); if(p === 'banksoal') loadBankSoal(); }
+        function showPage(p) { document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden'); if(window.innerWidth < 768) { document.getElementById('admin-sidebar').classList.add('-translate-x-full'); document.getElementById('admin-overlay').classList.add('hidden'); } if(p === 'dashboard') loadStats(); if(p === 'jadwal') loadJadwal(); if(p === 'nilai') loadNilai(); if(p === 'banksoal') loadBankSoal(); if(p === 'users') loadUsers(); }
         
         async function loadStats() { 
             if(!activeUser || activeUser.role === 'siswa') return; 
             const res = await fetch(API + '/admin/stats' + getAuthParams()); const data = await res.json(); 
             document.getElementById('stat-siswa').innerText = data.total_siswa; document.getElementById('stat-kerja').innerText = data.sedang_kerja; document.getElementById('stat-selesai').innerText = data.selesai; document.getElementById('stat-curang').innerText = data.curang; 
             
+            // TOKEN JADWAL DI DASHBOARD
+            const resSch = await fetch(API + '/admin/schedules' + getAuthParams()); const schedules = await resSch.json(); 
+            document.getElementById('dashboard-tokens').innerHTML = schedules.map(s => `<div class="bg-gradient-to-r from-blue-600 to-blue-800 p-3 md:p-4 rounded-xl shadow-md text-white flex justify-between items-center border border-blue-500"><div><p class="text-[8px] md:text-[10px] font-bold opacity-80 uppercase">${s.mapel}</p><h2 class="text-base md:text-xl font-black tracking-widest">${s.pin}</h2></div><i class="fa fa-key text-xl opacity-50"></i></div>`).join('');
+
             const resA = await fetch(API + '/admin/recent-activity' + getAuthParams()); allActivityData = await resA.json(); 
             if(document.getElementById('filter-kelas').options.length === 1) {
                 let kelasSet = new Set(); let mapelSet = new Set();
@@ -606,7 +640,13 @@
                     statusColor = 'bg-red-500 text-white font-black animate-pulse shadow-md'; textColor = 'text-red-600 font-bold'; 
                     aksiBtn = `<button onclick="resetSiswa('${a.student_name}', '${a.exam_name}')" class="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[9px] shadow cursor-pointer"><i class="fa fa-unlock"></i> Buka Akses</button>`;
                 }
-                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold ${textColor}">${a.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td><td class="p-2 md:p-3 font-medium">${a.exam_name}</td><td class="p-2 md:p-3"><span class="px-2 py-1 rounded-full text-[9px] md:text-[10px] font-bold ${statusColor}">${a.status}</span> ${aksiBtn}</td><td class="p-2 md:p-3 font-black">${a.score||'-'}</td><td class="p-2 md:p-3 text-[9px] md:text-[10px]">${a.last_seen}</td></tr>`;
+                
+                let skorTampil = a.score || '-';
+                if(a.status === 'Mengerjakan' && a.score) {
+                    skorTampil = `<span class="text-orange-500 font-bold text-[9px] md:text-[10px]"><i class="fa fa-clock"></i> ${a.score}</span>`;
+                }
+
+                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold ${textColor}">${a.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td><td class="p-2 md:p-3 font-medium">${a.exam_name}</td><td class="p-2 md:p-3"><span class="px-2 py-1 rounded-full text-[9px] md:text-[10px] font-bold ${statusColor}">${a.status}</span> ${aksiBtn}</td><td class="p-2 md:p-3 font-black">${skorTampil}</td><td class="p-2 md:p-3 text-[9px] md:text-[10px]">${a.last_seen}</td></tr>`;
             }).join(''); 
         }
 
@@ -646,11 +686,12 @@
         function exportExcelDetail() {
             if(!window.filteredResultsData || window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Belum ada data nilai pada filter ini', 'warning');
             let maxQ = 0; window.filteredResultsData.forEach(r => { try { let details = JSON.parse(r.detail_jawaban); if(details.length > maxQ) maxQ = details.length; } catch(e){} });
-            let tableHtml = `<table border="1"><thead><tr><th style="background-color: #f8fafc; font-weight: bold;">Nama Siswa</th><th style="background-color: #f8fafc; font-weight: bold;">Kelas</th><th style="background-color: #f8fafc; font-weight: bold;">Mapel</th><th style="background-color: #f8fafc; font-weight: bold;">Benar</th><th style="background-color: #f8fafc; font-weight: bold;">Salah</th><th style="background-color: #f8fafc; font-weight: bold;">Nilai Akhir</th>`;
+            let tableHtml = `<table border="1"><thead><tr><th style="background-color: #f8fafc; font-weight: bold;">Nama Siswa</th><th style="background-color: #f8fafc; font-weight: bold;">Kelas</th><th style="background-color: #f8fafc; font-weight: bold;">Mapel</th><th style="background-color: #f8fafc; font-weight: bold;">Waktu Pengerjaan</th><th style="background-color: #f8fafc; font-weight: bold;">Benar</th><th style="background-color: #f8fafc; font-weight: bold;">Salah</th><th style="background-color: #f8fafc; font-weight: bold;">Nilai Akhir</th>`;
             for(let i=1; i<=maxQ; i++) { tableHtml += `<th style="background-color: #f8fafc; font-weight: bold; vertical-align: top;">Soal No.${i}</th>`; } tableHtml += `</tr></thead><tbody>`;
             window.filteredResultsData.forEach(r => {
                 let details = []; try { details = JSON.parse(r.detail_jawaban); } catch(e){}
-                tableHtml += `<tr><td style="vertical-align: top;">${r.student_name}</td><td style="vertical-align: top;">${r.kelas||'-'}</td><td style="vertical-align: top;">${r.mapel}</td><td style="vertical-align: top;">${r.benar}</td><td style="vertical-align: top;">${r.salah}</td><td style="font-weight: bold; vertical-align: top;">${r.nilai}</td>`;
+                let tgl = r.tanggal || ''; let durasi = '-'; if (tgl.includes('|')) durasi = tgl.split('|')[1];
+                tableHtml += `<tr><td style="vertical-align: top;">${r.student_name}</td><td style="vertical-align: top;">${r.kelas||'-'}</td><td style="vertical-align: top;">${r.mapel}</td><td style="vertical-align: top; font-weight: bold;">${durasi}</td><td style="vertical-align: top;">${r.benar}</td><td style="vertical-align: top;">${r.salah}</td><td style="font-weight: bold; vertical-align: top;">${r.nilai}</td>`;
                 let detMap = {}; details.forEach(d => { detMap[d.no] = d; });
                 for(let i=1; i<=maxQ; i++) {
                     let d = detMap[i];
@@ -672,7 +713,7 @@
         async function importWord() { const file = document.getElementById('w_file').files[0]; const exam_id = document.getElementById('w_judul').value; if(!file || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Word!', 'warning'); const fd = new FormData(); fd.append('file_word', file); fd.append('exam_id', exam_id); Swal.fire({ title: 'Mengekstrak...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/import-word', { method: 'POST', body: fd }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil', data.message, 'success'); loadBankSoal(); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
         let questionCount = 1;
-        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative mt-4 md:mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-[10px] md:text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
+        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative mt-4 md:mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-[10px] md:text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
         async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN!', 'warning'); const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); if(dataSoal.length === 0) return; Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil!', `${dataSoal.length} Soal disimpan.`, 'success').then(() => location.reload()); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 

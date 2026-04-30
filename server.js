@@ -70,7 +70,6 @@ app.post('/api/admin/reset-siswa', async (req, res) => {
 app.get('/api/admin/users', async (req, res) => { const { data } = await supabase.from('users').select('*').neq('role', 'admin').neq('role', 'Admin').order('id', {ascending: false}); res.json(data || []); });
 app.post('/api/admin/import-users', upload.single('file_excel'), async (req, res) => { try { const workbook = XLSX.readFile(req.file.path); const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = excelData.map(row => ({ name: row.Nama, username: row.Username, password: row.Password, role: row.Role || 'siswa', kelas: row.Kelas, mapel: row.Mapel || '' })); if(insertData.length > 0) await supabase.from('users').insert(insertData); res.json({ status: "success" }); } catch(e) { res.status(500).json({status: "error"}); } });
 
-// PENGGABUNGAN DATA NILAI DENGAN KELAS SISWA UNTUK FILTER
 app.get('/api/admin/results', async (req, res) => { 
     let { data: results } = await supabase.from('results').select('*').order('id', { ascending: false }); 
     let { data: users } = await supabase.from('users').select('name, kelas');
@@ -104,7 +103,19 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
 
 app.post('/api/siswa/get-soal', async (req, res) => { const { data } = await supabase.from('questions').select('id, tipe, tanya, opsi_json, kunci, media_path, gform_url, skor').eq('exam_id', req.body.exam_id).order('id', {ascending: true}); res.json({status: "success", questions: data || []}); });
 
-app.post('/api/siswa/submit', async (req, res) => { await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: new Date().toLocaleDateString('id-ID') }]); await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); res.json({status: "success"}); });
+// ENDPOINT BARU: PING REAL-TIME UNTUK MENGIRIM DURASI SAAT MENGERJAKAN
+app.post('/api/siswa/ping', async (req, res) => {
+    await supabase.from('activity').update({ last_seen: new Date().toLocaleTimeString('id-ID'), score: req.body.durasi }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel).eq('status', 'Mengerjakan');
+    res.json({status: "success"});
+});
+
+// MENYIMPAN DURASI FINAL SAAT SUBMIT KE KOLOM TANGGAL
+app.post('/api/siswa/submit', async (req, res) => { 
+    const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (req.body.durasi || '-');
+    await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB }]); 
+    await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')' }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
+    res.json({status: "success"}); 
+});
 
 app.post('/api/siswa/flag-curang', async (req, res) => { 
     const { student_name, mapel, count } = req.body;
