@@ -11,7 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Inter', sans-serif; } .hidden { display: none !important; } ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; } .drawer-transition { transition: transform 0.3s ease-in-out; } .gform-container { position: relative; width: 100%; height: 75vh; overflow: hidden; border-radius: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); } .gform-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .anti-copas { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+        /* ANTI COPAS DAN PROTEKSI DASAR */
+        .anti-copas { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-touch-callout: none; }
+        @media print { body { display: none !important; } }
+        img { pointer-events: none; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
@@ -138,13 +141,13 @@
                                 <div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">1</div>
                                 <div class="grid grid-cols-1 gap-2 md:gap-3">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
-                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div>
+                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Kesesuaian)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
+                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,C,B"></div>
                                         <div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div>
                                     </div>
                                     <div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div>
-                                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
-                                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div>
+                                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Teks instruksi soal)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
+                                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="Isi Pilihan A ||| Pilihan B ATAU Pernyataan 1 ||| Pernyataan 2"></div>
                                 </div>
                             </div>
                         </div>
@@ -211,6 +214,14 @@
             if(passInput.type === 'password') { passInput.type = 'text'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
             else { passInput.type = 'password'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
         }
+
+        // SISTEM ANTI SCREENSHOT (MENCEGAH PRINT SCREEN KEY)
+        document.addEventListener('keyup', (e) => {
+            if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+                navigator.clipboard.writeText('');
+                Swal.fire('Akses Dilarang!', 'Tangkapan layar (Screenshot) terdeteksi dan tidak diizinkan!', 'warning');
+            }
+        });
 
         document.addEventListener('keydown', function(e) { if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } });
 
@@ -313,14 +324,19 @@
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
+            // PERBAIKAN GAMBAR DRIVE: JALUR GANDA ANTI-BLANK DENGAN LAZY LOAD
             let imgUrl = q.gform_url;
+            let fallbackUrl = '';
             if(imgUrl && imgUrl.includes('drive.google.com')) {
                 let idMatch = imgUrl.match(/[?&]id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/);
-                if(idMatch && idMatch[1]) { imgUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`; }
+                if(idMatch && idMatch[1]) { 
+                    imgUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+                    fallbackUrl = `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+                }
             }
 
             if (imgUrl && q.tipe !== 'GFORM' && imgUrl.startsWith('http')) { 
-                divMedia.innerHTML = `<img src="${imgUrl}" loading="lazy" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-3 md:mb-4 object-contain">`; 
+                divMedia.innerHTML = `<img src="${imgUrl}" ${fallbackUrl ? `onerror="if(this.src !== '${fallbackUrl}') this.src='${fallbackUrl}';"` : ''} loading="lazy" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-3 md:mb-4 object-contain">`; 
             }
 
             if(q.tipe === 'GFORM') {
@@ -354,21 +370,21 @@
                     }
                     else if (q.tipe === 'BS' || q.tipe === 'TS') {
                         let savedArr = savedAns ? savedAns.split(',') : []; 
-                        let headers = opsiArray.length > 0 ? opsiArray : (q.tipe === 'BS' ? ['Benar', 'Salah'] : ['Sesuai', 'Tidak Sesuai']);
-                        let lines = (q.tanya||"").split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(l => l); let premises = []; let mainTanya = [];
-                        lines.forEach(l => { if (/^\d+[\.\)]\s?/.test(l)) { premises.push(l); } else { mainTanya.push(l); } });
-                        divTanya.innerHTML = mainTanya.join('<br>'); 
-                        if(premises.length === 0) premises = ['Pernyataan 1', 'Pernyataan 2'];
+                        
+                        // SETTING HEADERS (Jika TS/BS Kustom, bisa diubah di kode admin. Defaultnya ini:)
+                        let headers = q.tipe === 'BS' ? ['Benar', 'Salah'] : ['Sesuai', 'Tidak Sesuai'];
+                        let statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
 
                         htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-[10px] md:text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-3 md:p-4 border-b">Pernyataan</th>`;
                         headers.forEach(h => htmlOpsi += `<th class="p-3 md:p-4 border-b text-center font-bold min-w-[60px] md:min-w-[80px]">${h}</th>`);
                         htmlOpsi += `</tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
                         
-                        premises.forEach((val, idx) => { 
+                        statements.forEach((val, idx) => { 
                             htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-3 md:p-4 text-slate-700 font-medium whitespace-normal min-w-[150px] md:min-w-[200px] leading-snug">${val}</td>`;
                             headers.forEach((h, hIdx) => {
-                                let huruf = abjad[hIdx]; let isChecked = savedArr[idx] === huruf ? 'checked' : '';
-                                htmlOpsi += `<td class="p-3 md:p-4 text-center border-l"><input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked} onchange="cbtSaveMatrix(${premises.length})" class="w-4 h-4 md:w-5 md:h-5 accent-emerald-600 cursor-pointer"></td>`;
+                                let huruf = abjad[hIdx]; // A = kolom 1, B = kolom 2 dst
+                                let isChecked = savedArr[idx] === huruf ? 'checked' : '';
+                                htmlOpsi += `<td class="p-3 md:p-4 text-center border-l"><input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked} onchange="cbtSaveMatrix(${statements.length})" class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer"></td>`;
                             });
                             htmlOpsi += `</tr>`; 
                         }); 
@@ -407,7 +423,7 @@
         // FUNGSI PEWARNAAN OTOMATIS JAWABAN (DETAIL & EXCEL)
         function colorizeAnswer(jawab, kunci, tipe) {
             if (!jawab || jawab === '-') return '-';
-            if (jawab === kunci) return `<span style="color:#2563eb; font-weight:bold;">${jawab}</span>`; // Full Correct
+            if (jawab === kunci) return `<span style="color:#2563eb; font-weight:bold;">${jawab}</span>`; 
             
             let jArr = jawab.split(/, | \| /);
             let kArr = (kunci||"").split(/, | \| /);
@@ -421,7 +437,7 @@
                 }
                 return res.join('<br>');
             }
-            return `<span style="color:#dc2626; font-weight:bold;">${jawab}</span>`; // Full Wrong
+            return `<span style="color:#dc2626; font-weight:bold;">${jawab}</span>`; 
         }
 
         function getFullAnswerText(q, rawAnswer) {
@@ -433,9 +449,17 @@
             if(q.tipe === 'PGK') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`${a}. ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(', '); }
             if(q.tipe === 'JODOH') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let numberPart = a.replace(/[a-zA-Z]/g, ''); let letterPart = a.replace(/[0-9]/g, ''); let idx = abjad.indexOf(letterPart); if(idx !== -1 && opsiArray[idx]) texts.push(`No.${numberPart} -> ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(' | '); }
             if(q.tipe === 'BS' || q.tipe === 'TS') { 
-                let headers = opsiArray.length > 0 ? opsiArray : (q.tipe === 'BS' ? ['Benar', 'Salah'] : ['Sesuai', 'Tidak Sesuai']);
+                let headers = q.tipe === 'BS' ? ['Benar', 'Salah'] : ['Sesuai', 'Tidak Sesuai'];
                 let ansArr = rawAnswer.split(','); let texts = []; 
-                ansArr.forEach((a, i) => { let idx = abjad.indexOf(a); if(idx !== -1 && headers[idx]) texts.push(`No.${i+1}:${headers[idx]}`); else texts.push(`No.${i+1}:-`); }); 
+                ansArr.forEach((a, i) => { 
+                    // MAP KEMBALI A/B/C KE TEKS (A=Benar, B=Salah)
+                    let idx = abjad.indexOf(a); 
+                    if(a === 'B' && headers.length === 2 && idx === 1) { /* Legacy B/S catch */ }
+                    else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } // Fallback B = Benar
+                    else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } // Fallback S = Salah
+                    
+                    if(idx !== -1 && headers[idx]) texts.push(`No.${i+1}:${headers[idx]}`); else texts.push(`No.${i+1}:-`); 
+                }); 
                 return texts.join(', '); 
             }
             return rawAnswer;
@@ -470,6 +494,12 @@
                     else if (q.tipe === 'BS' || q.tipe === 'TS') {
                         totalSkorMaksimal += bobot;
                         let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x);
+                        
+                        // PENERJEMAH OTOMATIS B/S KUNCI LAMA KE A/B
+                        if (kArr.some(k => k === 'S')) {
+                            kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k));
+                        }
+
                         let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(',');
                         let correctCount = 0; let totalItems = kArr.length;
                         for(let j=0; j<totalItems; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correctCount++; } }
@@ -642,7 +672,7 @@
         async function importWord() { const file = document.getElementById('w_file').files[0]; const exam_id = document.getElementById('w_judul').value; if(!file || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Word!', 'warning'); const fd = new FormData(); fd.append('file_word', file); fd.append('exam_id', exam_id); Swal.fire({ title: 'Mengekstrak...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/import-word', { method: 'POST', body: fd }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil', data.message, 'success'); loadBankSoal(); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
         let questionCount = 1;
-        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative mt-4 md:mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-[10px] md:text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
+        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative mt-4 md:mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-[10px] md:text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
         async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN!', 'warning'); const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); if(dataSoal.length === 0) return; Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil!', `${dataSoal.length} Soal disimpan.`, 'success').then(() => location.reload()); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
