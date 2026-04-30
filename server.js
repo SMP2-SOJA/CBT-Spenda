@@ -41,6 +41,13 @@ app.delete('/api/admin/clear-monitoring', async (req, res) => { await supabase.f
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
 app.put('/api/admin/update-user', async (req, res) => { const { old_username, name, username, password, role, kelas, mapel } = req.body; await supabase.from('users').update({ name, username, password, role, kelas, mapel }).eq('username', old_username); res.json({status: "success"}); });
 
+// ENDPOINT TAMBAH USER MANUAL
+app.post('/api/admin/add-user', async (req, res) => { 
+    const { name, username, password, role, kelas, mapel } = req.body; 
+    await supabase.from('users').insert([{ name, username, password, role: role || 'siswa', kelas: kelas || '', mapel: mapel || '' }]); 
+    res.json({status: "success"}); 
+});
+
 app.post('/api/admin/add-soal-bulk', async (req, res) => { const { questions } = req.body; if (!questions || questions.length === 0) return res.status(400).json({status: "error"}); const { error } = await supabase.from('questions').insert(questions); if(error) return res.status(500).json({status: "error", message: error.message}); res.json({ status: "success" }); });
 
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => { try { const exam_id = req.body.exam_id; if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"}); const workbook = XLSX.readFile(req.file.path); const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = data.map(row => { let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String); return { exam_id: exam_id, tipe: (row.Tipe || 'PG').toUpperCase(), tanya: row.Pertanyaan || '', opsi_json: opsi.join('|||'), kunci: row.Kunci ? String(row.Kunci).trim() : '', gform_url: row.Link_Gambar || '', skor: row.Skor || 1 }; }); if(insertData.length > 0) { const { error } = await supabase.from('questions').insert(insertData); if(error) throw error; } res.json({ status: "success", message: `${insertData.length} Soal berhasil di-import!` }); } catch(e) { res.status(500).json({status: "error", message: "Gagal memproses Excel. Pastikan kolom Skor sudah ada di Supabase."}); } });
@@ -103,13 +110,11 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
 
 app.post('/api/siswa/get-soal', async (req, res) => { const { data } = await supabase.from('questions').select('id, tipe, tanya, opsi_json, kunci, media_path, gform_url, skor').eq('exam_id', req.body.exam_id).order('id', {ascending: true}); res.json({status: "success", questions: data || []}); });
 
-// ENDPOINT BARU: PING REAL-TIME UNTUK MENGIRIM DURASI SAAT MENGERJAKAN
 app.post('/api/siswa/ping', async (req, res) => {
     await supabase.from('activity').update({ last_seen: new Date().toLocaleTimeString('id-ID'), score: req.body.durasi }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel).eq('status', 'Mengerjakan');
     res.json({status: "success"});
 });
 
-// MENYIMPAN DURASI FINAL SAAT SUBMIT KE KOLOM TANGGAL
 app.post('/api/siswa/submit', async (req, res) => { 
     const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (req.body.durasi || '-');
     await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB }]); 
