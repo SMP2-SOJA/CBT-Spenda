@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+<!-- @Copyright Rahmat Hidayat H. -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
 
+    <!-- LOGIN -->
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600">
@@ -24,10 +26,11 @@
                 <div><label class="text-xs font-bold text-slate-500">PASSWORD</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-lock"></i></span><input type="password" id="login-pass" class="w-full pl-11 p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div></div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black shadow-lg hover:bg-blue-700">MASUK APLIKASI</button>
             </div>
-            <p class="text-center text-[10px] md:text-xs text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @Copyright spenda-digi</p>
+            <p class="text-center text-[10px] md:text-xs text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @Copyright Rahmat Hidayat H.</p>
         </div>
     </div>
 
+    <!-- TOKEN SISWA -->
     <div id="view-siswa-token" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-100">
         <div class="w-full max-w-sm bg-white p-6 md:p-8 rounded-3xl shadow-xl text-center border-t-8 border-emerald-500">
             <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa fa-unlock-alt text-xl"></i></div>
@@ -39,6 +42,7 @@
         </div>
     </div>
 
+    <!-- AREA UJIAN SISWA -->
     <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative anti-copas">
         <header class="bg-blue-800 text-white shadow-md flex justify-between items-center px-4 py-3 flex-shrink-0 z-20 relative">
             <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm md:text-lg tracking-wider uppercase">MAPEL</h1><p class="text-[10px] md:text-xs text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
@@ -63,6 +67,7 @@
         </div>
     </div>
 
+    <!-- ADMIN PANEL -->
     <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
@@ -125,13 +130,13 @@
                                 <div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">1</div>
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                        <div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Tabel)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
+                                        <div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Sesuai/Tidak Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
                                         <div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau 1B,2C"></div>
                                         <div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div>
                                     </div>
                                     <div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div>
                                     <div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" lalu enter untuk B-S/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div>
-                                    <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Pilihan A ||| Pilihan B"></div>
+                                    <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Contoh B/S: Benar ||| Salah ATAU Sesuai ||| Tidak Sesuai"></div>
                                 </div>
                             </div>
                         </div>
@@ -165,6 +170,7 @@
         </main>
     </div>
 
+    <!-- MODAL DETAIL -->
     <div id="modal-detail" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl">
             <div class="p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl"><h3 class="font-bold text-blue-800">Detail Analisis Butir Soal</h3><button onclick="document.getElementById('modal-detail').classList.add('hidden')" class="text-slate-400 hover:text-red-500"><i class="fa fa-times text-xl"></i></button></div>
@@ -317,8 +323,14 @@
                         let savedArr = savedAns ? savedAns.split(',') : []; htmlOpsi += `<div class="space-y-2 md:space-y-3">`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx] || ''; let isChecked = savedArr.includes(huruf) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-3 border-2 rounded-xl cursor-pointer bg-white transition hover:border-purple-300"><input type="checkbox" value="${huruf}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb w-6 h-6 text-purple-600 mr-4 rounded accent-purple-600 shadow-sm"><span class="text-sm font-medium text-slate-700">${val}</span></label>`; }); htmlOpsi += `</div>`;
                     }
                     else if (q.tipe === 'BS') {
-                        let savedArr = savedAns ? savedAns.split(',') : []; htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-4 border-b">Pernyataan</th><th class="p-4 border-b text-center w-24">Benar</th><th class="p-4 border-b text-center w-24">Salah</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
-                        opsiArray.forEach((val, idx) => { let isB = savedArr[idx] === 'B' ? 'checked' : ''; let isS = savedArr[idx] === 'S' ? 'checked' : ''; htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-slate-700 font-medium">${val}</td><td class="p-4 text-center bg-emerald-50/30 border-l"><input type="radio" name="bs_${idx}" value="B" ${isB} onchange="cbtSaveBS(${opsiArray.length})" class="w-6 h-6 accent-emerald-600 cursor-pointer"></td><td class="p-4 text-center bg-red-50/30 border-l"><input type="radio" name="bs_${idx}" value="S" ${isS} onchange="cbtSaveBS(${opsiArray.length})" class="w-6 h-6 accent-red-600 cursor-pointer"></td></tr>`; }); htmlOpsi += `</tbody></table></div>`;
+                        let labelTrue = opsiArray[0] || 'Benar'; let labelFalse = opsiArray[1] || 'Salah';
+                        let savedArr = savedAns ? savedAns.split(',') : []; htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-4 border-b">Pernyataan</th><th class="p-4 border-b text-center w-24">${labelTrue}</th><th class="p-4 border-b text-center w-24">${labelFalse}</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
+                        
+                        let statements = opsiArray.slice(2);
+                        if(statements.length === 0 && q.tanya) { statements = q.tanya.split(/\r?\n/).filter(x=>x); divTanya.innerHTML = ""; }
+                        if(statements.length === 0) statements = ['Pernyataan 1', 'Pernyataan 2'];
+
+                        statements.forEach((val, idx) => { let isB = savedArr[idx] === 'B' ? 'checked' : ''; let isS = savedArr[idx] === 'S' ? 'checked' : ''; htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-slate-700 font-medium">${val}</td><td class="p-4 text-center bg-emerald-50/30 border-l"><input type="radio" name="bs_${idx}" value="B" ${isB} onchange="cbtSaveBS(${statements.length})" class="w-6 h-6 accent-emerald-600 cursor-pointer"></td><td class="p-4 text-center bg-red-50/30 border-l"><input type="radio" name="bs_${idx}" value="S" ${isS} onchange="cbtSaveBS(${statements.length})" class="w-6 h-6 accent-red-600 cursor-pointer"></td></tr>`; }); htmlOpsi += `</tbody></table></div>`;
                     }
                     else if (q.tipe === 'ISIAN') { htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 rounded-xl text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`; }
                     else if (q.tipe === 'ESAI') { htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" class="w-full p-4 border-2 rounded-xl h-32 text-sm bg-white focus:border-blue-500 outline-none" placeholder="Uraikan jawaban Anda di sini...">${savedAns}</textarea>`; }
@@ -350,6 +362,38 @@
             }
         }
 
+        // PENGEMBALIAN KALIMAT JAWABAN LENGKAP SAAT SUBMIT
+        function getFullAnswerText(q, rawAnswer) {
+            if(!rawAnswer || rawAnswer === '-') return '-';
+            let opsiArray = q.opsi_json ? q.opsi_json.split(/\|\|\|/).map(o=>o.trim()).filter(o=>o) : [];
+            const abjad = ['A', 'B', 'C', 'D', 'E'];
+            
+            if(q.tipe === 'PG') {
+                let idx = abjad.indexOf(rawAnswer); return idx !== -1 && opsiArray[idx] ? `${rawAnswer}. ${opsiArray[idx]}` : rawAnswer;
+            }
+            if(q.tipe === 'PGK') {
+                let ansArr = rawAnswer.split(','); let texts = [];
+                ansArr.forEach(a => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`${a}. ${opsiArray[idx]}`); else texts.push(a); });
+                return texts.join(', ');
+            }
+            if(q.tipe === 'JODOH') {
+                let ansArr = rawAnswer.split(','); let texts = [];
+                ansArr.forEach(a => {
+                    let numberPart = a.replace(/[a-zA-Z]/g, ''); let letterPart = a.replace(/[0-9]/g, '');
+                    let idx = abjad.indexOf(letterPart);
+                    if(idx !== -1 && opsiArray[idx]) texts.push(`No.${numberPart} -> ${opsiArray[idx]}`); else texts.push(a);
+                });
+                return texts.join(' | ');
+            }
+            if(q.tipe === 'BS') {
+                let labelTrue = opsiArray[0] || 'Benar'; let labelFalse = opsiArray[1] || 'Salah';
+                let ansArr = rawAnswer.split(','); let texts = [];
+                ansArr.forEach((a, i) => { if(a==='B') texts.push(`No.${i+1}:${labelTrue}`); else if(a==='S') texts.push(`No.${i+1}:${labelFalse}`); else texts.push(`No.${i+1}:-`); });
+                return texts.join(', ');
+            }
+            return rawAnswer;
+        }
+
         async function submitUjian(showConfirm = true, isForceCurang = false) {
             let benar = 0; let salah = 0; let detail = []; let isGformOnly = cbtQuestions.length > 0 && cbtQuestions[0].tipe === 'GFORM'; let nilaiAkhir = 0; let totalSkorMaksimal = 0; let totalSkorDiperoleh = 0;
 
@@ -357,7 +401,10 @@
                 cbtQuestions.forEach((q, index) => {
                     let ans = cbtAnswers[index].ans; let status = 'Salah'; let bobot = q.skor ? parseFloat(q.skor) : 1; let poin = 0;
                     
-                    if (q.tipe === 'PG') {
+                    if (q.kunci && q.kunci.trim() === '') {
+                        status = 'Menunggu Koreksi Guru'; poin = 0; // JIKA TIDAK ADA KUNCI
+                    }
+                    else if (q.tipe === 'PG') {
                         totalSkorMaksimal += bobot; let kunciBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let ansBersih = (ans || "").replace(/\s/g, '').toLowerCase();
                         if(ansBersih && ansBersih === kunciBersih) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; }
                     } 
@@ -398,7 +445,6 @@
                     else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') {
                         let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || [];
                         let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || [];
-                        
                         if (kWords.length > 0) {
                             totalSkorMaksimal += bobot; 
                             let matchWords = 0; let aWordsUnique = [...new Set(aWords)];
@@ -411,7 +457,7 @@
                     }
                     
                     poin = Math.round(poin * 100) / 100;
-                    detail.push({ no: index+1, tanya: q.tanya, jawab: ans.replace(/\|\|\|/g, ', '), kunci: q.kunci, status: status, poin: poin });
+                    detail.push({ no: index+1, tanya: q.tanya, jawab: getFullAnswerText(q, ans), kunci: getFullAnswerText(q, q.kunci), status: status, poin: poin });
                 });
                 nilaiAkhir = totalSkorMaksimal > 0 ? Math.round((totalSkorDiperoleh / totalSkorMaksimal) * 100) : 0;
             } else { nilaiAkhir = 'Cek G-Form'; }
@@ -491,8 +537,7 @@
             let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } 
             if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); 
             let html = details.map(d => {
-                let jawabTampil = d.jawab || '-'; if(jawabTampil.includes(',')) jawabTampil = jawabTampil.split(',').join(', ');
-                return `<div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700">Soal No. ${d.no}</span><span class="px-2 py-1 text-[10px] font-bold rounded-full ${d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')}">${d.status} (Skor: ${d.poin})</span></div><div class="text-sm text-slate-600 mb-3">${d.tanya.substring(0, 100)}...</div><div class="flex gap-4 text-xs bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><strong class="${d.status==='Salah'?'text-red-600':'text-slate-800'}">${jawabTampil}</strong></div><div class="flex-1 border-l pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600">${d.kunci || '-'}</strong></div></div></div>`
+                return `<div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700">Soal No. ${d.no}</span><span class="px-2 py-1 text-[10px] font-bold rounded-full ${d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')}">${d.status} (Skor: ${d.poin})</span></div><div class="text-sm text-slate-600 mb-3">${d.tanya.substring(0, 100)}...</div><div class="flex gap-4 text-xs bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><strong class="${d.status==='Salah'?'text-red-600':'text-slate-800'}">${d.jawab}</strong></div><div class="flex-1 border-l pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600">${d.kunci || '-'}</strong></div></div></div>`
             }).join(''); 
             document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); 
         }
@@ -510,7 +555,7 @@
                     let d = detMap[i];
                     if(d) {
                         let color = d.status.includes('Benar') ? '#2563eb' : (d.status === 'Salah' ? '#dc2626' : '#000000');
-                        let jawabText = d.jawab || '-'; tableHtml += `<td style="color: ${color}; font-weight: bold;">${jawabText}</td>`;
+                        tableHtml += `<td style="color: ${color}; font-weight: bold;">${d.jawab}</td>`;
                     } else { tableHtml += `<td>-</td>`; }
                 } tableHtml += `</tr>`;
             }); tableHtml += `</tbody></table>`;
@@ -526,7 +571,7 @@
         async function importWord() { const file = document.getElementById('w_file').files[0]; const exam_id = document.getElementById('w_judul').value; if(!file || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Word!', 'warning'); const fd = new FormData(); fd.append('file_word', file); fd.append('exam_id', exam_id); Swal.fire({ title: 'Mengekstrak...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/import-word', { method: 'POST', body: fd }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil', data.message, 'success'); loadBankSoal(); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
         let questionCount = 1;
-        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Tabel)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau 1B,2C"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" lalu enter untuk B-S/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Pilihan A ||| Pilihan B"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
+        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS" class="font-bold text-emerald-600">7 - Benar/Salah (Sesuai/Tidak Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau 1B,2C"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" lalu enter untuk B-S/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Contoh B/S: Benar ||| Salah ATAU Sesuai ||| Tidak Sesuai"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
         async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN!', 'warning'); const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); if(dataSoal.length === 0) return; Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil!', `${dataSoal.length} Soal disimpan.`, 'success').then(() => location.reload()); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
