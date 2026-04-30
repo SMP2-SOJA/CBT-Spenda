@@ -179,7 +179,7 @@
         let isExamActive = false; let allActivityData = [];
         window.allResultsData = []; 
 
-        function getAuthParams() { return !activeUser ? "" : `?role=${activeUser.role}&mapel=${activeUser.mapel || ''}`; }
+        function getAuthParams() { return !activeUser ? "" : `?role=${encodeURIComponent(activeUser.role)}&mapel=${encodeURIComponent(activeUser.mapel || '')}`; }
         function toggleAdminSidebar() { document.getElementById('admin-sidebar').classList.toggle('-translate-x-full'); document.getElementById('admin-overlay').classList.toggle('hidden'); }
         function toggleCbtNav() { document.getElementById('cbt-nav-panel').classList.toggle('translate-x-full'); document.getElementById('cbt-nav-overlay').classList.toggle('hidden'); }
 
@@ -550,7 +550,6 @@
             document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[10px]">${u.role}</span></td><td class="text-right p-3"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 rounded shadow-sm transition mr-1"><i class="fa fa-edit"></i> Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fa fa-trash"></i></button></td></tr>`).join(''); 
         }
 
-        // FUNGSI EDIT DAN HAPUS USER SATUAN
         function editUser(u) {
             Swal.fire({
                 title: 'Edit Pengguna', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama Lengkap</label><input id="e_name" class="w-full p-2 border rounded" value="${u.name}"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="e_user" class="w-full p-2 border rounded" value="${u.username}"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="e_pass" class="w-full p-2 border rounded" value="${u.password}"></div><div><label class="text-xs font-bold text-slate-500">Akses Role</label><select id="e_role" class="w-full p-2 border rounded"><option value="siswa" ${u.role==='siswa'?'selected':''}>Siswa</option><option value="guru" ${u.role==='guru'?'selected':''}>Guru</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas (Khusus Siswa)</label><input id="e_kelas" class="w-full p-2 border rounded" value="${u.kelas||''}"></div><div><label class="text-xs font-bold text-slate-500">Mapel (Khusus Guru)</label><input id="e_mapel" class="w-full p-2 border rounded" value="${u.mapel||''}"></div></div>`,

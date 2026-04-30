@@ -16,11 +16,13 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 const upload = multer({ dest: '/tmp' });
 
+// FILTER PINTAR UNTUK GURU: Jika mapel "IPA", bisa lihat "IPA-8", "Ujian IPA", dll.
 function isAuthorizedMapel(reqMapelStr, examName) {
     if (!reqMapelStr || reqMapelStr.trim() === '') return true; 
     if (!examName) return false;
     const allowed = reqMapelStr.split(',').map(m => m.trim().toLowerCase());
-    return allowed.includes(examName.trim().toLowerCase());
+    const exName = examName.trim().toLowerCase();
+    return allowed.some(m => exName.includes(m) || m.includes(exName));
 }
 
 app.post('/api/login', async (req, res) => { const { username, password } = req.body; const { data } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single(); if (data) res.json({ status: "success", user: data }); else res.status(401).json({ status: "error", message: "Username/Password Salah!" }); });
@@ -36,7 +38,6 @@ app.delete('/api/admin/clear-schedules', async (req, res) => { await supabase.fr
 app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from('results').delete().neq('id', 0); await supabase.from('activity').delete().neq('id', 0); res.json({status: "success"}); });
 app.delete('/api/admin/clear-users', async (req, res) => { await supabase.from('users').delete().neq('role', 'admin').neq('role', 'Admin'); res.json({status: "success"}); });
 
-// ENDPOINT TAMBAHAN: EDIT DAN HAPUS USER SATUAN
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
 app.put('/api/admin/update-user', async (req, res) => { const { old_username, name, username, password, role, kelas, mapel } = req.body; await supabase.from('users').update({ name, username, password, role, kelas, mapel }).eq('username', old_username); res.json({status: "success"}); });
 
@@ -91,7 +92,6 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
     } 
 });
 
-// MEMAKSA SOAL DIURUTKAN SESUAI ID / URUTAN SAAT DIBUAT
 app.post('/api/siswa/get-soal', async (req, res) => { const { data } = await supabase.from('questions').select('id, tipe, tanya, opsi_json, kunci, media_path, gform_url, skor').eq('exam_id', req.body.exam_id).order('id', {ascending: true}); res.json({status: "success", questions: data || []}); });
 
 app.post('/api/siswa/submit', async (req, res) => { await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: new Date().toLocaleDateString('id-ID') }]); await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); res.json({status: "success"}); });
