@@ -18,7 +18,7 @@
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600">
-            <div class="text-center mb-6"><img src="logo-sekolah.png" onerror="this.src='https://via.placeholder.com/150'" class="w-16 h-16 mx-auto mb-4 object-contain"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
+            <div class="text-center mb-6"><img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
             <div class="space-y-4">
                 <div><label class="text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div></div>
                 <div><label class="text-xs font-bold text-slate-500">PASSWORD</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-lock"></i></span><input type="password" id="login-pass" class="w-full pl-11 p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div></div>
@@ -53,7 +53,10 @@
                     <div id="cbt-tanya" class="prose max-w-none text-base text-slate-800 mb-6 font-medium whitespace-pre-wrap"></div>
                     <div id="cbt-opsi-area" class="space-y-3 w-full mt-auto"></div>
                 </div>
-                <div class="bg-slate-50 border-t p-3 flex justify-between items-center"><button onclick="cbtPrev()" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-bold text-xs"><i class="fa fa-arrow-left"></i> KEMBALI</button><label class="flex items-center bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg font-bold text-xs"><input type="checkbox" id="cbt-ragu" onchange="cbtToggleRagu()" class="w-4 h-4 mr-1 accent-yellow-600"> RAGU</label><button onclick="cbtNext()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-xs">LANJUT <i class="fa fa-arrow-right"></i></button></div>
+                <div class="bg-slate-50 border-t p-3 flex justify-between items-center">
+                    <button onclick="cbtPrev()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-xs hover:bg-slate-300 transition"><i class="fa fa-arrow-left"></i> SEBELUMNYA</button>
+                    <button onclick="cbtNext()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-blue-700 transition">SELANJUTNYA <i class="fa fa-arrow-right"></i></button>
+                </div>
             </div>
             <div id="cbt-nav-overlay" onclick="toggleCbtNav()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
             <div id="cbt-nav-panel" class="fixed inset-y-0 right-0 w-64 bg-white shadow-2xl transform translate-x-full md:translate-x-0 md:relative md:flex flex-col h-full z-40 md:my-4 md:mr-4 md:rounded-xl md:border drawer-transition"><div class="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm"><i class="fa fa-th mr-2 text-blue-500"></i> Navigasi</h3><button onclick="toggleCbtNav()" class="md:hidden text-slate-400 hover:text-red-500"><i class="fa fa-times text-lg"></i></button></div><div class="flex-1 overflow-y-auto p-4"><div id="cbt-grid" class="grid grid-cols-4 gap-2"></div></div><div class="p-4 border-t bg-slate-50"><button id="btn-submit-ujian" onclick="submitUjian(true)" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-sm shadow-md">SELESAI UJIAN</button></div></div>
@@ -62,7 +65,13 @@
 
     <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
-        <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full"><div class="p-6 text-center border-b border-slate-800"><h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2></div><nav class="p-4 space-y-1 flex-1 overflow-y-auto text-sm"><button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-home w-6"></i> Dashboard</button><button onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button><button onclick="showPage('banksoal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-database w-6"></i> Bank Soal</button><button onclick="showPage('nilai')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-chart-bar w-6"></i> Hasil Nilai</button><button id="menu-users" onclick="showPage('users')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-users w-6"></i> Manajemen Siswa</button></nav><div class="p-4 border-t border-slate-800"><button onclick="logout()" class="w-full flex justify-center p-3 rounded-lg bg-red-600/10 text-red-500 font-bold text-sm">Keluar</button></div></aside>
+        <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
+            <div class="p-6 text-center border-b border-slate-800">
+                <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-12 h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
+                <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
+            </div>
+            <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-sm"><button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-home w-6"></i> Dashboard</button><button onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button><button onclick="showPage('banksoal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-database w-6"></i> Bank Soal</button><button onclick="showPage('nilai')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-chart-bar w-6"></i> Hasil Nilai</button><button id="menu-users" onclick="showPage('users')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-users w-6"></i> Manajemen Siswa</button></nav><div class="p-4 border-t border-slate-800"><button onclick="logout()" class="w-full flex justify-center p-3 rounded-lg bg-red-600/10 text-red-500 font-bold text-sm">Keluar</button></div>
+        </aside>
         <main class="flex-1 flex flex-col overflow-hidden relative w-full">
             <header class="h-16 bg-white border-b flex items-center justify-between px-4 shadow-sm z-10 flex-shrink-0"><div class="flex items-center"><button onclick="toggleAdminSidebar()" class="md:hidden mr-3 text-slate-600 p-2"><i class="fa fa-bars text-xl"></i></button><h3 id="page-title" class="font-bold text-slate-700 uppercase tracking-widest text-xs">Dashboard</h3><span id="role-badge" class="ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold uppercase hidden">Guru</span></div></header>
             <div class="flex-1 overflow-y-auto p-4 md:p-8" id="content">
@@ -144,12 +153,13 @@
                     </div>
                     <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap" id="nilai-table"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-3">Nama Siswa</th><th>Mapel</th><th>Benar</th><th>Salah</th><th>Nilai (100)</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
                 </div>
+                
                 <div id="page-users" class="page-content hidden space-y-4">
                     <div class="flex justify-between items-center mb-2">
                         <label class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] cursor-pointer shadow hover:bg-blue-700 transition"><i class="fa fa-upload mr-1"></i> Import Data Dari Excel<input type="file" class="hidden" onchange="importUsers(this)"></label>
                         <button onclick="clearUsers()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200 transition"><i class="fa fa-trash"></i> Bersihkan Semua Pengguna</button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-xs"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-3">Nama</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-xs"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-3">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Akses (Role)</th><th class="text-right p-3">Aksi/Edit</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
                 </div>
             </div>
         </main>
@@ -229,9 +239,9 @@
                     
                     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
                     
-                    cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '', ragu: false })); cbtCurrentIndex = 0;
+                    cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '' })); cbtCurrentIndex = 0;
                     loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; Swal.close();
-                } else Swal.fire('Gagal', data.message, 'error'); // MENAMPILKAN PESAN DITOLAK JIKA TERKUNCI
+                } else Swal.fire('Gagal', data.message, 'error');
             } catch(e) { Swal.fire('Error', 'Terputus', 'error'); }
         }
 
@@ -257,8 +267,7 @@
                     else if(cbtQuestions[i].tipe === 'JODOH') { let h = (cbtQuestions[i].kunci||"").split(',').length; isAnswered = cbtAnswers[i].ans.split(',').length >= h; }
                     else { isAnswered = true; }
                 }
-                if(cbtAnswers[i].ragu) statusClass = "bg-yellow-400 text-yellow-900 border-yellow-500 shadow-inner"; 
-                else if(isAnswered) statusClass = "bg-blue-600 text-white border-blue-700 shadow-md"; 
+                if(isAnswered) statusClass = "bg-blue-600 text-white border-blue-700 shadow-md"; 
                 let activeRing = (i === cbtCurrentIndex) ? "ring-4 ring-blue-300 scale-105" : "";
                 html += `<button onclick="showCbtQuestion(${i}); if(window.innerWidth < 768) toggleCbtNav();" class="w-full aspect-square flex items-center justify-center rounded-lg font-black text-sm md:text-lg border-2 transition transform active:scale-95 ${statusClass} ${activeRing}">${i+1}</button>`;
             }
@@ -267,7 +276,7 @@
 
         function showCbtQuestion(index) {
             cbtCurrentIndex = index; const q = cbtQuestions[index]; const savedAns = cbtAnswers[index].ans || "";
-            document.getElementById('cbt-no-soal').innerText = index + 1; document.getElementById('cbt-tipe-soal').innerText = q.tipe; document.getElementById('cbt-ragu').checked = cbtAnswers[index].ragu;
+            document.getElementById('cbt-no-soal').innerText = index + 1; document.getElementById('cbt-tipe-soal').innerText = q.tipe;
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
@@ -323,7 +332,6 @@
         function cbtSaveBS(length) { let arr = []; for(let i=0; i<length; i++) { let selected = document.querySelector(`input[name="bs_${i}"]:checked`); arr.push(selected ? selected.value : '-'); } cbtSaveAnswer(arr.join(',')); }
         function cbtSaveJodoh(totalPairs) { let arr = []; let selects = document.querySelectorAll('.jodoh-select'); selects.forEach((sel, idx) => { if(sel.value) arr.push(`${idx+1}${sel.value}`); }); cbtSaveAnswer(arr.join(',')); }
         function cbtSaveAnswer(val) { cbtAnswers[cbtCurrentIndex].ans = val; saveToLocal(); renderCbtGrid(); }
-        function cbtToggleRagu() { cbtAnswers[cbtCurrentIndex].ragu = document.getElementById('cbt-ragu').checked; saveToLocal(); renderCbtGrid(); }
         function cbtNext() { if(cbtCurrentIndex < cbtQuestions.length - 1) showCbtQuestion(cbtCurrentIndex + 1); }
         function cbtPrev() { if(cbtCurrentIndex > 0) showCbtQuestion(cbtCurrentIndex - 1); }
 
@@ -536,7 +544,23 @@
         }
         
         async function importUsers(inp) { if(!inp.files[0]) return; Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('file_excel', inp.files[0]); await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); Swal.fire('Selesai', 'Import berhasil', 'success'); loadUsers(); }
-        async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[10px]">${u.role}</span></td></tr>`).join(''); }
+        
+        async function loadUsers() { 
+            const res = await fetch(API + '/admin/users'); const data = await res.json(); 
+            document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[10px]">${u.role}</span></td><td class="text-right p-3"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 rounded shadow-sm transition mr-1"><i class="fa fa-edit"></i> Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fa fa-trash"></i></button></td></tr>`).join(''); 
+        }
+
+        // FUNGSI EDIT DAN HAPUS USER SATUAN
+        function editUser(u) {
+            Swal.fire({
+                title: 'Edit Pengguna', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama Lengkap</label><input id="e_name" class="w-full p-2 border rounded" value="${u.name}"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="e_user" class="w-full p-2 border rounded" value="${u.username}"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="e_pass" class="w-full p-2 border rounded" value="${u.password}"></div><div><label class="text-xs font-bold text-slate-500">Akses Role</label><select id="e_role" class="w-full p-2 border rounded"><option value="siswa" ${u.role==='siswa'?'selected':''}>Siswa</option><option value="guru" ${u.role==='guru'?'selected':''}>Guru</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas (Khusus Siswa)</label><input id="e_kelas" class="w-full p-2 border rounded" value="${u.kelas||''}"></div><div><label class="text-xs font-bold text-slate-500">Mapel (Khusus Guru)</label><input id="e_mapel" class="w-full p-2 border rounded" value="${u.mapel||''}"></div></div>`,
+                showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#2563eb',
+                preConfirm: () => { return { old_username: u.username, name: document.getElementById('e_name').value, username: document.getElementById('e_user').value, password: document.getElementById('e_pass').value, role: document.getElementById('e_role').value, kelas: document.getElementById('e_kelas').value, mapel: document.getElementById('e_mapel').value } }
+            }).then(async (res) => {
+                if(res.isConfirmed) { Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); await fetch(API+'/admin/update-user', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); Swal.fire('Tersimpan!', 'Data berhasil diperbarui.', 'success'); }
+            });
+        }
+        async function hapusUser(usr) { Swal.fire({title: 'Hapus User?', text: "Data tidak bisa dikembalikan!", icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API+'/admin/delete-user/'+usr, {method:'DELETE'}); loadUsers(); Swal.fire('Dihapus!', 'Pengguna telah dihapus.', 'success'); } }); }
 
         setInterval(() => { if(activeUser && activeUser.role !== 'siswa' && !document.getElementById('page-dashboard').classList.contains('hidden')) loadStats(); }, 3000);
     </script>
