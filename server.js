@@ -69,7 +69,15 @@ app.post('/api/admin/reset-siswa', async (req, res) => {
 
 app.get('/api/admin/users', async (req, res) => { const { data } = await supabase.from('users').select('*').neq('role', 'admin').neq('role', 'Admin').order('id', {ascending: false}); res.json(data || []); });
 app.post('/api/admin/import-users', upload.single('file_excel'), async (req, res) => { try { const workbook = XLSX.readFile(req.file.path); const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = excelData.map(row => ({ name: row.Nama, username: row.Username, password: row.Password, role: row.Role || 'siswa', kelas: row.Kelas, mapel: row.Mapel || '' })); if(insertData.length > 0) await supabase.from('users').insert(insertData); res.json({ status: "success" }); } catch(e) { res.status(500).json({status: "error"}); } });
-app.get('/api/admin/results', async (req, res) => { let { data } = await supabase.from('results').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(r => isAuthorizedMapel(req.query.mapel, r.mapel)); res.json(data || []); });
+
+// PENGGABUNGAN DATA NILAI DENGAN KELAS SISWA UNTUK FILTER
+app.get('/api/admin/results', async (req, res) => { 
+    let { data: results } = await supabase.from('results').select('*').order('id', { ascending: false }); 
+    let { data: users } = await supabase.from('users').select('name, kelas');
+    let resultsWithKelas = (results || []).map(r => { let u = (users || []).find(x => x.name === r.student_name); return { ...r, kelas: u ? u.kelas : '-' }; });
+    if (req.query.role === 'guru') resultsWithKelas = resultsWithKelas.filter(r => isAuthorizedMapel(req.query.mapel, r.mapel)); 
+    res.json(resultsWithKelas); 
+});
 
 app.post('/api/siswa/cek-pin', async (req, res) => { 
     const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).eq('status', 'Aktif').single(); 
