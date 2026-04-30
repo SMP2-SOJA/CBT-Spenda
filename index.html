@@ -138,13 +138,13 @@
                                 <div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">1</div>
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                        <div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai / Tingkat Kesesuaian)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
+                                        <div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - Sesuai/Tidak Sesuai</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
                                         <div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau 1B,2C"></div>
                                         <div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div>
                                     </div>
                                     <div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div>
                                     <div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" lalu enter untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div>
-                                    <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div>
+                                    <div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Gunakan opsi untuk menginput Peryataan 1 ||| Pernyataan 2 dst"></div>
                                 </div>
                             </div>
                         </div>
@@ -156,7 +156,9 @@
                     </div>
                     
                     <div class="flex justify-between items-center mb-2 mt-8"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Soal</button></div>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-3">Kode</th><th>Tipe</th><th>Detail Pertanyaan, Kunci & Skor</th><th>Aksi</th></tr></thead><tbody id="banksoal-table" class="divide-y"></tbody></table></div>
+                    <div id="banksoal-container">
+                        <!-- Dropdown Accordion Soal Masuk Sini -->
+                    </div>
                 </div>
 
                 <div id="page-nilai" class="page-content hidden space-y-4">
@@ -197,10 +199,8 @@
         function toggleAdminSidebar() { document.getElementById('admin-sidebar').classList.toggle('-translate-x-full'); document.getElementById('admin-overlay').classList.toggle('hidden'); }
         function toggleCbtNav() { document.getElementById('cbt-nav-panel').classList.toggle('translate-x-full'); document.getElementById('cbt-nav-overlay').classList.toggle('hidden'); }
 
-        // FUNGSI TOGGLE PASSWORD (MATA)
         function togglePass(inputId, iconId) {
-            const passInput = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
+            const passInput = document.getElementById(inputId); const icon = document.getElementById(iconId);
             if(passInput.type === 'password') { passInput.type = 'text'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
             else { passInput.type = 'password'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
         }
@@ -306,19 +306,17 @@
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
-            // PERBAIKAN LINK GAMBAR GOOGLE DRIVE (PROXY DUAL JALUR + LAZY LOAD)
+            // GAMBAR DRIVE PROXY THUMBNAIL ENGINE (DIJAMIN TAMPIL & ANTI BLOKIR)
             let imgUrl = q.gform_url;
-            let fallbackUrl = '';
             if(imgUrl && imgUrl.includes('drive.google.com')) {
                 let idMatch = imgUrl.match(/[?&]id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/);
                 if(idMatch && idMatch[1]) { 
-                    imgUrl = `https://lh3.googleusercontent.com/d/${idMatch[1]}`; 
-                    fallbackUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+                    imgUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`; 
                 }
             }
 
             if (imgUrl && q.tipe !== 'GFORM' && imgUrl.startsWith('http')) { 
-                divMedia.innerHTML = `<img src="${imgUrl}" ${fallbackUrl ? `onerror="this.onerror=null; this.src='${fallbackUrl}';"` : ''} loading="lazy" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-4 object-contain">`; 
+                divMedia.innerHTML = `<img src="${imgUrl}" loading="lazy" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-4 object-contain">`; 
             }
 
             if(q.tipe === 'GFORM') {
@@ -350,40 +348,21 @@
                     else if (q.tipe === 'PGK') {
                         let savedArr = savedAns ? savedAns.split(',') : []; htmlOpsi += `<div class="space-y-2 md:space-y-3">`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx] || ''; let isChecked = savedArr.includes(huruf) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-3 border-2 rounded-xl cursor-pointer bg-white transition hover:border-purple-300"><input type="checkbox" value="${huruf}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb w-6 h-6 text-purple-600 mr-4 rounded accent-purple-600 shadow-sm"><span class="text-sm font-medium text-slate-700">${val}</span></label>`; }); htmlOpsi += `</div>`;
                     }
-                    else if (q.tipe === 'BS') {
+                    else if (q.tipe === 'BS' || q.tipe === 'TS') {
+                        // OpsiArray adalah PERNYATAAN. Header di-hardcode.
                         let savedArr = savedAns ? savedAns.split(',') : []; 
-                        htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-4 border-b">Pernyataan</th><th class="p-4 border-b text-center w-24">Benar</th><th class="p-4 border-b text-center w-24">Salah</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
+                        let labelT = q.tipe === 'BS' ? 'Benar' : 'Sesuai';
+                        let labelF = q.tipe === 'BS' ? 'Salah' : 'Tidak Sesuai';
+                        
+                        let htmlOpsiTemp = `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-4 border-b">Pernyataan</th><th class="p-4 border-b text-center w-24">${labelT}</th><th class="p-4 border-b text-center w-24">${labelF}</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
+                        
                         opsiArray.forEach((val, idx) => { 
                             let isB = savedArr[idx] === 'B' ? 'checked' : ''; 
                             let isS = savedArr[idx] === 'S' ? 'checked' : ''; 
-                            htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-slate-700 font-medium">${val}</td><td class="p-4 text-center bg-emerald-50/30 border-l"><input type="radio" name="bs_${idx}" value="B" ${isB} onchange="cbtSaveMatrix(${opsiArray.length}, 'BS')" class="w-6 h-6 accent-emerald-600 cursor-pointer"></td><td class="p-4 text-center bg-red-50/30 border-l"><input type="radio" name="bs_${idx}" value="S" ${isS} onchange="cbtSaveMatrix(${opsiArray.length}, 'BS')" class="w-6 h-6 accent-red-600 cursor-pointer"></td></tr>`; 
+                            htmlOpsiTemp += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-slate-700 font-medium whitespace-normal min-w-[200px]">${val}</td><td class="p-4 text-center bg-emerald-50/30 border-l"><input type="radio" name="matrix_${idx}" value="B" ${isB} onchange="cbtSaveMatrix(${opsiArray.length})" class="w-6 h-6 accent-emerald-600 cursor-pointer"></td><td class="p-4 text-center bg-red-50/30 border-l"><input type="radio" name="matrix_${idx}" value="S" ${isS} onchange="cbtSaveMatrix(${opsiArray.length})" class="w-6 h-6 accent-red-600 cursor-pointer"></td></tr>`; 
                         }); 
-                        htmlOpsi += `</tbody></table></div>`;
-                    }
-                    else if (q.tipe === 'TS') {
-                        let savedArr = savedAns ? savedAns.split(',') : [];
-                        let headers = opsiArray.length > 0 ? opsiArray : ['Sesuai', 'Tidak Sesuai'];
-                        
-                        let lines = (q.tanya||"").split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(l => l);
-                        let premises = []; let mainTanya = [];
-                        lines.forEach(l => { if (/^\d+[\.\)]\s?/.test(l)) { premises.push(l); } else { mainTanya.push(l); } });
-                        divTanya.innerHTML = mainTanya.join('<br>'); 
-                        if(premises.length === 0) premises = ['Pernyataan 1', 'Pernyataan 2'];
-
-                        htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-4 border-b">Pernyataan</th>`;
-                        headers.forEach(h => htmlOpsi += `<th class="p-4 border-b text-center font-bold">${h}</th>`);
-                        htmlOpsi += `</tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
-                        
-                        premises.forEach((val, idx) => { 
-                            htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-slate-700 font-medium">${val}</td>`;
-                            headers.forEach((h, hIdx) => {
-                                let huruf = abjad[hIdx]; 
-                                let isChecked = savedArr[idx] === huruf ? 'checked' : '';
-                                htmlOpsi += `<td class="p-4 text-center border-l"><input type="radio" name="ts_${idx}" value="${huruf}" ${isChecked} onchange="cbtSaveMatrix(${premises.length}, 'TS')" class="w-6 h-6 accent-blue-600 cursor-pointer"></td>`;
-                            });
-                            htmlOpsi += `</tr>`; 
-                        }); 
-                        htmlOpsi += `</tbody></table></div>`;
+                        htmlOpsiTemp += `</tbody></table></div>`;
+                        htmlOpsi += htmlOpsiTemp;
                     }
                     else if (q.tipe === 'ISIAN') { htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 rounded-xl text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`; }
                     else if (q.tipe === 'ESAI') { htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" class="w-full p-4 border-2 rounded-xl h-32 text-sm bg-white focus:border-blue-500 outline-none" placeholder="Uraikan jawaban Anda di sini...">${savedAns}</textarea>`; }
@@ -394,14 +373,7 @@
         }
 
         function cbtSaveCheckbox() { let checked = []; document.querySelectorAll('.cbt-pgk-cb:checked').forEach(cb => checked.push(cb.value)); cbtSaveAnswer(checked.join(',')); }
-        function cbtSaveMatrix(length, typeCode) { 
-            let arr = []; let namePrefix = typeCode === 'BS' ? 'bs_' : 'ts_';
-            for(let i=0; i<length; i++) { 
-                let selected = document.querySelector(`input[name="${namePrefix}${i}"]:checked`); 
-                arr.push(selected ? selected.value : '-'); 
-            } 
-            cbtSaveAnswer(arr.join(',')); 
-        }
+        function cbtSaveMatrix(length) { let arr = []; for(let i=0; i<length; i++) { let selected = document.querySelector(`input[name="matrix_${i}"]:checked`); arr.push(selected ? selected.value : '-'); } cbtSaveAnswer(arr.join(',')); }
         function cbtSaveJodoh(totalPairs) { let arr = []; let selects = document.querySelectorAll('.jodoh-select'); selects.forEach((sel, idx) => { if(sel.value) arr.push(`${idx+1}${sel.value}`); }); cbtSaveAnswer(arr.join(',')); }
         function cbtSaveAnswer(val) { cbtAnswers[cbtCurrentIndex].ans = val; saveToLocal(); renderCbtGrid(); }
         function cbtNext() { if(cbtCurrentIndex < cbtQuestions.length - 1) showCbtQuestion(cbtCurrentIndex + 1); }
@@ -431,10 +403,11 @@
             if(q.tipe === 'PG') { let idx = abjad.indexOf(rawAnswer); return idx !== -1 && opsiArray[idx] ? `${rawAnswer}. ${opsiArray[idx]}` : rawAnswer; }
             if(q.tipe === 'PGK') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`${a}. ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(', '); }
             if(q.tipe === 'JODOH') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let numberPart = a.replace(/[a-zA-Z]/g, ''); let letterPart = a.replace(/[0-9]/g, ''); let idx = abjad.indexOf(letterPart); if(idx !== -1 && opsiArray[idx]) texts.push(`No.${numberPart} -> ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(' | '); }
-            if(q.tipe === 'BS') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach((a, i) => { if(a==='B') texts.push(`No.${i+1}:Benar`); else if(a==='S') texts.push(`No.${i+1}:Salah`); else texts.push(`No.${i+1}:-`); }); return texts.join(', '); }
-            if(q.tipe === 'TS') { 
+            if(q.tipe === 'BS' || q.tipe === 'TS') { 
+                let labelT = q.tipe === 'BS' ? 'Benar' : 'Sesuai';
+                let labelF = q.tipe === 'BS' ? 'Salah' : 'Tidak Sesuai';
                 let ansArr = rawAnswer.split(','); let texts = []; 
-                ansArr.forEach((a, i) => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`No.${i+1}:${opsiArray[idx]}`); else texts.push(`No.${i+1}:-`); }); 
+                ansArr.forEach((a, i) => { if(a==='B') texts.push(`No.${i+1}:${labelT}`); else if(a==='S') texts.push(`No.${i+1}:${labelF}`); else texts.push(`No.${i+1}:-`); }); 
                 return texts.join(', '); 
             }
             return rawAnswer;
@@ -626,11 +599,45 @@
         async function importWord() { const file = document.getElementById('w_file').files[0]; const exam_id = document.getElementById('w_judul').value; if(!file || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Word!', 'warning'); const fd = new FormData(); fd.append('file_word', file); fd.append('exam_id', exam_id); Swal.fire({ title: 'Mengekstrak...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/import-word', { method: 'POST', body: fd }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil', data.message, 'success'); loadBankSoal(); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
         let questionCount = 1;
-        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai / Tingkat Kesesuaian)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau 1B,2C"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" lalu enter untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
+        function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 relative mt-6" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Kotak Centang)</option><option value="JODOH">3 - Menjodohkan (Dropdown)</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - Sesuai/Tidak Sesuai</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs" placeholder="http://..."></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" lalu enter untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-sm h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI / PILIHAN JAWABAN (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-xs" placeholder="Gunakan opsi untuk menginput Peryataan 1 ||| Pernyataan 2 dst"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
         async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN!', 'warning'); const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); if(dataSoal.length === 0) return; Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil!', `${dataSoal.length} Soal disimpan.`, 'success').then(() => location.reload()); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
 
-        async function loadBankSoal() { const res = await fetch(API + '/admin/questions' + getAuthParams()); const data = await res.json(); document.getElementById('banksoal-table').innerHTML = data.map(q => { let det = q.tipe === 'GFORM' ? `<span class="text-purple-600 font-bold">Link G-Form: ${q.tanya || q.gform_url}</span>` : (q.tanya ? q.tanya.substring(0,60)+'...' : '-'); det += `<br><span class="text-[10px] font-bold text-emerald-600 mt-2 inline-block p-1 bg-emerald-50 border border-emerald-200 rounded"><i class="fa fa-key"></i> KUNCI: <b class="text-emerald-900">${q.kunci || '-'}</b></span> <span class="text-[10px] font-bold text-blue-600 mt-2 inline-block p-1 bg-blue-50 border border-blue-200 rounded ml-1"><i class="fa fa-star"></i> SKOR: <b class="text-blue-900">${q.skor || 1}</b></span>`; return `<tr><td class="p-3 font-bold text-blue-900 align-top">${q.exam_id}</td><td class="align-top pt-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[8px] font-black">${q.tipe}</span></td><td class="text-xs text-slate-700 py-3">${det}</td><td class="p-3 align-top"><button onclick="hapusSoal(${q.id})" class="text-red-500 hover:text-white hover:bg-red-500 border border-red-200 px-3 py-2 rounded-lg transition shadow-sm"><i class="fa fa-trash"></i> Hapus</button></td></tr>`; }).join(''); }
+        async function loadBankSoal() { 
+            const res = await fetch(API + '/admin/questions' + getAuthParams()); 
+            const data = await res.json(); 
+            
+            if (data.length === 0) {
+                document.getElementById('banksoal-container').innerHTML = '<div class="text-center p-8 text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm"><i class="fa fa-box-open text-3xl mb-2"></i><br>Belum ada soal.</div>';
+                return;
+            }
+
+            const groups = {};
+            data.forEach(q => { if(!groups[q.exam_id]) groups[q.exam_id] = []; groups[q.exam_id].push(q); });
+
+            let html = '';
+            for (const [examId, questions] of Object.entries(groups)) {
+                let tableRows = questions.map(q => { 
+                    let det = q.tipe === 'GFORM' ? `<span class="text-purple-600 font-bold">Link G-Form: ${q.tanya || q.gform_url}</span>` : (q.tanya ? q.tanya.substring(0,80)+'...' : '-'); 
+                    det += `<br><span class="text-[10px] font-bold text-emerald-600 mt-2 inline-block p-1 bg-emerald-50 border border-emerald-200 rounded"><i class="fa fa-key"></i> KUNCI: <b class="text-emerald-900">${q.kunci || '-'}</b></span> <span class="text-[10px] font-bold text-blue-600 mt-2 inline-block p-1 bg-blue-50 border border-blue-200 rounded ml-1"><i class="fa fa-star"></i> SKOR: <b class="text-blue-900">${q.skor || 1}</b></span>`; 
+                    return `<tr class="hover:bg-slate-50 transition"><td class="align-top pt-4 w-20 px-4 border-b border-slate-100"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] font-black shadow-sm">${q.tipe}</span></td><td class="text-xs text-slate-700 py-4 px-2 border-b border-slate-100 whitespace-normal min-w-[250px] leading-relaxed">${det}</td><td class="p-4 align-top text-right w-24 border-b border-slate-100"><button onclick="hapusSoal(${q.id})" class="text-red-500 hover:text-white hover:bg-red-500 border border-red-200 px-3 py-2 rounded-lg transition shadow-sm"><i class="fa fa-trash"></i></button></td></tr>`; 
+                }).join('');
+
+                html += `
+                <div class="mb-4 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <button onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')" class="w-full bg-slate-50 p-4 font-bold text-left text-slate-700 flex justify-between items-center hover:bg-blue-50 transition">
+                        <span class="flex items-center"><i class="fa fa-folder-open text-blue-500 mr-3 text-lg"></i> ${examId} <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-[10px] ml-3 shadow-inner">${questions.length} Soal</span></span>
+                        <i class="fa fa-chevron-down text-slate-400"></i>
+                    </button>
+                    <div id="soal-${examId}" class="hidden overflow-x-auto border-t border-slate-100">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <tbody class="divide-y divide-slate-100">${tableRows}</tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('banksoal-container').innerHTML = html;
+        }
 
         async function hapusSoal(id) { Swal.fire({title: 'Hapus Soal?', icon:'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/delete-soal/'+id, {method:'DELETE'}); loadBankSoal(); loadJadwal(); } }); }
         
