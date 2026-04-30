@@ -44,8 +44,8 @@
                 </div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 mt-2 text-sm md:text-base">MASUK APLIKASI</button>
                 
-                <!-- TOMBOL INSTAL APLIKASI MUNCUL JIKA MENDUKUNG PWA -->
-                <button id="btnInstall" class="hidden w-full bg-emerald-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-emerald-700 mt-3 text-sm md:text-base"><i class="fa fa-download mr-2"></i> INSTAL KE LAYAR HP</button>
+                <!-- TOMBOL INSTAL APLIKASI DITAMPILKAN EKSPLISIT -->
+                <button onclick="installPWA()" class="w-full bg-emerald-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-emerald-700 mt-3 text-sm md:text-base"><i class="fa fa-download mr-2"></i> INSTAL KE LAYAR HP</button>
             </div>
             <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @spenda-digi</p>
         </div>
@@ -112,9 +112,7 @@
             <div class="flex-1 overflow-y-auto p-3 md:p-8" id="content">
                 <div id="page-dashboard" class="page-content space-y-3 md:space-y-4">
                     <div id="dashboard-tokens" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-3 md:mb-4"></div>
-                    
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-[8px] font-bold text-slate-400">TOTAL SISWA</p><h1 id="stat-siswa" class="text-base md:text-xl font-black text-slate-700">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-[8px] font-bold text-slate-400">MENGERJAKAN</p><h1 id="stat-kerja" class="text-base md:text-xl font-black text-orange-500">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-emerald-500"><p class="text-[8px] font-bold text-slate-400">SELESAI</p><h1 id="stat-selesai" class="text-base md:text-xl font-black text-emerald-500">0</h1></div><div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-red-500"><p class="text-[8px] font-bold text-slate-400">CURANG</p><h1 id="stat-curang" class="text-base md:text-xl font-black text-red-500">0</h1></div></div>
-                    
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                         <div class="bg-slate-50 p-3 md:p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3">
                             <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center">
@@ -164,13 +162,13 @@
                                 <div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">1</div>
                                 <div class="grid grid-cols-1 gap-2 md:gap-3">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
-                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,C,B"></div>
+                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
+                                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C, atau B,S,B"></div>
                                         <div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div>
                                     </div>
                                     <div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div>
-                                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Teks instruksi soal)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
-                                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="Isi Pilihan A ||| Pilihan B ATAU Pernyataan 1 ||| Pernyataan 2"></div>
+                                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
+                                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div>
                                 </div>
                             </div>
                         </div>
@@ -199,19 +197,18 @@
                         <button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button>
                         <button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3">Nama Siswa</th><th>Mapel</th><th>Waktu</th><th>Benar</th><th>Salah</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Siswa</th><th>Mapel</th><th>Waktu</th><th>Benar</th><th>Salah</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
                 </div>
                 
                 <div id="page-users" class="page-content hidden space-y-4">
                     <div class="flex justify-between items-center mb-2">
                         <div class="flex gap-2">
-                            <!-- TOMBOL TAMBAH USER BARU -->
                             <button onclick="tambahUserManual()" class="bg-blue-600 text-white px-3 py-1.5 md:py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-blue-700 transition"><i class="fa fa-user-plus mr-1"></i> Tambah User</button>
                             <label class="bg-emerald-600 text-white px-3 py-1.5 md:py-2 rounded-lg font-bold text-[10px] md:text-xs cursor-pointer shadow hover:bg-emerald-700 transition"><i class="fa fa-upload mr-1"></i> Import Excel<input type="file" class="hidden" onchange="importUsers(this)"></label>
                         </div>
                         <button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200 transition"><i class="fa fa-trash"></i> Bersihkan User</button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
                 </div>
             </div>
         </main>
@@ -231,23 +228,23 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            const btnInstall = document.getElementById('btnInstall');
-            if(btnInstall) btnInstall.classList.remove('hidden');
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const btnInstall = document.getElementById('btnInstall');
-            if(btnInstall) {
-                btnInstall.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') { btnInstall.classList.add('hidden'); }
-                        deferredPrompt = null;
-                    }
-                });
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') { deferredPrompt = null; }
+            } else {
+                Swal.fire('Informasi Instalasi', 'Sistem mendeteksi bahwa aplikasi mungkin sudah terinstal di layar HP Anda. Jika belum, pastikan Anda menggunakan browser Chrome terbaru dengan koneksi HTTPS (Gembok Hijau).', 'info');
             }
-        });
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
+            });
+        }
 
         const API = "/api";
         let activeUser = null; let currentExam = null; let examTimerInterval = null;
@@ -717,7 +714,8 @@
             const selKelas = document.getElementById('filter-kelas-nilai').value; const selMapel = document.getElementById('filter-mapel-nilai').value;
             window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); });
             
-            document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => `<tr><td class="p-2 md:p-3 font-medium">${n.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${n.kelas||'-'}</span></td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black text-xs md:text-sm">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]")})' class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1 rounded text-[9px] md:text-[10px] font-bold">Detail</button></td></tr>`).join(''); 
+            // PERBAIKAN TABEL NILAI HP (Whitespace normal dan Min Width)
+            document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${n.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${n.kelas||'-'}</span></td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black text-xs md:text-sm">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]")})' class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1 rounded text-[9px] md:text-[10px] font-bold">Detail</button></td></tr>`).join(''); 
         }
         
         function lihatDetail(detailJson) { 
@@ -834,7 +832,9 @@
         
         async function loadUsers() { 
             const res = await fetch(API + '/admin/users'); const data = await res.json(); 
-            document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-2 md:p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[9px] md:text-[10px]">${u.role}</span></td><td class="text-right p-2 md:p-3"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 rounded shadow-sm transition mr-1"><i class="fa fa-edit"></i> Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fa fa-trash"></i></button></td></tr>`).join(''); 
+            
+            // PERBAIKAN TABEL USERS HP (Whitespace normal dan Min Width)
+            document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[9px] md:text-[10px]">${u.role}</span></td><td class="text-right p-2 md:p-3 min-w-[100px]"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 rounded shadow-sm transition mr-1"><i class="fa fa-edit"></i> Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fa fa-trash"></i></button></td></tr>`).join(''); 
         }
 
         function tambahUserManual() {
