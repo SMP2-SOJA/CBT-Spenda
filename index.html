@@ -79,13 +79,13 @@
                             <select id="filter-kelas" class="p-2 border rounded-lg text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
                         </div>
                     </div>
-                    <div class="overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap"><thead class="bg-slate-100 text-[9px] text-slate-500 uppercase"><tr><th class="p-3">Nama Siswa</th><th>Ujian</th><th>Status (Real-Time)</th><th>Skor</th><th>Jam Update</th></tr></thead><tbody id="monitor-table" class="divide-y bg-white"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap"><thead class="bg-slate-100 text-[9px] text-slate-500 uppercase"><tr><th class="p-3">Nama Siswa</th><th>Ujian</th><th>Status (Aksi)</th><th>Skor</th><th>Jam Update</th></tr></thead><tbody id="monitor-table" class="divide-y bg-white"></tbody></table></div>
                 </div>
                 </div>
                 
                 <div id="page-jadwal" class="page-content hidden space-y-4">
-                    <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold"><i class="fa fa-trash"></i> Bersihkan Semua Jadwal</button></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border"><div class="grid grid-cols-1 md:grid-cols-4 gap-3"><select id="j_mapel" class="p-3 border rounded-lg text-sm"></select><input type="date" id="j_tgl" class="p-3 border rounded-lg text-sm"><input type="number" id="j_durasi" placeholder="Durasi (Menit)" class="p-3 border rounded-lg text-sm"><button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-3 rounded-lg text-sm">BUAT JADWAL</button></div></div><div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+                    <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Jadwal</button></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border"><div class="grid grid-cols-1 md:grid-cols-4 gap-3"><select id="j_mapel" class="p-3 border rounded-lg text-sm"></select><input type="date" id="j_tgl" class="p-3 border rounded-lg text-sm"><input type="number" id="j_durasi" placeholder="Durasi (Menit)" class="p-3 border rounded-lg text-sm"><button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-3 rounded-lg text-sm hover:bg-blue-700">BUAT JADWAL</button></div></div><div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
                 </div>
                 
                 <div id="page-banksoal" class="page-content hidden space-y-4">
@@ -133,12 +133,15 @@
                         </div>
                     </div>
                     
-                    <div class="flex justify-between items-center mb-2 mt-8"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold"><i class="fa fa-trash"></i> Bersihkan Semua Soal</button></div>
+                    <div class="flex justify-between items-center mb-2 mt-8"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Soal</button></div>
                     <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-3">Kode</th><th>Tipe</th><th>Detail Pertanyaan, Kunci & Skor</th><th>Aksi</th></tr></thead><tbody id="banksoal-table" class="divide-y"></tbody></table></div>
                 </div>
 
                 <div id="page-nilai" class="page-content hidden space-y-4">
-                    <div class="flex justify-between items-center mb-2"><button onclick="exportExcel('nilai-table', 'Hasil_Ujian')" class="text-xs bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold"><i class="fa fa-download"></i> Download Excel</button><button onclick="clearResults()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold"><i class="fa fa-trash"></i> Bersihkan Semua Nilai</button></div>
+                    <div class="flex justify-between items-center mb-2">
+                        <button onclick="exportExcelDetail()" class="text-xs bg-emerald-600 text-white px-4 py-3 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel Lengkap</button>
+                        <button onclick="clearResults()" class="text-xs bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Nilai</button>
+                    </div>
                     <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap" id="nilai-table"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-3">Nama Siswa</th><th>Mapel</th><th>Benar</th><th>Salah</th><th>Nilai (100)</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
                 </div>
                 <div id="page-users" class="page-content hidden space-y-4">
@@ -164,15 +167,14 @@
         let activeUser = null; let currentExam = null; let examTimerInterval = null;
         let cbtQuestions = []; let cbtAnswers = []; let cbtCurrentIndex = 0; let curangCount = 0;
         let isExamActive = false; let allActivityData = [];
+        window.allResultsData = []; // Untuk kebutuhan cetak Excel Lengkap
 
         function getAuthParams() { return !activeUser ? "" : `?role=${activeUser.role}&mapel=${activeUser.mapel || ''}`; }
         function toggleAdminSidebar() { document.getElementById('admin-sidebar').classList.toggle('-translate-x-full'); document.getElementById('admin-overlay').classList.toggle('hidden'); }
         function toggleCbtNav() { document.getElementById('cbt-nav-panel').classList.toggle('translate-x-full'); document.getElementById('cbt-nav-overlay').classList.toggle('hidden'); }
 
-        // MENCEGAH SHORTCUT KEYBOARD
         document.addEventListener('keydown', function(e) { if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } });
 
-        // SISTEM DETEKSI KECURANGAN
         function deteksiKecurangan() {
             if (!isExamActive || !navigator.onLine) return;
             curangCount++; 
@@ -180,7 +182,7 @@
             
             if (curangCount >= 3) { 
                 isExamActive = false;
-                Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Anda terdeteksi keluar dari layar ujian lebih dari 3 kali. Ujian otomatis dikumpulkan!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); }); 
+                Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Anda terdeteksi keluar dari layar ujian lebih dari 3 kali. Ujian otomatis dikunci!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); }); 
             } else { 
                 Swal.fire('PERINGATAN KECURANGAN!', `Sistem mendeteksi Anda meminimalkan layar/membuka tab lain! DILARANG KERAS KELUAR DARI HALAMAN UJIAN! (Peringatan ${curangCount}/3)`, 'warning'); 
             }
@@ -248,10 +250,8 @@
                     else if(cbtQuestions[i].tipe === 'JODOH') { let h = (cbtQuestions[i].kunci||"").split(',').length; isAnswered = cbtAnswers[i].ans.split(',').length >= h; }
                     else { isAnswered = true; }
                 }
-
                 if(cbtAnswers[i].ragu) statusClass = "bg-yellow-400 text-yellow-900 border-yellow-500 shadow-inner"; 
                 else if(isAnswered) statusClass = "bg-blue-600 text-white border-blue-700 shadow-md"; 
-                
                 let activeRing = (i === cbtCurrentIndex) ? "ring-4 ring-blue-300 scale-105" : "";
                 html += `<button onclick="showCbtQuestion(${i}); if(window.innerWidth < 768) toggleCbtNav();" class="w-full aspect-square flex items-center justify-center rounded-lg font-black text-sm md:text-lg border-2 transition transform active:scale-95 ${statusClass} ${activeRing}">${i+1}</button>`;
             }
@@ -266,7 +266,6 @@
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
 
-            // MESIN KONVERTER OTOMATIS LINK GAMBAR DRIVE
             let imgUrl = q.gform_url;
             if(imgUrl && imgUrl.includes('drive.google.com')) {
                 let idMatch = imgUrl.match(/id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/);
@@ -288,30 +287,26 @@
                     let lines = (q.tanya||"").split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(l => l);
                     let premises = []; let mainTanya = [];
                     lines.forEach(l => { if (/^\d+[\.\)]\s?/.test(l)) { premises.push(l); } else { mainTanya.push(l); } });
-                    
                     divTanya.innerHTML = mainTanya.join('<br>'); 
                     
                     let totalPairs = q.kunci ? q.kunci.split(',').length : (premises.length || 4); 
                     let savedArr = savedAns ? savedAns.split(',') : [];
 
-                    htmlOpsi += `<p class="text-[10px] font-bold text-slate-500 mb-2 uppercase"><i class="fa fa-mouse-pointer"></i> Klik untuk memilih jawaban yang tepat:</p><div class="space-y-3">`;
-                    
+                    htmlOpsi += `<div class="bg-blue-50 p-4 rounded-xl border border-blue-200 mt-2 mb-4"><p class="text-xs font-bold text-blue-800 mb-3"><i class="fa fa-mouse-pointer"></i> PILIH PASANGAN JAWABAN YANG TEPAT:</p><div class="space-y-3">`;
                     for(let i=0; i<totalPairs; i++) {
                         let currentSaved = savedArr[i] ? savedArr[i].replace(/[0-9]/g, '') : ''; 
                         let labelText = premises[i] ? premises[i] : `Pertanyaan/Pasangan Nomor ${i+1}`;
-                        
-                        htmlOpsi += `<div class="flex flex-col md:flex-row items-start md:items-center justify-between p-3 border-2 border-slate-200 rounded-xl bg-white shadow-sm gap-2">
+                        htmlOpsi += `<div class="flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-white border border-blue-100 rounded-lg shadow-sm gap-2">
                             <span class="font-bold text-slate-700 text-sm md:w-1/2 leading-snug">${labelText}</span>
-                            <select class="jodoh-select p-3 border-2 border-blue-300 rounded-lg text-sm font-bold text-blue-800 bg-blue-50 outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-1/2 cursor-pointer" onchange="cbtSaveJodoh(${totalPairs})">
-                                <option value="">- Pilih Jawaban -</option>`;
+                            <select class="jodoh-select p-3 border-2 border-emerald-300 rounded-lg text-sm font-bold text-emerald-800 bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-1/2 cursor-pointer" onchange="cbtSaveJodoh(${totalPairs})">
+                                <option value="">- Silakan Pilih Jawaban -</option>`;
                         opsiArray.forEach((val, idx) => {
                             let huruf = abjad[idx]; let isSel = (currentSaved === huruf) ? "selected" : "";
-                            // DROPDOWN LANGSUNG MENAMPILKAN TEKS JAWABAN
                             htmlOpsi += `<option value="${huruf}" ${isSel}>${val}</option>`;
                         });
                         htmlOpsi += `</select></div>`;
                     }
-                    htmlOpsi += `</div>`;
+                    htmlOpsi += `</div></div>`;
                 }
                 else {
                     divTanya.innerHTML = q.tanya || "";
@@ -344,12 +339,8 @@
                         });
                         htmlOpsi += `</tbody></table></div>`;
                     }
-                    else if (q.tipe === 'ISIAN') {
-                        htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 rounded-xl text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`;
-                    }
-                    else if (q.tipe === 'ESAI') { 
-                        htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" class="w-full p-4 border-2 rounded-xl h-32 text-sm bg-white focus:border-blue-500 outline-none" placeholder="Uraikan jawaban Anda di sini...">${savedAns}</textarea>`; 
-                    }
+                    else if (q.tipe === 'ISIAN') { htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" value="${savedAns}" class="w-full p-4 border-2 rounded-xl text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`; }
+                    else if (q.tipe === 'ESAI') { htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" class="w-full p-4 border-2 rounded-xl h-32 text-sm bg-white focus:border-blue-500 outline-none" placeholder="Uraikan jawaban Anda di sini...">${savedAns}</textarea>`; }
                 }
                 divOpsi.innerHTML = htmlOpsi; 
             }
@@ -380,9 +371,7 @@
         }
 
         async function submitUjian(showConfirm = true, isForceCurang = false) {
-            let benar = 0; let salah = 0; let detail = [];
-            let isGformOnly = cbtQuestions.length > 0 && cbtQuestions[0].tipe === 'GFORM';
-            let nilaiAkhir = 0; let totalSkorMaksimal = 0; let totalSkorDiperoleh = 0;
+            let benar = 0; let salah = 0; let detail = []; let isGformOnly = cbtQuestions.length > 0 && cbtQuestions[0].tipe === 'GFORM'; let nilaiAkhir = 0; let totalSkorMaksimal = 0; let totalSkorDiperoleh = 0;
 
             if(!isGformOnly) {
                 cbtQuestions.forEach((q, index) => {
@@ -408,18 +397,14 @@
                 Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
                 try {
                     await fetch(API + '/siswa/submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(document.exitFullscreen) document.exitFullscreen(); localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`);
+                    if(document.exitFullscreen) document.exitFullscreen(); 
+                    if(!isForceCurang) { localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`); }
                     Swal.fire('Selesai!', isGformOnly ? 'Terkirim.' : `Nilai Anda: ${nilaiAkhir}`, 'success').then(() => location.reload());
                 } catch(e) { localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload)); document.getElementById('offline-pending-alert').classList.remove('hidden'); Swal.fire('Error Server', 'Disimpan di HP.', 'warning'); }
             };
 
             if (showConfirm && !isForceCurang) {
-                let kosong = cbtQuestions.filter((q, i) => { 
-                    let a = cbtAnswers[i].ans; 
-                    if(q.tipe === 'BS') return a === "" || a.indexOf('-') !== -1; 
-                    if(q.tipe === 'JODOH') { let h = (q.kunci||"").split(',').length; return a.split(',').length < h; }
-                    return a === ""; 
-                }).length;
+                let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS') return a === "" || a.indexOf('-') !== -1; if(q.tipe === 'JODOH') { let h = (q.kunci||"").split(',').length; return a.split(',').length < h; } return a === ""; }).length;
                 let text = isGformOnly ? "Pastikan sudah Submit G-Form!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Yakin?` : "Kirim sekarang?");
                 Swal.fire({ title: 'Kumpulkan Ujian?', html: text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya!' }).then((r) => { if(r.isConfirmed) sendLogic(); });
             } else sendLogic();
@@ -433,9 +418,7 @@
             const res = await fetch(API + '/admin/stats' + getAuthParams()); const data = await res.json(); 
             document.getElementById('stat-siswa').innerText = data.total_siswa; document.getElementById('stat-kerja').innerText = data.sedang_kerja; document.getElementById('stat-selesai').innerText = data.selesai; document.getElementById('stat-curang').innerText = data.curang; 
             
-            const resA = await fetch(API + '/admin/recent-activity' + getAuthParams()); 
-            allActivityData = await resA.json(); 
-            
+            const resA = await fetch(API + '/admin/recent-activity' + getAuthParams()); allActivityData = await resA.json(); 
             if(document.getElementById('filter-kelas').options.length === 1) {
                 let kelasSet = new Set(); let mapelSet = new Set();
                 allActivityData.forEach(a => { if(a.kelas && a.kelas !== '-') kelasSet.add(a.kelas); if(a.exam_name) mapelSet.add(a.exam_name); });
@@ -445,20 +428,39 @@
             renderActivityTable();
         }
 
+        // FUNGSI BUKA AKSES SISWA CURANG
+        async function resetSiswa(nama, mapel) {
+            Swal.fire({ title: 'Buka Akses Ujian?', text: `Akses ujian ${nama} akan direset agar bisa login kembali tanpa menghapus jawabannya.`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Buka Akses!' }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({title: 'Membuka akses...', didOpen: () => Swal.showLoading()});
+                    await fetch(API + '/admin/reset-siswa', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: nama, mapel: mapel}) });
+                    loadStats(); Swal.fire('Berhasil', 'Akses telah dibuka. Silakan suruh siswa login kembali.', 'success');
+                }
+            });
+        }
+
         function renderActivityTable() {
             const selKelas = document.getElementById('filter-kelas').value; const selMapel = document.getElementById('filter-mapel').value;
             let filtered = allActivityData.filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
             document.getElementById('monitor-table').innerHTML = filtered.map(a => {
-                let statusColor = 'bg-orange-100 text-orange-600'; let textColor = 'text-slate-800';
+                let statusColor = 'bg-orange-100 text-orange-600'; let textColor = 'text-slate-800'; let aksiBtn = '';
                 if(a.status === 'Selesai') statusColor = 'bg-emerald-100 text-emerald-600';
-                else if(a.status && a.status.includes('Curang')) { statusColor = 'bg-red-500 text-white font-black animate-pulse shadow-md'; textColor = 'text-red-600 font-bold'; }
-                return `<tr class="hover:bg-slate-50"><td class="p-3 font-bold ${textColor}">${a.student_name} <br><span class="text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td><td class="p-3 font-medium">${a.exam_name}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${statusColor}">${a.status}</span></td><td class="p-3 font-black">${a.score||'-'}</td><td class="p-3 text-[10px]">${a.last_seen}</td></tr>`;
+                else if(a.status && a.status.includes('Curang')) { 
+                    statusColor = 'bg-red-500 text-white font-black animate-pulse shadow-md'; textColor = 'text-red-600 font-bold'; 
+                    aksiBtn = `<button onclick="resetSiswa('${a.student_name}', '${a.exam_name}')" class="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[9px] shadow cursor-pointer"><i class="fa fa-unlock"></i> Buka Akses</button>`;
+                }
+                return `<tr class="hover:bg-slate-50"><td class="p-3 font-bold ${textColor}">${a.student_name} <br><span class="text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td><td class="p-3 font-medium">${a.exam_name}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${statusColor}">${a.status}</span> ${aksiBtn}</td><td class="p-3 font-black">${a.score||'-'}</td><td class="p-3 text-[10px]">${a.last_seen}</td></tr>`;
             }).join(''); 
         }
 
         async function loadMaster() { const resC = await fetch(API + '/admin/config'); const conf = await resC.json(); document.getElementById('app-name-display').innerText = conf.find(c => c.key === 'app_name').value; }
         
-        async function loadNilai() { const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); document.getElementById('nilai-body').innerHTML = data.map(n => `<tr><td class="p-3 font-medium">${n.student_name}</td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]")})' class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-[10px] font-bold">Detail</button></td></tr>`).join(''); }
+        async function loadNilai() { 
+            const res = await fetch(API + '/admin/results' + getAuthParams()); 
+            const data = await res.json(); 
+            window.allResultsData = data; // Simpan untuk Excel
+            document.getElementById('nilai-body').innerHTML = data.map(n => `<tr><td class="p-3 font-medium">${n.student_name}</td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]")})' class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-[10px] font-bold">Detail</button></td></tr>`).join(''); 
+        }
         
         function lihatDetail(detailJson) { 
             let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } 
@@ -470,13 +472,51 @@
             document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); 
         }
 
-        // FUNGSI BERSIHKAN DATA
-        async function clearResults() { Swal.fire({title: 'Hapus Nilai?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-results', {method:'DELETE'}); loadNilai(); loadStats(); Swal.fire('Bersih!', '', 'success'); } }); }
+        // FITUR EXCEL WARNA WARNI LENGKAP
+        function exportExcelDetail() {
+            if(!window.allResultsData || window.allResultsData.length === 0) return Swal.fire('Kosong', 'Belum ada data nilai', 'warning');
+            
+            let maxQ = 0;
+            window.allResultsData.forEach(r => { try { let details = JSON.parse(r.detail_jawaban); if(details.length > maxQ) maxQ = details.length; } catch(e){} });
+
+            let tableHtml = `<table border="1"><thead><tr>
+                <th style="background-color: #f8fafc; font-weight: bold;">Nama Siswa</th>
+                <th style="background-color: #f8fafc; font-weight: bold;">Mapel</th>
+                <th style="background-color: #f8fafc; font-weight: bold;">Benar</th>
+                <th style="background-color: #f8fafc; font-weight: bold;">Salah</th>
+                <th style="background-color: #f8fafc; font-weight: bold;">Nilai Akhir</th>`;
+            for(let i=1; i<=maxQ; i++) { tableHtml += `<th style="background-color: #f8fafc; font-weight: bold;">Soal No.${i}</th>`; }
+            tableHtml += `</tr></thead><tbody>`;
+
+            window.allResultsData.forEach(r => {
+                let details = []; try { details = JSON.parse(r.detail_jawaban); } catch(e){}
+                tableHtml += `<tr><td>${r.student_name}</td><td>${r.mapel}</td><td>${r.benar}</td><td>${r.salah}</td><td style="font-weight: bold;">${r.nilai}</td>`;
+                
+                let detMap = {}; details.forEach(d => { detMap[d.no] = d; });
+
+                for(let i=1; i<=maxQ; i++) {
+                    let d = detMap[i];
+                    if(d) {
+                        let color = d.status === 'Benar' ? '#2563eb' : (d.status === 'Salah' ? '#dc2626' : '#000000');
+                        let jawabText = d.jawab || '-';
+                        tableHtml += `<td style="color: ${color}; font-weight: bold;">${jawabText}</td>`;
+                    } else { tableHtml += `<td>-</td>`; }
+                }
+                tableHtml += `</tr>`;
+            });
+            tableHtml += `</tbody></table>`;
+
+            let blob = new Blob([tableHtml], {type: 'application/vnd.ms-excel'});
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Hasil_Ujian_Lengkap_Berwarna.xls';
+            a.click();
+        }
+
+        async function clearResults() { Swal.fire({title: 'Hapus Semua Nilai?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-results', {method:'DELETE'}); loadNilai(); loadStats(); Swal.fire('Bersih!', '', 'success'); } }); }
         async function clearSchedules() { Swal.fire({title: 'Hapus Semua Jadwal?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-schedules', {method:'DELETE'}); loadJadwal(); Swal.fire('Bersih!', '', 'success'); } }); }
         async function clearQuestions() { Swal.fire({title: 'Kosongkan Bank Soal?', text: 'Seluruh soal akan hilang!', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-questions', {method:'DELETE'}); loadBankSoal(); Swal.fire('Bersih!', '', 'success'); } }); }
         async function clearUsers() { Swal.fire({title: 'Hapus Semua Siswa?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-users', {method:'DELETE'}); loadUsers(); Swal.fire('Bersih!', '', 'success'); } }); }
-        
-        function exportExcel(id, fn) { let csv = []; let r = document.querySelectorAll(`#${id} tr`); for(let i=0; i<r.length; i++) { let row=[], c=r[i].querySelectorAll("td:not(:last-child), th:not(:last-child)"); for(let j=0; j<c.length; j++) row.push(c[j].innerText); csv.push(row.join(",")); } const a=document.createElement('a'); a.href=window.URL.createObjectURL(new Blob([csv.join('\n')], {type:'text/csv'})); a.download=fn+'.csv'; a.click(); }
 
         // --- SISTEM IMPORT & INPUT BANK SOAL ---
         async function importExcelSoal() { const file = document.getElementById('ex_file').files[0]; const exam_id = document.getElementById('ex_judul').value; if(!file || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Excel!', 'warning'); const fd = new FormData(); fd.append('file_excel', file); fd.append('exam_id', exam_id); Swal.fire({ title: 'Importing Excel...', didOpen: () => Swal.showLoading() }); try { const res = await fetch(API + '/admin/import-soal', { method: 'POST', body: fd }); const data = await res.json(); if(data.status === 'success') { Swal.fire('Berhasil', data.message, 'success'); loadBankSoal(); } else Swal.fire('Gagal', data.message, 'error'); } catch(e) { Swal.fire('Error', 'Gagal', 'error'); } }
@@ -504,7 +544,6 @@
         async function importUsers(inp) { if(!inp.files[0]) return; Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('file_excel', inp.files[0]); await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); Swal.fire('Selesai', 'Import berhasil', 'success'); loadUsers(); }
         async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-3 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[10px]">${u.role}</span></td></tr>`).join(''); }
 
-        // REAL-TIME AUTO REFRESH DASHBOARD SETIAP 3 DETIK
         setInterval(() => { if(activeUser && activeUser.role !== 'siswa' && !document.getElementById('page-dashboard').classList.contains('hidden')) loadStats(); }, 3000);
     </script>
 </body>

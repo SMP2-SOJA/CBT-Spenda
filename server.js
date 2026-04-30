@@ -29,7 +29,6 @@ app.get('/api/admin/available-exams', async (req, res) => { let { data } = await
 
 app.delete('/api/admin/delete-soal/:id', async (req, res) => { const { data: soal } = await supabase.from('questions').select('exam_id').eq('id', req.params.id).single(); if (soal) { await supabase.from('questions').delete().eq('id', req.params.id); const { count } = await supabase.from('questions').select('*', { count: 'exact', head: true }).eq('exam_id', soal.exam_id); if (count === 0) await supabase.from('schedules').delete().eq('mapel', soal.exam_id); res.json({status: "success"}); } else { res.json({status: "error"}); } });
 
-// FITUR BERSIHKAN DATA GLOBAL
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
 app.delete('/api/admin/clear-schedules', async (req, res) => { await supabase.from('schedules').delete().neq('id', 0); res.json({status: "success"}); });
 app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from('results').delete().neq('id', 0); await supabase.from('activity').delete().neq('id', 0); res.json({status: "success"}); });
@@ -52,6 +51,14 @@ app.get('/api/admin/recent-activity', async (req, res) => {
     let actsWithKelas = (acts || []).map(a => { let u = (users || []).find(x => x.name === a.student_name); return { ...a, kelas: u ? u.kelas : '-' }; });
     if (req.query.role === 'guru') actsWithKelas = actsWithKelas.filter(a => isAuthorizedMapel(req.query.mapel, a.exam_name)); 
     res.json(actsWithKelas); 
+});
+
+// FITUR RESET AKSES SISWA YANG TERKUNCI (Hapus Hasil & Aktivitas Terakhir agar bisa masuk lagi)
+app.post('/api/admin/reset-siswa', async (req, res) => {
+    const { student_name, mapel } = req.body;
+    await supabase.from('results').delete().eq('student_name', student_name).eq('mapel', mapel);
+    await supabase.from('activity').delete().eq('student_name', student_name).eq('exam_name', mapel);
+    res.json({status: "success"});
 });
 
 app.get('/api/admin/users', async (req, res) => { const { data } = await supabase.from('users').select('*').neq('role', 'admin').neq('role', 'Admin'); res.json(data || []); });
