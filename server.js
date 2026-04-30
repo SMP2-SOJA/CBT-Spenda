@@ -16,9 +16,12 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 const upload = multer({ dest: '/tmp' });
 
+// PERBAIKAN FILTER: Dibuat sangat luwes untuk mendeteksi hak akses Guru Mapel
 function isAuthorizedMapel(reqMapelStr, examName) {
-    if (!reqMapelStr) return false;
-    return reqMapelStr.split(',').map(m => m.trim().toUpperCase()).includes(examName.trim().toUpperCase());
+    if (!reqMapelStr || reqMapelStr.trim() === '') return true; // Jika mapel di excel kosong, Guru bisa lihat semua
+    if (!examName) return false;
+    const allowed = reqMapelStr.split(',').map(m => m.trim().toLowerCase());
+    return allowed.includes(examName.trim().toLowerCase());
 }
 
 app.post('/api/login', async (req, res) => { const { username, password } = req.body; const { data } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single(); if (data) res.json({ status: "success", user: data }); else res.status(401).json({ status: "error", message: "Username/Password Salah!" }); });
@@ -53,11 +56,11 @@ app.get('/api/admin/recent-activity', async (req, res) => {
     res.json(actsWithKelas); 
 });
 
-// FITUR RESET AKSES SISWA YANG TERKUNCI (Hapus Hasil & Aktivitas Terakhir agar bisa masuk lagi)
+// FITUR GURU UNTUK BUKA BLOKIR SISWA
 app.post('/api/admin/reset-siswa', async (req, res) => {
     const { student_name, mapel } = req.body;
     await supabase.from('results').delete().eq('student_name', student_name).eq('mapel', mapel);
-    await supabase.from('activity').delete().eq('student_name', student_name).eq('exam_name', mapel);
+    await supabase.from('activity').update({ status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }).eq('student_name', student_name).eq('exam_name', mapel);
     res.json({status: "success"});
 });
 
@@ -65,9 +68,30 @@ app.get('/api/admin/users', async (req, res) => { const { data } = await supabas
 app.post('/api/admin/import-users', upload.single('file_excel'), async (req, res) => { try { const workbook = XLSX.readFile(req.file.path); const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = excelData.map(row => ({ name: row.Nama, username: row.Username, password: row.Password, role: row.Role || 'siswa', kelas: row.Kelas, mapel: row.Mapel || '' })); if(insertData.length > 0) await supabase.from('users').insert(insertData); res.json({ status: "success" }); } catch(e) { res.status(500).json({status: "error"}); } });
 app.get('/api/admin/results', async (req, res) => { let { data } = await supabase.from('results').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(r => isAuthorizedMapel(req.query.mapel, r.mapel)); res.json(data || []); });
 
-app.post('/api/siswa/cek-pin', async (req, res) => { const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).eq('status', 'Aktif').single(); if(row) { await supabase.from('activity').insert([{ student_name: req.body.student_name, exam_name: row.mapel, status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }]); res.json({status: "success", exam: row}); } else { res.status(404).json({status: "error"}); } });
+// TEMBOK PENOLAKAN SAAT SISWA MEMASUKKAN PIN JIKA TERKUNCI
+app.post('/api/siswa/cek-pin', async (req, res) => { 
+    const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).eq('status', 'Aktif').single(); 
+    if(row) { 
+        const { data: existingActs } = await supabase.from('activity').select('*').eq('student_name', req.body.student_name).eq('exam_name', row.mapel);
+        if (existingActs && existingActs.length > 0) {
+            const act = existingActs[0];
+            if (act.status && act.status.includes('Terkunci')) {
+                return res.status(403).json({status: "error", message: "Akses Terkunci! Laporkan ke Guru Mapel untuk dibuka kembali."});
+            } else if (act.status === 'Selesai') {
+                return res.status(403).json({status: "error", message: "Anda sudah menyelesaikan ujian ini."});
+            }
+            await supabase.from('activity').update({ status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }).eq('id', act.id);
+        } else {
+            await supabase.from('activity').insert([{ student_name: req.body.student_name, exam_name: row.mapel, status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }]); 
+        }
+        res.json({status: "success", exam: row}); 
+    } else { 
+        res.status(404).json({status: "error", message: "PIN Salah atau Ujian belum aktif!"}); 
+    } 
+});
+
 app.post('/api/siswa/get-soal', async (req, res) => { const { data } = await supabase.from('questions').select('id, tipe, tanya, opsi_json, kunci, media_path, gform_url, skor').eq('exam_id', req.body.exam_id); res.json({status: "success", questions: data || []}); });
-app.post('/api/siswa/submit', async (req, res) => { await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: new Date().toLocaleDateString('id-ID') }]); await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel).eq('status', 'Mengerjakan'); res.json({status: "success"}); });
+app.post('/api/siswa/submit', async (req, res) => { await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: new Date().toLocaleDateString('id-ID') }]); await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); res.json({status: "success"}); });
 
 app.post('/api/siswa/flag-curang', async (req, res) => { 
     const { student_name, mapel, count } = req.body;

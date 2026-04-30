@@ -201,7 +201,15 @@
                 if (data.status === "success") {
                     activeUser = data.user; Swal.close(); document.getElementById('view-login').classList.add('hidden');
                     if (activeUser.role.toLowerCase() === 'siswa') { document.getElementById('view-siswa-token').classList.remove('hidden'); document.getElementById('nama-siswa-welcome').innerText = activeUser.name; checkPendingSubmit(false); } 
-                    else { document.getElementById('view-admin').classList.remove('hidden'); if (activeUser.role.toLowerCase() === 'guru') { document.getElementById('menu-users').classList.add('hidden'); document.getElementById('role-badge').classList.remove('hidden'); document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel}`; } loadMaster(); showPage('dashboard'); }
+                    else { 
+                        document.getElementById('view-admin').classList.remove('hidden'); 
+                        if (activeUser.role.toLowerCase() === 'guru') { 
+                            document.getElementById('menu-users').classList.add('hidden'); 
+                            document.getElementById('role-badge').classList.remove('hidden'); 
+                            document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`; 
+                        } 
+                        loadMaster(); showPage('dashboard'); 
+                    }
                 } else Swal.fire('Gagal', data.message, 'error');
             } catch (e) { Swal.fire('Error', 'Server mati.', 'error'); }
         }
@@ -223,7 +231,7 @@
                     
                     cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '', ragu: false })); cbtCurrentIndex = 0;
                     loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; Swal.close();
-                } else Swal.fire('Gagal', data.message, 'error');
+                } else Swal.fire('Gagal', data.message, 'error'); // MENAMPILKAN PESAN DITOLAK JIKA TERKUNCI
             } catch(e) { Swal.fire('Error', 'Terputus', 'error'); }
         }
 
@@ -334,7 +342,6 @@
             }
         }
 
-        // UPDATE MESIN PENILAI (SKOR PARSIAL & KEYWORD MATCHING)
         async function submitUjian(showConfirm = true, isForceCurang = false) {
             let benar = 0; let salah = 0; let detail = []; let isGformOnly = cbtQuestions.length > 0 && cbtQuestions[0].tipe === 'GFORM'; let nilaiAkhir = 0; let totalSkorMaksimal = 0; let totalSkorDiperoleh = 0;
 
