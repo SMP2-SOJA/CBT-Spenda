@@ -34,6 +34,18 @@ app.delete('/api/admin/delete-soal/:id', async (req, res) => { const { data: soa
 
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
 app.delete('/api/admin/clear-schedules', async (req, res) => { await supabase.from('schedules').delete().neq('id', 0); res.json({status: "success"}); });
+
+// 🟢 ENDPOINT BARU: Hapus dan Edit Spesifik 1 Jadwal Tanpa Ganggu Soal
+app.delete('/api/admin/delete-schedule/:id', async (req, res) => { 
+    await supabase.from('schedules').delete().eq('id', req.params.id); 
+    res.json({status: "success"}); 
+});
+app.put('/api/admin/update-schedule', async (req, res) => { 
+    const { id, mapel, tanggal, durasi, status } = req.body; 
+    await supabase.from('schedules').update({ mapel, tanggal, durasi, status }).eq('id', id); 
+    res.json({status: "success"}); 
+});
+
 app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from('results').delete().neq('id', 0); await supabase.from('activity').delete().neq('id', 0); res.json({status: "success"}); });
 app.delete('/api/admin/clear-users', async (req, res) => { await supabase.from('users').delete().neq('role', 'admin').neq('role', 'Admin'); res.json({status: "success"}); });
 app.delete('/api/admin/clear-monitoring', async (req, res) => { await supabase.from('activity').delete().neq('id', 0); res.json({status: "success"}); });
@@ -51,7 +63,6 @@ app.post('/api/admin/add-soal-bulk', async (req, res) => { const { questions } =
 
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => { try { const exam_id = req.body.exam_id; if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"}); const workbook = XLSX.readFile(req.file.path); const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = data.map(row => { let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String); return { exam_id: exam_id, tipe: (row.Tipe || 'PG').toUpperCase(), tanya: row.Pertanyaan || '', opsi_json: opsi.join('|||'), kunci: row.Kunci ? String(row.Kunci).trim() : '', gform_url: row.Link_Gambar || '', skor: row.Skor || 1 }; }); if(insertData.length > 0) { const { error } = await supabase.from('questions').insert(insertData); if(error) throw error; } res.json({ status: "success", message: `${insertData.length} Soal berhasil di-import!` }); } catch(e) { res.status(500).json({status: "error", message: "Gagal memproses Excel. Pastikan kolom Skor sudah ada di Supabase."}); } });
 
-// PERBAIKAN MESIN EKSTRAK WORD (Pengecualian tag sup, sub, b, i)
 app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) => { 
     try { 
         const exam_id = req.body.exam_id; 
@@ -65,7 +76,6 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
         for(let i = 0; i < rows.length; i++) { 
             const cells = rows[i].match(/<td[^>]*>([\s\S]*?)<\/td>/gi); 
             if (cells && cells.length >= 5) { 
-                // Regex baru: Menghapus semua tag HTML KECUALI superscript, subscript, bold, italic, underline
                 const textCells = cells.map(c => c.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<\/?(?!(?:sup|sub|b|i|u|strong|em)\b)[^>]+>/gi, '').trim()); 
                 
                 let jenisAngka = textCells[1] ? textCells[1].replace(/[^0-9]/g, '') : ""; 
@@ -131,8 +141,11 @@ app.get('/api/admin/results', async (req, res) => {
 });
 
 app.post('/api/siswa/cek-pin', async (req, res) => { 
-    const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).eq('status', 'Aktif').single(); 
+    const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).single(); 
     if(row) { 
+        // CEK JIKA STATUS DITUTUP MANUAL
+        if (row.status !== 'Aktif') return res.status(403).json({status: "error", message: "Sesi Ujian sudah ditutup oleh Guru!"});
+
         let scheduleDate = row.tanggal; let scheduleTime = null;
         if(row.tanggal && row.tanggal.includes('|')) { let parts = row.tanggal.split('|'); scheduleDate = parts[0]; scheduleTime = parts[1]; }
         if (scheduleDate && scheduleDate !== req.body.client_date) return res.status(403).json({status: "error", message: "Ujian tidak dijadwalkan pada hari ini!"});
@@ -149,7 +162,7 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
         }
         res.json({status: "success", exam: row}); 
     } else { 
-        res.status(404).json({status: "error", message: "PIN Salah atau Ujian belum aktif!"}); 
+        res.status(404).json({status: "error", message: "PIN Salah atau Ujian tidak ditemukan!"}); 
     } 
 });
 
