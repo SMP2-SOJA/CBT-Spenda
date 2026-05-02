@@ -129,6 +129,8 @@
                 <div id="page-jadwal" class="page-content hidden space-y-4">
                     <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Jadwal</button></div>
                     <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border"><div class="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-3"><select id="j_mapel" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm"></select><input type="date" id="j_tgl" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Tanggal Mulai"><input type="time" id="j_jam" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Jam Mulai"><input type="number" id="j_durasi" placeholder="Durasi (Mnt)" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm"><button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 md:py-3 rounded-lg text-xs md:text-sm hover:bg-blue-700">BUAT JADWAL</button></div></div>
+                    
+                    <!-- DAFTAR KARTU JADWAL DENGAN TOMBOL EDIT & HAPUS -->
                     <div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"></div>
                 </div>
                 
@@ -178,9 +180,7 @@
                     </div>
                     
                     <div class="flex justify-between items-center mb-2 mt-6 md:mt-8"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Soal</button></div>
-                    <div id="banksoal-container" class="space-y-2">
-                        <!-- Dropdown Accordion Soal Masuk Sini -->
-                    </div>
+                    <div id="banksoal-container" class="space-y-2"></div>
                 </div>
 
                 <div id="page-nilai" class="page-content hidden space-y-3 md:space-y-4">
@@ -206,7 +206,7 @@
                         </div>
                         <button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200 transition"><i class="fa fa-trash"></i> Bersihkan User</button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3 min-w-[150px]">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
                 </div>
             </div>
         </main>
@@ -254,6 +254,8 @@
         let activeUser = null; let currentExam = null; let examTimerInterval = null;
         let cbtQuestions = []; let cbtAnswers = []; let cbtCurrentIndex = 0; let curangCount = 0;
         let isExamActive = false; let allActivityData = [];
+        
+        // PENGEMBALIAN VARIABEL PENYIMPAN JADWAL
         window.allResultsData = []; window.filteredResultsData = []; window.allSchedulesData = [];
 
         function getAuthParams() { return !activeUser ? "" : `?role=${encodeURIComponent(activeUser.role)}&mapel=${encodeURIComponent(activeUser.mapel || '')}`; }
@@ -772,9 +774,9 @@
         async function clearQuestions() { Swal.fire({title: 'Kosongkan Bank Soal?', text: 'Seluruh soal akan hilang!', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-questions', {method:'DELETE'}); loadBankSoal(); Swal.fire('Bersih!', '', 'success'); } }); }
         async function clearUsers() { Swal.fire({title: 'Hapus Semua Siswa?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-users', {method:'DELETE'}); loadUsers(); Swal.fire('Bersih!', '', 'success'); } }); }
 
-        // FUNGSI BARU: HAPUS DAN EDIT JADWAL SPESIFIK
+        // PENGEMBALIAN FUNGSI EDIT DAN HAPUS JADWAL
         async function hapusJadwal(id) { 
-            Swal.fire({title: 'Hapus Jadwal?', text: 'Soal tidak akan terhapus, hanya jadwalnya saja.', icon: 'warning', showCancelButton: true}).then(async (r) => { 
+            Swal.fire({title: 'Hapus Jadwal?', text: 'Soal tidak terhapus, hanya jadwal saja.', icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
                     await fetch(API+'/admin/delete-schedule/'+id, {method:'DELETE'}); 
                     loadJadwal(); 
@@ -801,13 +803,7 @@
                 </div>`,
                 showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#2563eb',
                 preConfirm: () => { 
-                    return { 
-                        id: j.id, 
-                        mapel: document.getElementById('e_j_mapel').value,
-                        tanggal: document.getElementById('e_j_tgl').value + '|' + document.getElementById('e_j_jam').value,
-                        durasi: document.getElementById('e_j_durasi').value,
-                        status: document.getElementById('e_j_status').value
-                    } 
+                    return { id: j.id, mapel: document.getElementById('e_j_mapel').value, tanggal: document.getElementById('e_j_tgl').value + '|' + document.getElementById('e_j_jam').value, durasi: document.getElementById('e_j_durasi').value, status: document.getElementById('e_j_status').value } 
                 }
             }).then(async (res) => {
                 if(res.isConfirmed) { 
@@ -819,9 +815,35 @@
             });
         }
 
+        // PENYEMPURNAAN RADAR ERROR SAAT BUAT JADWAL
+        async function saveJadwal() { 
+            const mapel = document.getElementById('j_mapel').value;
+            const tanggal = document.getElementById('j_tgl').value;
+            const jam = document.getElementById('j_jam').value;
+            const durasi = document.getElementById('j_durasi').value;
+            
+            if(!mapel || !tanggal || !jam || !durasi) return Swal.fire('Oops','Semua kolom jadwal wajib diisi!','warning'); 
+            
+            const tglJamDB = `${tanggal}|${jam}`;
+            Swal.fire({ title: 'Menyimpan Jadwal...', didOpen: () => Swal.showLoading() });
+            try {
+                const response = await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: tglJamDB, durasi }) }); 
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    Swal.fire('Sukses!', 'Jadwal ujian berhasil dibuat.', 'success'); 
+                    loadJadwal(); 
+                } else {
+                    Swal.fire('Gagal Menyimpan!', data.message || 'Pastikan kolom "status" sudah ditambahkan di tabel Supabase Anda.', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error Server', 'Terjadi kesalahan sistem, silakan periksa database Supabase Anda.', 'error');
+            }
+        }
+        
         async function loadJadwal() { 
             const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); 
-            window.allSchedulesData = data; // Simpan di memori untuk fungsi edit
+            window.allSchedulesData = data; 
             
             document.getElementById('list-jadwal').innerHTML = data.map(j => {
                 let tglJamArr = j.tanggal ? j.tanggal.split('|') : [];
@@ -893,6 +915,8 @@
             document.getElementById('banksoal-container').innerHTML = html;
         }
 
+        async function hapusSoal(id) { Swal.fire({title: 'Hapus Soal?', icon:'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/delete-soal/'+id, {method:'DELETE'}); loadBankSoal(); loadJadwal(); } }); }
+        
         async function importUsers(inp) { if(!inp.files[0]) return; Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('file_excel', inp.files[0]); await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); Swal.fire('Selesai', 'Import berhasil', 'success'); loadUsers(); }
         
         async function loadUsers() { 

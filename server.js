@@ -35,14 +35,16 @@ app.delete('/api/admin/delete-soal/:id', async (req, res) => { const { data: soa
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
 app.delete('/api/admin/clear-schedules', async (req, res) => { await supabase.from('schedules').delete().neq('id', 0); res.json({status: "success"}); });
 
-// 🟢 ENDPOINT BARU: Hapus dan Edit Spesifik 1 Jadwal Tanpa Ganggu Soal
+// MENGEMBALIKAN ENDPOINT EDIT DAN HAPUS SPESIFIK JADWAL
 app.delete('/api/admin/delete-schedule/:id', async (req, res) => { 
-    await supabase.from('schedules').delete().eq('id', req.params.id); 
+    const { error } = await supabase.from('schedules').delete().eq('id', req.params.id); 
+    if (error) return res.status(500).json({status: "error", message: error.message});
     res.json({status: "success"}); 
 });
 app.put('/api/admin/update-schedule', async (req, res) => { 
     const { id, mapel, tanggal, durasi, status } = req.body; 
-    await supabase.from('schedules').update({ mapel, tanggal, durasi, status }).eq('id', id); 
+    const { error } = await supabase.from('schedules').update({ mapel, tanggal, durasi, status }).eq('id', id); 
+    if (error) return res.status(500).json({status: "error", message: error.message});
     res.json({status: "success"}); 
 });
 
@@ -109,7 +111,14 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
     } 
 });
 
-app.post('/api/admin/add-schedule', async (req, res) => { const pin = Math.floor(100000 + Math.random() * 900000).toString(); await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); res.json({ status: "success", pin }); });
+// RADAR ERROR UNTUK PENYIMPANAN JADWAL
+app.post('/api/admin/add-schedule', async (req, res) => { 
+    const pin = Math.floor(100000 + Math.random() * 900000).toString(); 
+    const { error } = await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); 
+    if (error) return res.status(500).json({ status: "error", message: `Supabase Error: ${error.message} (Cek apakah kolom 'status' sudah ada di tabel schedules)` });
+    res.json({ status: "success", pin }); 
+});
+
 app.get('/api/admin/schedules', async (req, res) => { let { data } = await supabase.from('schedules').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(s => isAuthorizedMapel(req.query.mapel, s.mapel)); res.json(data || []); });
 
 app.get('/api/admin/stats', async (req, res) => { const stats = { total_siswa: 0, sedang_kerja: 0, selesai: 0, curang: 0 }; const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).ilike('role', 'siswa'); stats.total_siswa = count || 0; let { data: acts } = await supabase.from('activity').select('*'); if (req.query.role === 'guru') acts = (acts || []).filter(a => isAuthorizedMapel(req.query.mapel, a.exam_name)); (acts || []).forEach(a => { if (a.status === 'Mengerjakan') stats.sedang_kerja++; else if (a.status === 'Selesai') stats.selesai++; else if (a.status && a.status.includes('Curang')) stats.curang++; }); res.json(stats); });
@@ -143,9 +152,8 @@ app.get('/api/admin/results', async (req, res) => {
 app.post('/api/siswa/cek-pin', async (req, res) => { 
     const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).single(); 
     if(row) { 
-        // CEK JIKA STATUS DITUTUP MANUAL
         if (row.status !== 'Aktif') return res.status(403).json({status: "error", message: "Sesi Ujian sudah ditutup oleh Guru!"});
-
+        
         let scheduleDate = row.tanggal; let scheduleTime = null;
         if(row.tanggal && row.tanggal.includes('|')) { let parts = row.tanggal.split('|'); scheduleDate = parts[0]; scheduleTime = parts[1]; }
         if (scheduleDate && scheduleDate !== req.body.client_date) return res.status(403).json({status: "error", message: "Ujian tidak dijadwalkan pada hari ini!"});
