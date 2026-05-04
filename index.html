@@ -6,10 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CBT Online - SMPN 2 SOYO JAYA</title>
 
+    <!-- LIBRARY & CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- PENGGANTI SERVER.JS (LANGSUNG EKSEKUSI DI BROWSER) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+
     <style> 
         body { font-family: 'Inter', sans-serif; } 
         .hidden { display: none !important; } 
@@ -94,7 +101,6 @@
         </header>
 
         <div class="flex-1 flex overflow-hidden max-w-7xl mx-auto w-full relative">
-            <!-- Kotak Kiri: Area Soal -->
             <div class="flex-1 bg-white md:rounded-xl md:my-4 md:ml-4 shadow-sm border flex flex-col overflow-hidden relative z-10">
                 <div id="offline-pending-alert" class="hidden bg-orange-100 border-b border-orange-200 p-2 text-center flex justify-between items-center px-4">
                     <p class="text-xs text-orange-800 font-bold"><i class="fa fa-wifi text-red-500"></i> Offline! Jawaban tertunda.</p>
@@ -118,7 +124,6 @@
                 </div>
             </div>
 
-            <!-- Kotak Kanan: Navigasi Nomor -->
             <div id="cbt-nav-overlay" onclick="toggleCbtNav()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
             <div id="cbt-nav-panel" class="fixed inset-y-0 right-0 w-56 md:w-64 bg-white shadow-2xl transform translate-x-full md:translate-x-0 md:relative md:flex flex-col h-full z-40 md:my-4 md:mr-4 md:rounded-xl md:border drawer-transition">
                 <div class="p-3 md:p-4 border-b bg-slate-50 flex justify-between items-center">
@@ -328,9 +333,13 @@
         </div>
     </div>
 
+    <!-- ================= SCRIPT UTAMA (SUPABASE CLIENT-SIDE) ================= -->
     <script>
-        // ================= KODE APLIKASI UTAMA =================
-        const API = "/api";
+        // KONEKSI SUPABASE LANGSUNG DARI BROWSER (MENGGANTIKAN SERVER.JS)
+        const supabaseUrl = 'https://uftiednbhdmexxlabhad.supabase.co';
+        const supabaseKey = 'sb_publishable_TAEkdHBM3n5nY-I4bm-zaA_C5y9sEwH';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
         let activeUser = null; 
         let currentExam = null; 
         let examTimerInterval = null;
@@ -353,8 +362,12 @@
             return text;
         }
 
-        function getAuthParams() { 
-            return !activeUser ? "" : `?role=${encodeURIComponent(activeUser.role)}&mapel=${encodeURIComponent(activeUser.mapel || '')}`; 
+        function isAuthorizedMapel(reqMapelStr, examName) {
+            if (!reqMapelStr || reqMapelStr.trim() === '') return true; 
+            if (!examName) return false;
+            const allowed = reqMapelStr.split(',').map(m => m.trim().toLowerCase());
+            const exName = examName.trim().toLowerCase();
+            return allowed.some(m => exName.includes(m) || m.includes(exName));
         }
 
         function toggleAdminSidebar() { 
@@ -371,15 +384,13 @@
             const passInput = document.getElementById(inputId); 
             const icon = document.getElementById(iconId);
             if(passInput.type === 'password') { 
-                passInput.type = 'text'; 
-                icon.classList.replace('fa-eye-slash', 'fa-eye'); 
+                passInput.type = 'text'; icon.classList.replace('fa-eye-slash', 'fa-eye'); 
             } else { 
-                passInput.type = 'password'; 
-                icon.classList.replace('fa-eye', 'fa-eye-slash'); 
+                passInput.type = 'password'; icon.classList.replace('fa-eye', 'fa-eye-slash'); 
             }
         }
 
-        // ================= FITUR KEAMANAN & ANTI-CURANG =================
+        // ================= FITUR KEAMANAN =================
         document.addEventListener('keyup', (e) => {
             if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
                 navigator.clipboard.writeText('');
@@ -388,30 +399,25 @@
         });
 
         document.addEventListener('keydown', function(e) { 
-            if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { 
-                e.preventDefault(); 
-            } 
+            if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } 
         });
 
-        function deteksiKecurangan() {
+        async function deteksiKecurangan() {
             if (!isExamActive || !navigator.onLine) return;
             curangCount++; 
-            fetch(API + '/siswa/flag-curang', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, count: curangCount}) 
-            });
+            
+            let finalStatus = curangCount >= 3 ? 'Curang (Terkunci)' : `Curang (${curangCount}x Peringatan)`;
+            await supabase.from('activity').update({ status: finalStatus, last_seen: new Date().toLocaleTimeString('id-ID') })
+                          .eq('student_name', activeUser.name)
+                          .eq('exam_name', currentExam.mapel);
             
             if (curangCount >= 3) { 
                 isExamActive = false;
                 Swal.fire({
                     title: 'UJIAN DIBATALKAN!', 
                     text: 'Anda terdeteksi keluar dari layar ujian lebih dari 3 kali. Ujian otomatis dikunci!', 
-                    icon: 'error', 
-                    allowOutsideClick: false
-                }).then(() => { 
-                    submitUjian(false, true); 
-                }); 
+                    icon: 'error', allowOutsideClick: false
+                }).then(() => { submitUjian(false, true); }); 
             } else { 
                 Swal.fire('PERINGATAN KECURANGAN!', `Sistem mendeteksi Anda meminimalkan layar/membuka tab lain! DILARANG KERAS KELUAR DARI HALAMAN UJIAN! (Peringatan ${curangCount}/3)`, 'warning'); 
             }
@@ -419,6 +425,7 @@
 
         document.addEventListener("visibilitychange", () => { if (document.visibilityState === 'hidden') deteksiKecurangan(); });
         window.addEventListener("blur", () => { deteksiKecurangan(); });
+        
         window.addEventListener('offline', () => { 
             const el = document.getElementById('network-status'); 
             if(el) { el.innerText = 'OFFLINE'; el.classList.replace('bg-emerald-500', 'bg-red-500'); } 
@@ -439,15 +446,10 @@
             Swal.fire({ title: 'Otentikasi...', didOpen: () => Swal.showLoading() });
             
             try {
-                const res = await fetch(API + '/login', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({username: user, password: pass}) 
-                }); 
-                const data = await res.json();
+                const { data, error } = await supabase.from('users').select('*').eq('username', user).eq('password', pass).single();
                 
-                if (data.status === "success") {
-                    activeUser = data.user; 
+                if (data && !error) {
+                    activeUser = data; 
                     Swal.close(); 
                     document.getElementById('view-login').classList.add('hidden');
                     
@@ -466,15 +468,13 @@
                         } 
                         loadMaster(); 
                         showPage('dashboard'); 
-                        
-                        // Isi soal pertama kali di Bank Soal
                         tambahBarisSoal();
                     }
                 } else {
-                    Swal.fire('Gagal', data.message, 'error');
+                    Swal.fire('Gagal', 'Username/Password Salah!', 'error');
                 }
             } catch (e) { 
-                Swal.fire('Error', 'Server mati atau tidak terkoneksi.', 'error'); 
+                Swal.fire('Error', 'Gagal terkoneksi ke Database.', 'error'); 
             }
         }
 
@@ -492,7 +492,7 @@
             } 
         }
 
-        // ================= SISTEM UJIAN =================
+        // ================= SISTEM UJIAN (SISWA) =================
         async function mulaiUjian() {
             const pin = document.getElementById('input-pin').value; 
             if(!pin) return Swal.fire('Error', 'Silakan masukkan PIN!', 'warning'); 
@@ -502,23 +502,63 @@
                 const clientDate = new Date().toLocaleDateString('en-CA'); 
                 const clientTime = new Date().toTimeString().substring(0,5); 
                 
-                const res = await fetch(API + '/siswa/cek-pin', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({pin: pin, student_name: activeUser.name, client_date: clientDate, client_time: clientTime}) 
-                }); 
-                const data = await res.json();
+                const { data: row, error } = await supabase.from('schedules').select('*').eq('pin', pin).single();
                 
-                if(data.status === "success") {
-                    currentExam = data.exam; 
-                    const resSoal = await fetch(API + '/siswa/get-soal', { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({exam_id: currentExam.mapel}) 
-                    }); 
-                    const dataSoal = await resSoal.json();
+                if(row && !error) {
+                    if (row.status !== 'Aktif') {
+                        return Swal.fire('Ditolak', 'Sesi Ujian sudah ditutup oleh Guru!', 'error');
+                    }
                     
-                    if(!dataSoal.questions || dataSoal.questions.length === 0) {
+                    let scheduleDate = row.tanggal; 
+                    let scheduleTime = null;
+                    if(row.tanggal && row.tanggal.includes('|')) { 
+                        let parts = row.tanggal.split('|'); 
+                        scheduleDate = parts[0]; 
+                        scheduleTime = parts[1]; 
+                    }
+                    
+                    if (scheduleDate && scheduleDate !== clientDate) {
+                        return Swal.fire('Ditolak', 'Ujian tidak dijadwalkan pada hari ini!', 'error');
+                    }
+                    
+                    const { data: existingActs } = await supabase.from('activity').select('*').eq('student_name', activeUser.name).eq('exam_name', row.mapel);
+                    let isBypassed = existingActs && existingActs.length > 0 && existingActs[0].status === 'Mengerjakan';
+
+                    if (scheduleTime) {
+                        if (clientTime < scheduleTime) {
+                            return Swal.fire('Ditolak', `Ujian belum dimulai! (Jadwal: ${scheduleTime})`, 'error');
+                        }
+                        
+                        // VALIDASI AUTO-LOCK WAKTU HABIS
+                        if (!isBypassed) {
+                            let [sh, sm] = scheduleTime.split(':').map(Number);
+                            let durasi = parseInt(row.durasi) || 0;
+                            let endMins = sh * 60 + sm + durasi;
+                            let endH = Math.floor(endMins / 60);
+                            let endM = endMins % 60;
+                            let endStr = String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
+
+                            if (clientTime > endStr) {
+                                return Swal.fire('Waktu Habis', `Waktu ujian telah berakhir pada ${endStr}! Hubungi Guru Mapel jika Anda ingin izin mengikuti susulan.`, 'error');
+                            }
+                        }
+                    }
+
+                    if (existingActs && existingActs.length > 0) {
+                        const act = existingActs[0];
+                        if (act.status && act.status.includes('Terkunci')) return Swal.fire('Error', 'Akses Terkunci! Laporkan ke Guru Mapel untuk dibuka kembali.', 'error');
+                        else if (act.status === 'Selesai') return Swal.fire('Error', 'Anda sudah menyelesaikan ujian ini.', 'error');
+                        
+                        await supabase.from('activity').update({ status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }).eq('id', act.id);
+                    } else {
+                        await supabase.from('activity').insert([{ student_name: activeUser.name, exam_name: row.mapel, status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }]);
+                    }
+                    
+                    // AMBIL SOAL
+                    currentExam = row;
+                    const { data: dataSoal } = await supabase.from('questions').select('*').eq('exam_id', currentExam.mapel).order('id', {ascending: true});
+                    
+                    if(!dataSoal || dataSoal.length === 0) {
                         return Swal.fire('Oops', 'Soal tidak ditemukan untuk paket ini!', 'error');
                     }
                     
@@ -531,7 +571,7 @@
                         document.documentElement.requestFullscreen().catch(e => console.log(e));
                     }
                     
-                    cbtQuestions = dataSoal.questions; 
+                    cbtQuestions = dataSoal; 
                     cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '' })); 
                     cbtCurrentIndex = 0;
                     
@@ -540,7 +580,7 @@
                         localStorage.setItem(startTimeKey, Date.now()); 
                     }
 
-                    // PRELOAD GAMBAR UNTUK OFFLINE
+                    // PRELOAD GAMBAR ANTI OFFLINE
                     const preloader = document.getElementById('cbt-image-preloader') || document.createElement('div');
                     preloader.id = 'cbt-image-preloader';
                     preloader.className = 'hidden';
@@ -568,7 +608,7 @@
                     isExamActive = true; 
                     Swal.close();
                 } else {
-                    Swal.fire('Gagal', data.message, 'error');
+                    Swal.fire('Gagal', 'PIN Salah atau Ujian tidak ditemukan!', 'error');
                 }
             } catch(e) { 
                 Swal.fire('Error', 'Terputus dari server', 'error'); 
@@ -656,7 +696,7 @@
             return totalMax > 0 ? Math.round((totalGet / totalMax) * 100) : 0;
         }
 
-        setInterval(() => {
+        setInterval(async () => {
             if (isExamActive && navigator.onLine) {
                 let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`;
                 let start = localStorage.getItem(startTimeKey);
@@ -668,16 +708,11 @@
                     let durasiTeks = `${dMins}m ${dSecs}s`;
                     let lScore = getLiveScore();
                     
-                    fetch(API + '/siswa/ping', { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({
-                            student_name: activeUser.name, 
-                            mapel: currentExam.mapel, 
-                            durasi: durasiTeks, 
-                            live_score: lScore
-                        }) 
-                    }).catch(e => console.log(e));
+                    let lstText = new Date().toLocaleTimeString('id-ID') + ' (' + durasiTeks + ')'; 
+                    await supabase.from('activity').update({ last_seen: lstText, score: lScore })
+                                  .eq('student_name', activeUser.name)
+                                  .eq('exam_name', currentExam.mapel)
+                                  .eq('status', 'Mengerjakan');
                 }
             }
         }, 15000);
@@ -874,9 +909,9 @@
                 }).length;
                 
                 if(kosong > 0) {
-                    Swal.fire('Peringatan!', `Ada <b class="text-red-500">${kosong} soal</b> yang belum dijawab. Cek menu navigasi yang belum berwarna biru!`, 'warning');
+                    Swal.fire('Peringatan!', `Ada <b class="text-red-500">${kosong} soal</b> yang belum dijawab. Cek menu navigasi!`, 'warning');
                 } else {
-                    Swal.fire('Selesai!', 'Semua soal sudah dijawab. Silakan klik tombol SELESAI UJIAN di menu navigasi.', 'success');
+                    Swal.fire('Selesai!', 'Semua soal sudah dijawab. Silakan klik tombol SELESAI UJIAN.', 'success');
                 }
             }
         }
@@ -895,11 +930,29 @@
                     if(showFeedback) Swal.fire({title:'Menyinkronkan...', didOpen: ()=>Swal.showLoading()});
                     try {
                         const payload = JSON.parse(pendingData); 
-                        await fetch(API + '/siswa/submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                        
+                        const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (payload.durasi || '-');
+                        await supabase.from('results').insert([{ 
+                            student_name: payload.student_name, 
+                            mapel: payload.mapel, 
+                            nilai: payload.nilai, 
+                            benar: payload.benar, 
+                            salah: payload.salah, 
+                            detail_jawaban: payload.detail_jawaban, 
+                            tanggal: tglDB 
+                        }]); 
+                        
+                        await supabase.from('activity').update({ 
+                            status: payload.is_curang ? 'Curang (Terkunci)' : 'Selesai', 
+                            score: payload.nilai, 
+                            last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (payload.durasi || '-') + ')' 
+                        }).eq('student_name', payload.student_name).eq('exam_name', payload.mapel); 
+                        
                         localStorage.removeItem(`pending_submit_${activeUser.username}`); 
                         document.getElementById('offline-pending-alert').classList.add('hidden'); 
                         localStorage.removeItem(`cbt_ans_${payload.mapel}_${activeUser.username}`); 
                         localStorage.removeItem(`cbt_time_${payload.mapel}_${activeUser.username}`);
+                        
                         Swal.fire('Berhasil!', 'Jawaban terkirim.', 'success').then(() => location.reload());
                     } catch(e) { 
                         if(showFeedback) Swal.fire('Gagal', 'Sinyal belum stabil.', 'error'); 
@@ -1104,7 +1157,23 @@
                 
                 Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
                 try {
-                    await fetch(API + '/siswa/submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                    const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (payload.durasi || '-');
+                    await supabase.from('results').insert([{ 
+                        student_name: payload.student_name, 
+                        mapel: payload.mapel, 
+                        nilai: payload.nilai, 
+                        benar: payload.benar, 
+                        salah: payload.salah, 
+                        detail_jawaban: payload.detail_jawaban, 
+                        tanggal: tglDB 
+                    }]); 
+                    
+                    await supabase.from('activity').update({ 
+                        status: payload.is_curang ? 'Curang (Terkunci)' : 'Selesai', 
+                        score: payload.nilai, 
+                        last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (payload.durasi || '-') + ')' 
+                    }).eq('student_name', payload.student_name).eq('exam_name', payload.mapel); 
+                    
                     if(document.exitFullscreen) document.exitFullscreen(); 
                     if(!isForceCurang) { 
                         localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); 
@@ -1157,16 +1226,28 @@
         async function loadStats() { 
             if(!activeUser || activeUser.role === 'siswa') return; 
             
-            const res = await fetch(API + '/admin/stats' + getAuthParams()); 
-            const data = await res.json(); 
+            // MENGHITUNG TOTAL SISWA & GURU SECARA TERPISAH
+            const { data: usersData } = await supabase.from('users').select('role');
+            let totalSiswa = 0;
+            let totalGuru = 0;
+            if (usersData) {
+                usersData.forEach(u => {
+                    let r = (u.role || '').toLowerCase();
+                    if (r === 'siswa') totalSiswa++;
+                    else if (r === 'guru' || r === 'admin') totalGuru++;
+                });
+            }
             
-            document.getElementById('stat-siswa').innerText = data.total_siswa; 
-            document.getElementById('stat-guru').innerText = data.total_guru; 
+            document.getElementById('stat-siswa').innerText = totalSiswa; 
+            document.getElementById('stat-guru').innerText = totalGuru; 
             
-            const resSch = await fetch(API + '/admin/schedules' + getAuthParams()); 
-            const schedules = await resSch.json(); 
+            const { data: schedules } = await supabase.from('schedules').select('*').order('id', { ascending: false }); 
+            let schedulesFilter = schedules || [];
+            if (activeUser.role.toLowerCase() === 'guru') {
+                schedulesFilter = schedulesFilter.filter(s => isAuthorizedMapel(activeUser.mapel, s.mapel));
+            }
             
-            document.getElementById('dashboard-tokens').innerHTML = schedules.map(s => 
+            document.getElementById('dashboard-tokens').innerHTML = schedulesFilter.map(s => 
                 `<div class="bg-gradient-to-r from-blue-600 to-blue-800 p-3 md:p-4 rounded-xl shadow-md text-white flex justify-between items-center border border-blue-500">
                     <div>
                         <p class="text-[8px] md:text-[10px] font-bold opacity-80 uppercase">${s.mapel}</p>
@@ -1176,8 +1257,14 @@
                 </div>`
             ).join('');
 
-            const resA = await fetch(API + '/admin/recent-activity' + getAuthParams()); 
-            allActivityData = await resA.json(); 
+            const { data: acts } = await supabase.from('activity').select('*').order('last_seen', { ascending: false }); 
+            const { data: users } = await supabase.from('users').select('name, kelas');
+            
+            let actsWithKelas = (acts || []).map(a => { 
+                let u = (users || []).find(x => x.name === a.student_name); 
+                return { ...a, kelas: u ? u.kelas : '-' }; 
+            });
+            allActivityData = actsWithKelas;
             
             if(document.getElementById('filter-kelas').options.length === 1) {
                 let kelasSet = new Set(); 
@@ -1204,11 +1291,8 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     Swal.fire({title: 'Membuka akses...', didOpen: () => Swal.showLoading()});
-                    await fetch(API + '/admin/reset-siswa', { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({student_name: nama, mapel: mapel}) 
-                    });
+                    await supabase.from('results').delete().eq('student_name', nama).eq('mapel', mapel);
+                    await supabase.from('activity').update({ status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }).eq('student_name', nama).eq('exam_name', mapel);
                     loadStats(); 
                     Swal.fire('Berhasil', 'Akses telah dibuka. Silakan suruh siswa login kembali.', 'success');
                 }
@@ -1226,7 +1310,7 @@
                 confirmButtonText: 'Ya, Bersihkan!' 
             }).then(async (result) => {
                 if (result.isConfirmed) { 
-                    await fetch(API + '/admin/remove-activity/' + id, { method: 'DELETE' }); 
+                    await supabase.from('activity').delete().eq('id', id);
                     loadStats(); 
                 }
             });
@@ -1240,7 +1324,7 @@
                 showCancelButton: true
             }).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API + '/admin/clear-monitoring', {method:'DELETE'}); 
+                    await supabase.from('activity').delete().neq('id', 0);
                     loadStats(); 
                     Swal.fire('Bersih!', '', 'success'); 
                 } 
@@ -1359,17 +1443,20 @@
             document.getElementById('monitor-container').innerHTML = html; 
         }
 
-        async function loadMaster() { 
-            const resC = await fetch(API + '/admin/config'); 
-            const conf = await resC.json(); 
-            document.getElementById('app-name-display').innerText = conf.find(c => c.key === 'app_name').value; 
-        }
-
         // ================= KODE ADMIN / GURU HASIL NILAI =================
         async function loadNilai() { 
-            const res = await fetch(API + '/admin/results' + getAuthParams()); 
-            const data = await res.json(); 
-            window.allResultsData = data; 
+            const { data } = await supabase.from('results').select('*').order('id', { ascending: false }); 
+            const { data: users } = await supabase.from('users').select('name, kelas'); 
+            
+            let resultsWithKelas = (data || []).map(r => { 
+                let u = (users || []).find(x => x.name === r.student_name); 
+                return { ...r, kelas: u ? u.kelas : '-' }; 
+            });
+            if (activeUser.role.toLowerCase() === 'guru') {
+                resultsWithKelas = resultsWithKelas.filter(r => isAuthorizedMapel(activeUser.mapel, r.mapel)); 
+            }
+            
+            window.allResultsData = resultsWithKelas; 
             
             if(document.getElementById('filter-kelas-nilai').options.length === 1) { 
                 let kelasSet = new Set(); 
@@ -1482,7 +1569,8 @@
         async function clearResults() { 
             Swal.fire({title: 'Hapus Semua Nilai?', icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API + '/admin/clear-results', {method:'DELETE'}); 
+                    await supabase.from('results').delete().neq('id', 0);
+                    await supabase.from('activity').delete().neq('id', 0);
                     loadNilai(); loadStats(); Swal.fire('Bersih!', '', 'success'); 
                 } 
             }); 
@@ -1491,7 +1579,7 @@
         async function clearSchedules() { 
             Swal.fire({title: 'Hapus Semua Jadwal?', icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API + '/admin/clear-schedules', {method:'DELETE'}); 
+                    await supabase.from('schedules').delete().neq('id', 0);
                     loadJadwal(); Swal.fire('Bersih!', '', 'success'); 
                 } 
             }); 
@@ -1500,7 +1588,7 @@
         async function clearQuestions() { 
             Swal.fire({title: 'Kosongkan Bank Soal?', text: 'Seluruh soal akan hilang!', icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API + '/admin/clear-questions', {method:'DELETE'}); 
+                    await supabase.from('questions').delete().neq('id', 0);
                     loadBankSoal(); Swal.fire('Bersih!', '', 'success'); 
                 } 
             }); 
@@ -1509,7 +1597,7 @@
         async function clearUsers() { 
             Swal.fire({title: 'Hapus Semua Siswa?', icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API + '/admin/clear-users', {method:'DELETE'}); 
+                    await supabase.from('users').delete().neq('role', 'admin').neq('role', 'Admin');
                     loadUsers(); Swal.fire('Bersih!', '', 'success'); 
                 } 
             }); 
@@ -1523,7 +1611,8 @@
             }).then(async (r) => { 
                 if(r.isConfirmed) { 
                     Swal.fire({title: 'Menghapus...', didOpen: ()=>Swal.showLoading()}); 
-                    await fetch(API + '/admin/delete-exam/' + encodeURIComponent(examId), {method: 'DELETE'}); 
+                    await supabase.from('questions').delete().eq('exam_id', examId);
+                    await supabase.from('schedules').delete().eq('mapel', examId);
                     loadBankSoal(); loadJadwal(); Swal.fire('Terhapus!', 'Paket soal berhasil dihapus.', 'success'); 
                 } 
             }); 
@@ -1532,7 +1621,7 @@
         async function hapusJadwal(id) { 
             Swal.fire({title: 'Hapus Jadwal?', text: 'Soal tidak terhapus, hanya jadwal saja.', icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API+'/admin/delete-schedule/'+id, {method:'DELETE'}); 
+                    await supabase.from('schedules').delete().eq('id', id);
                     loadJadwal(); Swal.fire('Dihapus!', 'Jadwal berhasil dihapus.', 'success'); 
                 } 
             }); 
@@ -1570,7 +1659,9 @@
             }).then(async (res) => { 
                 if(res.isConfirmed) { 
                     Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); 
-                    await fetch(API+'/admin/update-schedule', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); 
+                    await supabase.from('schedules').update({ 
+                        mapel: res.value.mapel, tanggal: res.value.tanggal, durasi: res.value.durasi, status: res.value.status 
+                    }).eq('id', res.value.id);
                     loadJadwal(); Swal.fire('Tersimpan!', 'Jadwal berhasil diperbarui.', 'success'); 
                 } 
             }); 
@@ -1585,16 +1676,16 @@
             if(!mapel || !tanggal || !jam || !durasi) return Swal.fire('Oops','Semua kolom jadwal wajib diisi!','warning'); 
             
             const tglJamDB = `${tanggal}|${jam}`; 
+            const pin = Math.floor(100000 + Math.random() * 900000).toString();
             Swal.fire({ title: 'Menyimpan Jadwal...', didOpen: () => Swal.showLoading() }); 
             
             try { 
-                const response = await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: tglJamDB, durasi }) }); 
-                const data = await response.json(); 
-                if (data.status === 'success') { 
+                const { error } = await supabase.from('schedules').insert([{ mapel, tanggal: tglJamDB, durasi, pin, status: 'Aktif' }]);
+                if (!error) { 
                     Swal.fire('Sukses!', 'Jadwal ujian berhasil dibuat.', 'success'); 
                     loadJadwal(); 
                 } else { 
-                    Swal.fire('Gagal Menyimpan!', data.message || 'Pastikan kolom "status" sudah ditambahkan di tabel Supabase Anda.', 'error'); 
+                    Swal.fire('Gagal Menyimpan!', error.message, 'error'); 
                 } 
             } catch(e) { 
                 Swal.fire('Error Server', 'Terjadi kesalahan sistem, silakan periksa database Supabase Anda.', 'error'); 
@@ -1602,11 +1693,14 @@
         }
         
         async function loadJadwal() { 
-            const res = await fetch(API + '/admin/schedules' + getAuthParams()); 
-            const data = await res.json(); 
-            window.allSchedulesData = data; 
+            const { data } = await supabase.from('schedules').select('*').order('id', { ascending: false }); 
+            let schedulesFilter = data || [];
+            if (activeUser.role.toLowerCase() === 'guru') {
+                schedulesFilter = schedulesFilter.filter(s => isAuthorizedMapel(activeUser.mapel, s.mapel));
+            }
+            window.allSchedulesData = schedulesFilter; 
             
-            document.getElementById('list-jadwal').innerHTML = data.map(j => { 
+            document.getElementById('list-jadwal').innerHTML = schedulesFilter.map(j => { 
                 let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; 
                 let tglTampil = tglJamArr[0] || j.tanggal; 
                 let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; 
@@ -1629,27 +1723,248 @@
                 </div>`; 
             }).join(''); 
             
-            const resExams = await fetch(API + '/admin/available-exams' + getAuthParams()); 
-            const exams = await resExams.json(); 
+            const { data: examsData } = await supabase.from('questions').select('exam_id'); 
+            let exams = [...new Set((examsData || []).map(r => r.exam_id))]; 
+            if (activeUser.role.toLowerCase() === 'guru') {
+                exams = exams.filter(e => isAuthorizedMapel(activeUser.mapel, e)); 
+            }
             const selectMapel = document.getElementById('j_mapel'); 
             selectMapel.innerHTML = '<option value="">-- Pilih Kode Soal --</option>' + exams.map(e => `<option value="${e}">${e}</option>`).join(''); 
+        }
+
+        // ================= KODE ADMIN BANK SOAL CLIENT-SIDE =================
+        async function importExcelSoal() {
+            const fileInput = document.getElementById('ex_file');
+            const exam_id = document.getElementById('ex_judul').value;
+            if(!fileInput.files[0] || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Excel!', 'warning');
+            
+            Swal.fire({ title: 'Importing Excel...', didOpen: () => Swal.showLoading() });
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+                    
+                    let insertData = json.map(row => {
+                        let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String);
+                        return { 
+                            exam_id: exam_id, 
+                            tipe: (row.Tipe || 'PG').toUpperCase(), 
+                            tanya: row.Pertanyaan || '', 
+                            opsi_json: opsi.join('|||'), 
+                            kunci: row.Kunci ? String(row.Kunci).trim() : '', 
+                            gform_url: row.Link_Gambar || '', 
+                            skor: row.Skor || 1 
+                        };
+                    });
+                    
+                    if(insertData.length > 0) {
+                        const { error } = await supabase.from('questions').insert(insertData);
+                        if(error) throw error;
+                    }
+                    Swal.fire('Berhasil', `${insertData.length} Soal berhasil di-import!`, 'success');
+                    loadBankSoal();
+                } catch(err) {
+                    Swal.fire('Error', 'Gagal memproses Excel.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        }
+
+        async function importWord() {
+            const fileInput = document.getElementById('w_file');
+            const exam_id = document.getElementById('w_judul').value;
+            if(!fileInput.files[0] || !exam_id) return Swal.fire('Oops', 'Isi KODE UJIAN dan pilih File Word!', 'warning');
+            
+            Swal.fire({ title: 'Mengekstrak...', didOpen: () => Swal.showLoading() });
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const result = await mammoth.convertToHtml({arrayBuffer: arrayBuffer});
+                    const rows = result.value.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+                    if (!rows) return Swal.fire('Error', 'Tabel tidak ditemukan!', 'error');
+                    
+                    let insertData = [];
+                    for(let i = 0; i < rows.length; i++) {
+                        const cells = rows[i].match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
+                        if (cells && cells.length >= 5) {
+                            const textCells = cells.map(c => c.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<\/?(?!(?:sup|sub|b|i|u|strong|em)\b)[^>]+>/gi, '').trim());
+                            let jenisAngka = textCells[1] ? textCells[1].replace(/[^0-9]/g, '') : ""; 
+                            if (!['1','2','3','4','5','6','9'].includes(jenisAngka)) continue;
+                            
+                            let tipe = 'PG';
+                            if (jenisAngka === '2') tipe = 'PGK'; 
+                            else if (jenisAngka === '3') tipe = 'JODOH'; 
+                            else if (jenisAngka === '4') tipe = 'ISIAN'; 
+                            else if (jenisAngka === '5') tipe = 'ESAI'; 
+                            else if (jenisAngka === '9') tipe = 'TS'; 
+                            else if (jenisAngka === '6') tipe = 'SIFAT';
+                            
+                            const tanya = textCells[3] || ""; 
+                            const fileSoal = textCells[4] || ""; 
+                            let opsi = []; 
+                            for(let j=5; j<=9; j++) { if(textCells[j] && textCells[j].trim() !== '') opsi.push(textCells[j].trim()); } 
+                            const kunci = textCells[10] || ""; 
+                            if (tanya !== '') insertData.push({ exam_id, tipe, tanya, opsi_json: opsi.join('|||'), kunci: kunci.trim().toUpperCase(), gform_url: fileSoal, skor: 1 }); 
+                        }
+                    }
+                    if(insertData.length > 0) {
+                        const { error } = await supabase.from('questions').insert(insertData);
+                        if(error) throw error;
+                        Swal.fire('Berhasil', `${insertData.length} Soal Bimasoft berhasil diekstrak!`, 'success');
+                        loadBankSoal();
+                    } else {
+                        Swal.fire('Error', '0 Soal diekstrak.', 'error');
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'Gagal ekstrak Word.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        }
+
+        let questionCount = 1;
+        function tambahBarisSoal() { 
+            questionCount++; 
+            const container = document.getElementById('bulk-questions-container'); 
+            const html = `
+            <div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative mt-4 md:mt-6" data-no="${questionCount}">
+                <div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">${questionCount}</div>
+                <button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-[10px] md:text-xs shadow-md"><i class="fa fa-times"></i></button>
+                <div class="grid grid-cols-1 gap-2 md:gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="SIFAT">10 - SIFAT (Komutatif dll)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div>
+                        <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C"></div>
+                        <div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div>
+                    </div>
+                    <div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div>
+                    <div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div>
+                    <div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div>
+                </div>
+            </div>`; 
+            container.insertAdjacentHTML('beforeend', html); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); 
+        }
+
+        async function simpanSoalBulk() { 
+            const kodeUjian = document.getElementById('s_judul_bulk').value; 
+            if(!kodeUjian) return Swal.fire('Error', 'Isi KODE UJIAN!', 'warning'); 
+            
+            const items = document.querySelectorAll('.question-item'); 
+            let dataSoal = []; 
+            items.forEach(el => { 
+                dataSoal.push({ 
+                    exam_id: kodeUjian, 
+                    tipe: el.querySelector('.q-tipe').value, 
+                    tanya: el.querySelector('.q-tanya').value, 
+                    opsi_json: el.querySelector('.q-opsi').value, 
+                    kunci: el.querySelector('.q-kunci').value.toUpperCase(), 
+                    gform_url: el.querySelector('.q-image').value, 
+                    skor: parseFloat(el.querySelector('.q-skor').value) || 1 
+                }); 
+            }); 
+            
+            if(dataSoal.length === 0) return; 
+            Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() }); 
+            
+            try { 
+                const { error } = await supabase.from('questions').insert(dataSoal); 
+                if(!error) { 
+                    Swal.fire('Berhasil!', `${dataSoal.length} Soal disimpan.`, 'success').then(() => location.reload()); 
+                } else Swal.fire('Gagal', error.message, 'error'); 
+            } catch(e) { 
+                Swal.fire('Error', 'Gagal menyambung database', 'error'); 
+            } 
+        }
+
+        async function loadBankSoal() { 
+            const { data } = await supabase.from('questions').select('*').order('id', { ascending: false });
+            let questionsFilter = data || [];
+            if (activeUser.role.toLowerCase() === 'guru') {
+                questionsFilter = questionsFilter.filter(q => isAuthorizedMapel(activeUser.mapel, q.exam_id));
+            }
+            
+            if (questionsFilter.length === 0) { 
+                document.getElementById('banksoal-container').innerHTML = '<div class="text-center p-8 text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm"><i class="fa fa-box-open text-3xl mb-2"></i><br>Belum ada soal.</div>'; 
+                return; 
+            } 
+            
+            const groups = {}; 
+            questionsFilter.forEach(q => { 
+                if(!groups[q.exam_id]) groups[q.exam_id] = []; 
+                groups[q.exam_id].push(q); 
+            }); 
+            
+            let html = ''; 
+            for (const [examId, questions] of Object.entries(groups)) { 
+                let tableRows = questions.map(q => { 
+                    let det = q.tipe === 'GFORM' ? `<span class="text-purple-600 font-bold">Link G-Form: ${q.tanya || q.gform_url}</span>` : (q.tanya ? formatMath(q.tanya).substring(0,80)+'...' : '-'); 
+                    det += `<br><span class="text-[9px] md:text-[10px] font-bold text-emerald-600 mt-1 md:mt-2 inline-block p-1 bg-emerald-50 border border-emerald-200 rounded"><i class="fa fa-key"></i> KUNCI: <b class="text-emerald-900">${formatMath(q.kunci) || '-'}</b></span> <span class="text-[9px] md:text-[10px] font-bold text-blue-600 mt-1 md:mt-2 inline-block p-1 bg-blue-50 border border-blue-200 rounded ml-1"><i class="fa fa-star"></i> SKOR: <b class="text-blue-900">${q.skor || 1}</b></span>`; 
+                    return `<tr class="hover:bg-slate-50 transition"><td class="align-top pt-3 md:pt-4 w-16 md:w-20 px-2 md:px-4 border-b border-slate-100"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[8px] md:text-[9px] font-black shadow-sm">${q.tipe}</span></td><td class="text-[10px] md:text-xs text-slate-700 py-3 md:py-4 px-2 border-b border-slate-100 whitespace-normal min-w-[200px] md:min-w-[250px] leading-relaxed">${det}</td><td class="p-2 md:p-4 align-top text-right w-16 md:w-24 border-b border-slate-100"><button onclick="hapusSoal(${q.id})" class="text-red-500 hover:text-white hover:bg-red-500 border border-red-200 px-2 py-1 md:px-3 md:py-2 rounded-lg transition shadow-sm" title="Hapus Soal"><i class="fa fa-trash"></i></button></td></tr>`; 
+                }).join(''); 
+                
+                html += `
+                <div class="mb-3 md:mb-4 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="w-full bg-slate-50 p-3 md:p-4 font-bold text-slate-700 flex justify-between items-center hover:bg-blue-50 transition">
+                        <button onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')" class="flex-1 flex items-center text-[10px] md:text-sm text-left">
+                            <i class="fa fa-folder-open text-blue-500 mr-2 md:mr-3 text-base md:text-lg"></i> ${examId} <span class="bg-blue-100 text-blue-700 px-2 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] ml-2 md:ml-3 shadow-inner">${questions.length} Soal</span>
+                        </button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="hapusPaketSoal('${examId.replace(/'/g, "\\'")}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 md:px-3 py-1 md:py-1.5 rounded text-[9px] md:text-xs font-bold transition shadow-sm"><i class="fa fa-trash mr-1"></i> Hapus Paket</button>
+                            <i class="fa fa-chevron-down text-slate-400 text-xs md:text-sm cursor-pointer p-2" onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')"></i>
+                        </div>
+                    </div>
+                    <div id="soal-${examId}" class="hidden overflow-x-auto border-t border-slate-100">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <tbody class="divide-y divide-slate-100">${tableRows}</tbody>
+                        </table>
+                    </div>
+                </div>`; 
+            } 
+            document.getElementById('banksoal-container').innerHTML = html; 
+        }
+
+        async function hapusSoal(id) { 
+            Swal.fire({title: 'Hapus Soal?', icon:'warning', showCancelButton: true}).then(async (r) => { 
+                if(r.isConfirmed) { 
+                    await supabase.from('questions').delete().eq('id', id); 
+                    loadBankSoal(); loadJadwal(); 
+                } 
+            }); 
         }
 
         // ================= MANAJEMEN USER =================
         async function importUsers(inp) { 
             if(!inp.files[0]) return; 
             Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); 
-            const fd = new FormData(); 
-            fd.append('file_excel', inp.files[0]); 
-            await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); 
-            Swal.fire('Selesai', 'Import berhasil', 'success'); 
-            loadUsers(); 
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const excelData = XLSX.utils.sheet_to_json(sheet);
+                    
+                    let insertData = excelData.map(row => ({ 
+                        name: row.Nama, username: row.Username, password: row.Password, role: row.Role || 'siswa', kelas: row.Kelas, mapel: row.Mapel || '' 
+                    })); 
+                    if(insertData.length > 0) {
+                        await supabase.from('users').insert(insertData); 
+                    }
+                    Swal.fire('Selesai', 'Import berhasil', 'success'); 
+                    loadUsers(); 
+                } catch(err) {
+                    Swal.fire('Error', 'Gagal memproses Excel', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(inp.files[0]);
         }
         
         async function loadUsers() { 
-            const res = await fetch(API + '/admin/users'); 
-            const data = await res.json(); 
-            document.getElementById('user-body').innerHTML = data.map(u => `
+            const { data } = await supabase.from('users').select('*').neq('role', 'admin').neq('role', 'Admin').order('id', {ascending: false}); 
+            document.getElementById('user-body').innerHTML = (data||[]).map(u => `
                 <tr>
                     <td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${u.name}</td>
                     <td>${u.username}</td>
@@ -1676,12 +1991,14 @@
                     <div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel (Khusus Guru)</label><input id="a_mapel" class="w-full p-2 border rounded" placeholder="Contoh: IPA, MTK"></div>
                 </div>`, 
                 showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#059669', 
-                preConfirm: () => { return { name: document.getElementById('a_name').value, username: document.getElementById('a_user').value, password: document.getElementById('a_pass').value, role: document.getElementById('a_role').value, kelas: document.getElementById('a_kelas').value, mapel: document.getElementById('a_mapel').value } } 
+                preConfirm: () => { 
+                    return { name: document.getElementById('a_name').value, username: document.getElementById('a_user').value, password: document.getElementById('a_pass').value, role: document.getElementById('a_role').value, kelas: document.getElementById('a_kelas').value, mapel: document.getElementById('a_mapel').value } 
+                } 
             }).then(async (res) => { 
                 if(res.isConfirmed) { 
                     if(!res.value.username || !res.value.password) return Swal.fire('Error', 'Username dan Password Wajib Diisi!', 'error'); 
                     Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); 
-                    await fetch(API+'/admin/add-user', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); 
+                    await supabase.from('users').insert([res.value]); 
                     loadUsers(); Swal.fire('Tersimpan!', 'Pengguna baru berhasil ditambahkan.', 'success'); 
                 } 
             }); 
@@ -1704,7 +2021,9 @@
             }).then(async (res) => { 
                 if(res.isConfirmed) { 
                     Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); 
-                    await fetch(API+'/admin/update-user', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); 
+                    await supabase.from('users').update({ 
+                        name: res.value.name, username: res.value.username, password: res.value.password, role: res.value.role, kelas: res.value.kelas, mapel: res.value.mapel 
+                    }).eq('username', res.value.old_username); 
                     loadUsers(); Swal.fire('Tersimpan!', 'Data berhasil diperbarui.', 'success'); 
                 } 
             }); 
@@ -1713,7 +2032,7 @@
         async function hapusUser(usr) { 
             Swal.fire({title: 'Hapus User?', text: "Data tidak bisa dikembalikan!", icon: 'warning', showCancelButton: true}).then(async (r) => { 
                 if(r.isConfirmed) { 
-                    await fetch(API+'/admin/delete-user/'+usr, {method:'DELETE'}); 
+                    await supabase.from('users').delete().eq('username', usr); 
                     loadUsers(); Swal.fire('Dihapus!', 'Pengguna telah dihapus.', 'success'); 
                 } 
             }); 
