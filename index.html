@@ -37,7 +37,8 @@
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600">
             <div class="text-center mb-6">
-                <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain">
+                <!-- LOGO DIPERBAIKI (TIDAK AKAN HILANG) -->
+                <img src="./logo-sekolah.png" alt="Logo Sekolah" class="w-16 h-16 mx-auto mb-4 object-contain">
                 <h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2>
             </div>
             
@@ -145,7 +146,7 @@
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
             <div class="p-6 text-center border-b border-slate-800">
-                <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
+                <img src="./logo-sekolah.png" alt="Logo Sekolah" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
                 <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
             </div>
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
@@ -335,10 +336,12 @@
 
     <!-- ================= SCRIPT UTAMA (SUPABASE CLIENT-SIDE) ================= -->
     <script>
-        // KONEKSI SUPABASE LANGSUNG DARI BROWSER (MENGGANTIKAN SERVER.JS)
+        // KONEKSI SUPABASE LANGSUNG DARI BROWSER (MENGGANTIKAN SERVER.JS SECARA AMAN)
         const supabaseUrl = 'https://uftiednbhdmexxlabhad.supabase.co';
         const supabaseKey = 'sb_publishable_TAEkdHBM3n5nY-I4bm-zaA_C5y9sEwH';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // PENGAMANAN (PEREDAM KEJUT) JIKA INTERNET LEMOT
+        const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
         let activeUser = null; 
         let currentExam = null; 
@@ -384,13 +387,15 @@
             const passInput = document.getElementById(inputId); 
             const icon = document.getElementById(iconId);
             if(passInput.type === 'password') { 
-                passInput.type = 'text'; icon.classList.replace('fa-eye-slash', 'fa-eye'); 
+                passInput.type = 'text'; 
+                icon.classList.replace('fa-eye-slash', 'fa-eye'); 
             } else { 
-                passInput.type = 'password'; icon.classList.replace('fa-eye', 'fa-eye-slash'); 
+                passInput.type = 'password'; 
+                icon.classList.replace('fa-eye', 'fa-eye-slash'); 
             }
         }
 
-        // ================= FITUR KEAMANAN =================
+        // ================= FITUR KEAMANAN & ANTI-CURANG =================
         document.addEventListener('keyup', (e) => {
             if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
                 navigator.clipboard.writeText('');
@@ -399,11 +404,13 @@
         });
 
         document.addEventListener('keydown', function(e) { 
-            if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } 
+            if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { 
+                e.preventDefault(); 
+            } 
         });
 
         async function deteksiKecurangan() {
-            if (!isExamActive || !navigator.onLine) return;
+            if (!isExamActive || !navigator.onLine || !supabase) return;
             curangCount++; 
             
             let finalStatus = curangCount >= 3 ? 'Curang (Terkunci)' : `Curang (${curangCount}x Peringatan)`;
@@ -416,8 +423,11 @@
                 Swal.fire({
                     title: 'UJIAN DIBATALKAN!', 
                     text: 'Anda terdeteksi keluar dari layar ujian lebih dari 3 kali. Ujian otomatis dikunci!', 
-                    icon: 'error', allowOutsideClick: false
-                }).then(() => { submitUjian(false, true); }); 
+                    icon: 'error', 
+                    allowOutsideClick: false
+                }).then(() => { 
+                    submitUjian(false, true); 
+                }); 
             } else { 
                 Swal.fire('PERINGATAN KECURANGAN!', `Sistem mendeteksi Anda meminimalkan layar/membuka tab lain! DILARANG KERAS KELUAR DARI HALAMAN UJIAN! (Peringatan ${curangCount}/3)`, 'warning'); 
             }
@@ -425,7 +435,6 @@
 
         document.addEventListener("visibilitychange", () => { if (document.visibilityState === 'hidden') deteksiKecurangan(); });
         window.addEventListener("blur", () => { deteksiKecurangan(); });
-        
         window.addEventListener('offline', () => { 
             const el = document.getElementById('network-status'); 
             if(el) { el.innerText = 'OFFLINE'; el.classList.replace('bg-emerald-500', 'bg-red-500'); } 
@@ -443,6 +452,11 @@
             const pass = document.getElementById('login-pass').value;
             
             if(!user || !pass) return Swal.fire('Oops', 'Wajib diisi!', 'warning'); 
+            
+            if (!supabase) {
+                return Swal.fire('Koneksi Terputus', 'Sistem gagal menghubungi Server. Pastikan laptop/HP Anda terhubung ke internet, lalu muat ulang (Refresh) halaman ini.', 'error');
+            }
+
             Swal.fire({ title: 'Otentikasi...', didOpen: () => Swal.showLoading() });
             
             try {
@@ -474,7 +488,7 @@
                     Swal.fire('Gagal', 'Username/Password Salah!', 'error');
                 }
             } catch (e) { 
-                Swal.fire('Error', 'Gagal terkoneksi ke Database.', 'error'); 
+                Swal.fire('Error', 'Gagal terkoneksi ke Database. Cek koneksi Anda.', 'error'); 
             }
         }
 
@@ -496,6 +510,8 @@
         async function mulaiUjian() {
             const pin = document.getElementById('input-pin').value; 
             if(!pin) return Swal.fire('Error', 'Silakan masukkan PIN!', 'warning'); 
+            if(!supabase) return Swal.fire('Error', 'Koneksi ke database terputus!', 'error');
+
             Swal.fire({ title: 'Menyiapkan Soal...', didOpen: () => Swal.showLoading() });
             
             try {
@@ -529,7 +545,6 @@
                             return Swal.fire('Ditolak', `Ujian belum dimulai! (Jadwal: ${scheduleTime})`, 'error');
                         }
                         
-                        // VALIDASI AUTO-LOCK WAKTU HABIS
                         if (!isBypassed) {
                             let [sh, sm] = scheduleTime.split(':').map(Number);
                             let durasi = parseInt(row.durasi) || 0;
@@ -554,7 +569,6 @@
                         await supabase.from('activity').insert([{ student_name: activeUser.name, exam_name: row.mapel, status: 'Mengerjakan', last_seen: new Date().toLocaleTimeString('id-ID') }]);
                     }
                     
-                    // AMBIL SOAL
                     currentExam = row;
                     const { data: dataSoal } = await supabase.from('questions').select('*').eq('exam_id', currentExam.mapel).order('id', {ascending: true});
                     
@@ -580,7 +594,6 @@
                         localStorage.setItem(startTimeKey, Date.now()); 
                     }
 
-                    // PRELOAD GAMBAR ANTI OFFLINE
                     const preloader = document.getElementById('cbt-image-preloader') || document.createElement('div');
                     preloader.id = 'cbt-image-preloader';
                     preloader.className = 'hidden';
@@ -697,7 +710,7 @@
         }
 
         setInterval(async () => {
-            if (isExamActive && navigator.onLine) {
+            if (isExamActive && navigator.onLine && supabase) {
                 let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`;
                 let start = localStorage.getItem(startTimeKey);
                 
@@ -909,9 +922,9 @@
                 }).length;
                 
                 if(kosong > 0) {
-                    Swal.fire('Peringatan!', `Ada <b class="text-red-500">${kosong} soal</b> yang belum dijawab. Cek menu navigasi!`, 'warning');
+                    Swal.fire('Peringatan!', `Ada <b class="text-red-500">${kosong} soal</b> yang belum dijawab. Cek menu navigasi yang belum berwarna biru!`, 'warning');
                 } else {
-                    Swal.fire('Selesai!', 'Semua soal sudah dijawab. Silakan klik tombol SELESAI UJIAN.', 'success');
+                    Swal.fire('Selesai!', 'Semua soal sudah dijawab. Silakan klik tombol SELESAI UJIAN di menu navigasi.', 'success');
                 }
             }
         }
@@ -921,7 +934,7 @@
         }
 
         async function checkPendingSubmit(showFeedback = false) {
-            if(!activeUser) return; 
+            if(!activeUser || !supabase) return; 
             const pendingData = localStorage.getItem(`pending_submit_${activeUser.username}`);
             
             if(pendingData) {
@@ -932,6 +945,7 @@
                         const payload = JSON.parse(pendingData); 
                         
                         const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (payload.durasi || '-');
+                        
                         await supabase.from('results').insert([{ 
                             student_name: payload.student_name, 
                             mapel: payload.mapel, 
@@ -1148,7 +1162,7 @@
                 clearInterval(examTimerInterval); 
                 isExamActive = false;
                 
-                if(!navigator.onLine) { 
+                if(!navigator.onLine || !supabase) { 
                     localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload)); 
                     Swal.fire('Sinyal Terputus!', 'Jawaban disimpan di HP.', 'warning'); 
                     document.getElementById('offline-pending-alert').classList.remove('hidden'); 
@@ -1224,9 +1238,8 @@
         }
         
         async function loadStats() { 
-            if(!activeUser || activeUser.role === 'siswa') return; 
+            if(!activeUser || activeUser.role === 'siswa' || !supabase) return; 
             
-            // MENGHITUNG TOTAL SISWA & GURU SECARA TERPISAH
             const { data: usersData } = await supabase.from('users').select('role');
             let totalSiswa = 0;
             let totalGuru = 0;
@@ -1299,7 +1312,6 @@
             });
         }
 
-        // FUNGSI PENGUSIR SISWA HANTU
         async function usirHantu(id) {
             Swal.fire({ 
                 title: 'Hapus dari Layar?', 
@@ -1343,7 +1355,6 @@
             let finished = filtered.filter(a => a.status === 'Selesai');
             let working = filtered.filter(a => a.status === 'Mengerjakan' || (!a.status.includes('Curang') && a.status !== 'Selesai'));
 
-            // UPDATE ANGKA STATISTIK (Dinamis Reset 0 jika ganti filter)
             document.getElementById('stat-kerja').innerText = working.length;
             document.getElementById('stat-selesai').innerText = finished.length;
             document.getElementById('stat-curang').innerText = blocked.length;
@@ -1688,7 +1699,7 @@
                     Swal.fire('Gagal Menyimpan!', error.message, 'error'); 
                 } 
             } catch(e) { 
-                Swal.fire('Error Server', 'Terjadi kesalahan sistem, silakan periksa database Supabase Anda.', 'error'); 
+                Swal.fire('Error Server', 'Terjadi kesalahan sistem database.', 'error'); 
             } 
         }
         
@@ -1732,7 +1743,7 @@
             selectMapel.innerHTML = '<option value="">-- Pilih Kode Soal --</option>' + exams.map(e => `<option value="${e}">${e}</option>`).join(''); 
         }
 
-        // ================= KODE ADMIN BANK SOAL CLIENT-SIDE =================
+        // ================= KODE ADMIN BANK SOAL =================
         async function importExcelSoal() {
             const fileInput = document.getElementById('ex_file');
             const exam_id = document.getElementById('ex_judul').value;
@@ -1814,7 +1825,7 @@
                     if(insertData.length > 0) {
                         const { error } = await supabase.from('questions').insert(insertData);
                         if(error) throw error;
-                        Swal.fire('Berhasil', `${insertData.length} Soal Bimasoft berhasil diekstrak!`, 'success');
+                        Swal.fire('Berhasil', `${insertData.length} Soal berhasil diekstrak!`, 'success');
                         loadBankSoal();
                     } else {
                         Swal.fire('Error', '0 Soal diekstrak.', 'error');
