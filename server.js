@@ -30,10 +30,8 @@ app.post('/api/admin/update-config', async (req, res) => { await supabase.from('
 app.get('/api/admin/questions', async (req, res) => { let { data } = await supabase.from('questions').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(q => isAuthorizedMapel(req.query.mapel, q.exam_id)); res.json(data || []); });
 app.get('/api/admin/available-exams', async (req, res) => { let { data } = await supabase.from('questions').select('exam_id'); let exams = [...new Set((data || []).map(r => r.exam_id))]; if (req.query.role === 'guru') exams = exams.filter(e => isAuthorizedMapel(req.query.mapel, e)); res.json(exams); });
 
-// FUNGSI HAPUS SATUAN SOAL
 app.delete('/api/admin/delete-soal/:id', async (req, res) => { const { data: soal } = await supabase.from('questions').select('exam_id').eq('id', req.params.id).single(); if (soal) { await supabase.from('questions').delete().eq('id', req.params.id); const { count } = await supabase.from('questions').select('*', { count: 'exact', head: true }).eq('exam_id', soal.exam_id); if (count === 0) await supabase.from('schedules').delete().eq('mapel', soal.exam_id); res.json({status: "success"}); } else { res.json({status: "error"}); } });
 
-// FUNGSI BARU: HAPUS 1 PAKET UJIAN PENUH (Tidak ganggu paket lain)
 app.delete('/api/admin/delete-exam/:exam_id', async (req, res) => { 
     await supabase.from('questions').delete().eq('exam_id', req.params.exam_id); 
     await supabase.from('schedules').delete().eq('mapel', req.params.exam_id); 
@@ -88,13 +86,27 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
 
 app.post('/api/admin/add-schedule', async (req, res) => { const pin = Math.floor(100000 + Math.random() * 900000).toString(); const { error } = await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); if (error) return res.status(500).json({ status: "error", message: `Supabase Error: ${error.message} (Cek apakah kolom 'status' sudah ada di tabel schedules)` }); res.json({ status: "success", pin }); });
 app.get('/api/admin/schedules', async (req, res) => { let { data } = await supabase.from('schedules').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(s => isAuthorizedMapel(req.query.mapel, s.mapel)); res.json(data || []); });
-app.get('/api/admin/stats', async (req, res) => { const stats = { total_siswa: 0, sedang_kerja: 0, selesai: 0, curang: 0 }; const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).ilike('role', 'siswa'); stats.total_siswa = count || 0; let { data: acts } = await supabase.from('activity').select('*'); if (req.query.role === 'guru') acts = (acts || []).filter(a => isAuthorizedMapel(req.query.mapel, a.exam_name)); (acts || []).forEach(a => { if (a.status === 'Mengerjakan') stats.sedang_kerja++; else if (a.status === 'Selesai') stats.selesai++; else if (a.status && a.status.includes('Curang')) stats.curang++; }); res.json(stats); });
 
+// 🟢 PERUBAHAN: Menghilangkan filter guru agar semua angka tampil di Dashboard
+app.get('/api/admin/stats', async (req, res) => { 
+    const stats = { total_siswa: 0, sedang_kerja: 0, selesai: 0, curang: 0 }; 
+    const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).ilike('role', 'siswa'); 
+    stats.total_siswa = count || 0; 
+    let { data: acts } = await supabase.from('activity').select('*'); 
+    
+    (acts || []).forEach(a => { 
+        if (a.status === 'Mengerjakan') stats.sedang_kerja++; 
+        else if (a.status === 'Selesai') stats.selesai++; 
+        else if (a.status && a.status.includes('Curang')) stats.curang++; 
+    }); 
+    res.json(stats); 
+});
+
+// 🟢 PERUBAHAN: Menghilangkan filter guru agar semua siswa mapel tampil di Live Monitoring
 app.get('/api/admin/recent-activity', async (req, res) => { 
     let { data: acts } = await supabase.from('activity').select('*').order('last_seen', { ascending: false }); 
     let { data: users } = await supabase.from('users').select('name, kelas');
     let actsWithKelas = (acts || []).map(a => { let u = (users || []).find(x => x.name === a.student_name); return { ...a, kelas: u ? u.kelas : '-' }; });
-    if (req.query.role === 'guru') actsWithKelas = actsWithKelas.filter(a => isAuthorizedMapel(req.query.mapel, a.exam_name)); 
     res.json(actsWithKelas); 
 });
 
@@ -134,7 +146,6 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
 
 app.post('/api/siswa/get-soal', async (req, res) => { const { data } = await supabase.from('questions').select('id, tipe, tanya, opsi_json, kunci, media_path, gform_url, skor').eq('exam_id', req.body.exam_id).order('id', {ascending: true}); res.json({status: "success", questions: data || []}); });
 
-// PENGATURAN ULANG PING AGAR MENYIMPAN LIVE SCORE
 app.post('/api/siswa/ping', async (req, res) => {
     let lstText = new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')';
     await supabase.from('activity').update({ last_seen: lstText, score: req.body.live_score }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel).eq('status', 'Mengerjakan');
