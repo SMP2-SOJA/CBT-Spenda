@@ -240,7 +240,7 @@
 
         async function loadPublicData() {
             try {
-                const res = await fetch(API + '/public/live-score');
+                const res = await fetch(API + '/admin/recent-activity');
                 publicActivityData = await res.json();
                 
                 if(document.getElementById('pub-filter-kelas').options.length === 1) {
@@ -258,12 +258,16 @@
             const selMapel = document.getElementById('pub-filter-mapel').value;
             let filtered = publicActivityData.filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
             
-            filtered.sort((a,b) => (parseFloat(b.score)||0) - (parseFloat(a.score)||0));
+            filtered.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0));
 
             let html = filtered.map(a => {
                 let badge = a.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : (a.status.includes('Curang') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
-                let skor = a.score !== null ? a.score : '-';
-                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${skor}</td></tr>`;
+                
+                let skorMentah = a.score !== null && a.score !== undefined ? String(a.score) : '-';
+                let nilaiTampil = '-'; 
+                if (skorMentah.includes('|')) { let sParts = skorMentah.split('|'); nilaiTampil = sParts[0].trim(); } else { nilaiTampil = skorMentah; }
+
+                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${nilaiTampil}</td></tr>`;
             }).join('');
 
             if(!html) html = `<tr><td colspan="4" class="text-center p-4 text-slate-400">Belum ada data nilai langsung.</td></tr>`;
@@ -367,7 +371,22 @@
         setInterval(() => {
             if (isExamActive && navigator.onLine) {
                 let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey);
-                if (start) { let diffMs = Date.now() - parseInt(start); let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); let durasiTeks = `${dMins}m ${dSecs}s`; let lScore = getLiveScore(); fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore}) }).catch(e=>console.log(e)); }
+                if (start) { 
+                    let diffMs = Date.now() - parseInt(start); let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
+                    
+                    let terjawab = 0; let totalSoal = cbtQuestions.length;
+                    for(let i=0; i<totalSoal; i++){
+                        let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i];
+                        if(a === "") continue;
+                        if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue;
+                        if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue;
+                        terjawab++;
+                    }
+                    
+                    let durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; 
+                    let lScore = getLiveScore(); 
+                    fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore}) }).catch(e=>console.log(e)); 
+                }
             }
         }, 15000);
 
@@ -388,8 +407,16 @@
             const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
             divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
             let imgUrl = q.gform_url; let fallbackUrl = '';
-            if(imgUrl && imgUrl.includes('drive.google.com')) { let idMatch = imgUrl.match(/[?&]id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/); if(idMatch && idMatch[1]) { imgUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`; fallbackUrl = `https://lh3.googleusercontent.com/d/${idMatch[1]}`; } }
-            if (imgUrl && q.tipe !== 'GFORM' && imgUrl.startsWith('http')) { divMedia.innerHTML = `<img src="${imgUrl}" ${fallbackUrl ? `onerror="if(this.src !== '${fallbackUrl}') this.src='${fallbackUrl}';"` : ''} loading="lazy" class="max-w-full md:max-w-xl h-auto rounded-xl border shadow-sm mx-auto mb-3 md:mb-4 object-contain">`; }
+            if(imgUrl && imgUrl.includes('drive.google.com')) { 
+                let idMatch = imgUrl.match(/[?&]id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/); 
+                if(idMatch && idMatch[1]) { 
+                    imgUrl = `https://lh3.googleusercontent.com/d/${idMatch[1]}=s1200`; 
+                    fallbackUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`; 
+                } 
+            }
+            if (imgUrl && q.tipe !== 'GFORM' && imgUrl.startsWith('http')) { 
+                divMedia.innerHTML = `<img src="${imgUrl}" ${fallbackUrl ? `onerror="if(this.src !== '${fallbackUrl}') this.src='${fallbackUrl}';"` : ''} class="w-auto max-w-full h-auto max-h-[60vh] rounded-xl border shadow-sm mx-auto mb-3 md:mb-4 object-contain">`; 
+            }
             if(q.tipe === 'GFORM') { divOpsi.innerHTML = `<div class="gform-container"><iframe src="${q.tanya || q.gform_url}"></iframe></div>`; cbtSaveAnswer("COMPLETED"); 
             } else {
                 let htmlOpsi = ""; let opsiArray = q.opsi_json ? q.opsi_json.split(/\|\|\|/).map(o=>o.trim()).filter(o=>o) : []; const abjad = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -483,7 +510,20 @@
             } else { nilaiAkhir = 'Cek G-Form'; }
 
             let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey); let durasiText = '-';
-            if (start) { let diffMs = Date.now() - parseInt(start); let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); durasiText = `${dMins}m ${dSecs}s`; }
+            if (start) { 
+                let diffMs = Date.now() - parseInt(start); 
+                let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
+                
+                let terjawab = 0; let totalSoal = cbtQuestions.length;
+                for(let i=0; i<totalSoal; i++){
+                    let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i];
+                    if(a === "") continue;
+                    if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue;
+                    if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue;
+                    terjawab++;
+                }
+                durasiText = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; 
+            }
 
             const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
 
@@ -563,8 +603,8 @@
             document.getElementById('stat-selesai').innerText = finished.length;
             document.getElementById('stat-curang').innerText = blocked.length;
 
-            working.sort((a,b) => (parseFloat(b.score)||0) - (parseFloat(a.score)||0));
-            finished.sort((a,b) => (parseFloat(b.score)||0) - (parseFloat(a.score)||0));
+            working.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0));
+            finished.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0));
 
             let html = '';
 
@@ -580,15 +620,27 @@
                         else { aksiBtn = `<br><span class="mt-1 inline-block bg-slate-200 text-slate-500 px-2 py-1 rounded text-[8px]"><i class="fa fa-lock"></i> Bukan Mapel Anda</span>`; }
                     }
                     
-                    let skorTampil = a.score !== null && a.score !== undefined ? a.score : '-';
-                    if(isWorking && a.status === 'Mengerjakan' && a.score) { skorTampil = `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${skorTampil}</span>`; } 
+                    let skorMentah = a.score !== null && a.score !== undefined ? String(a.score) : '-';
+                    let nilaiTampil = '-'; let progressTampil = '';
+                    if (skorMentah.includes('|')) { let sParts = skorMentah.split('|'); nilaiTampil = sParts[0].trim(); } else { nilaiTampil = skorMentah; }
+
+                    if(isWorking && a.status === 'Mengerjakan' && a.score) { skorTampil = `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${nilaiTampil}</span>`; } 
                     else if (isWorking && a.status === 'Mengerjakan') { skorTampil = `<span class="text-orange-500 font-bold text-[9px] md:text-[10px]">-</span>`; }
 
                     let durasiFinal = '<span class="text-slate-400">-</span>'; let jamUpdate = a.last_seen || '-';
-                    if (a.last_seen && a.last_seen.includes('(')) { let parts = a.last_seen.split(' ('); jamUpdate = parts[0]; durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${parts[1].replace(')', '')}</span>`; } 
-                    else if (a.status === 'Mengerjakan') { durasiFinal = `<span class="font-bold text-orange-500"><i class="fa fa-spinner fa-spin mr-1"></i> Baru mulai</span>`; }
+                    if (a.last_seen && a.last_seen.includes('(')) { 
+                        let parts = a.last_seen.split(' ('); 
+                        jamUpdate = parts[0]; 
+                        let dText = parts[1].replace(')', '');
+                        if(dText.includes('|')) {
+                            let subParts = dText.split('|');
+                            durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${subParts[0].trim()}</span><br><span class="text-[9px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 mt-1 inline-block"><i class="fa fa-tasks"></i> Progress: ${subParts[1].trim()}</span>`;
+                        } else {
+                            durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${dText}</span>`; 
+                        }
+                    } else if (a.status === 'Mengerjakan') { durasiFinal = `<span class="font-bold text-orange-500"><i class="fa fa-spinner fa-spin mr-1"></i> Baru mulai</span>`; }
 
-                    let hantuBtn = isWorking ? `<button onclick="usirHantu(${a.id})" class="ml-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white px-2 py-1 rounded shadow-sm text-[8px]" title="Siswa sudah pulang? Klik ini"><i class="fa fa-times"></i></button>` : '';
+                    let hantuBtn = (isWorking && activeUser && activeUser.role.toLowerCase() === 'admin') ? `<button onclick="usirHantu(${a.id})" class="ml-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white px-2 py-1 rounded shadow-sm text-[8px]" title="Hapus Siswa (Khusus Admin)"><i class="fa fa-times"></i></button>` : '';
 
                     return `<tr class="hover:bg-slate-50 border-b border-slate-100 ${rowColorClass}">
                         <td class="p-2 md:p-3 font-bold ${textClass}">${a.student_name} ${hantuBtn}<br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td>
@@ -600,7 +652,7 @@
                     </tr>`;
                 }).join('');
 
-                return `<div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white mb-4"><div class="p-2 md:p-3 text-[10px] md:text-xs font-black uppercase tracking-widest ${titleColorClass}"><i class="fa ${icon} mr-1"></i> ${title} <span class="float-right bg-white/80 px-2 py-0.5 rounded-full shadow-sm text-[9px] text-slate-700">${dataArray.length} Siswa</span></div><div class="overflow-x-auto"><div class="max-h-[40vh] overflow-y-auto scroll-saver"><table class="w-full text-left text-[10px] md:text-xs"><thead class="text-[8px] md:text-[9px] text-slate-500 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-2 md:p-3 bg-slate-100">Nama Siswa</th><th class="p-2 md:p-3 bg-slate-100">Ujian</th><th class="p-2 md:p-3 bg-slate-100">Status / Aksi</th><th class="p-2 md:p-3 bg-slate-100">Skor</th><th class="p-2 md:p-3 bg-slate-100">Durasi</th><th class="p-2 md:p-3 bg-slate-100">Jam Update</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">${rows}</tbody></table></div></div></div>`;
+                return `<div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white mb-4"><div class="p-2 md:p-3 text-[10px] md:text-xs font-black uppercase tracking-widest ${titleColorClass}"><i class="fa ${icon} mr-1"></i> ${title} <span class="float-right bg-white/80 px-2 py-0.5 rounded-full shadow-sm text-[9px] text-slate-700">${dataArray.length} Siswa</span></div><div class="overflow-x-auto"><div class="max-h-[40vh] overflow-y-auto scroll-saver"><table class="w-full text-left text-[10px] md:text-xs"><thead class="text-[8px] md:text-[9px] text-slate-500 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-2 md:p-3 bg-slate-100">Nama Siswa</th><th class="p-2 md:p-3 bg-slate-100">Ujian</th><th class="p-2 md:p-3 bg-slate-100">Status / Aksi</th><th class="p-2 md:p-3 bg-slate-100">Skor</th><th class="p-2 md:p-3 bg-slate-100">Durasi / Progress</th><th class="p-2 md:p-3 bg-slate-100">Jam Update</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">${rows}</tbody></table></div></div></div>`;
             };
 
             html += renderTableGroup('Siswa Diblokir (Curang)', 'fa-ban', 'bg-red-50 text-red-600 border-b border-red-200', blocked, 'bg-red-50/30', 'text-red-700', 'bg-red-500 text-white animate-pulse', false);
@@ -609,10 +661,7 @@
             if(!html) html = `<div class="text-center p-8 text-slate-400 font-bold bg-white rounded-xl border border-slate-200 border-dashed"><i class="fa fa-info-circle text-3xl mb-2 text-slate-300"></i><br>Belum ada aktivitas siswa.</div>`;
             document.getElementById('monitor-container').innerHTML = html; 
 
-            // Kembalikan posisi scroll
-            document.querySelectorAll('.scroll-saver').forEach((el, index) => {
-                if(scrollPositions[index]) el.scrollTop = scrollPositions[index];
-            });
+            document.querySelectorAll('.scroll-saver').forEach((el, index) => { if(scrollPositions[index]) el.scrollTop = scrollPositions[index]; });
         }
 
         async function loadMaster() { const resC = await fetch(API + '/admin/config'); const conf = await resC.json(); document.getElementById('app-name-display').innerText = conf.find(c => c.key === 'app_name').value; }
@@ -628,7 +677,6 @@
         
         async function hapusPaketSoal(examId) { Swal.fire({ title: `Hapus Paket ${examId}?`, text: "Seluruh soal di dalam paket ini akan terhapus secara permanen!", icon: "warning", showCancelButton: true, confirmButtonColor: "#dc2626", confirmButtonText: "Ya, Hapus Paket" }).then(async (r) => { if(r.isConfirmed) { Swal.fire({title: 'Menghapus...', didOpen: ()=>Swal.showLoading()}); await fetch(API + '/admin/delete-exam/' + encodeURIComponent(examId), {method: 'DELETE'}); loadBankSoal(); loadJadwal(); Swal.fire('Terhapus!', 'Paket soal berhasil dihapus.', 'success'); } }); }
         async function hapusJadwal(id) { Swal.fire({title: 'Hapus Jadwal?', text: 'Soal tidak terhapus, hanya jadwal saja.', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API+'/admin/delete-schedule/'+id, {method:'DELETE'}); loadJadwal(); Swal.fire('Dihapus!', 'Jadwal berhasil dihapus.', 'success'); } }); }
-        
         function editJadwal(id) { const j = window.allSchedulesData.find(x => x.id === id); if(!j) return; let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tgl = tglJamArr[0] || ''; let jam = tglJamArr[1] || ''; Swal.fire({ title: 'Edit Jadwal', html: `<div class="space-y-3 text-left"><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel / Kode Soal</label><input id="e_j_mapel" class="w-full p-2 border rounded bg-slate-100 font-bold" value="${j.mapel}" readonly></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Tanggal Mulai</label><input type="date" id="e_j_tgl" class="w-full p-2 border rounded" value="${tgl}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Jam Mulai</label><input type="time" id="e_j_jam" class="w-full p-2 border rounded" value="${jam}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Durasi (Menit)</label><input type="number" id="e_j_durasi" class="w-full p-2 border rounded font-bold" value="${j.durasi}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Status Ujian</label><select id="e_j_status" class="w-full p-2 border rounded font-bold text-blue-700"><option value="Aktif" ${j.status==='Aktif'?'selected':''}>Aktif</option><option value="Ditutup" ${j.status!=='Aktif'?'selected':''}>Ditutup (Kunci Ujian)</option></select></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#2563eb', preConfirm: () => { return { id: j.id, mapel: document.getElementById('e_j_mapel').value, tanggal: document.getElementById('e_j_tgl').value + '|' + document.getElementById('e_j_jam').value, durasi: document.getElementById('e_j_durasi').value, status: document.getElementById('e_j_status').value } } }).then(async (res) => { if(res.isConfirmed) { Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); await fetch(API+'/admin/update-schedule', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadJadwal(); Swal.fire('Tersimpan!', 'Jadwal berhasil diperbarui.', 'success'); } }); }
         async function saveJadwal() { const mapel = document.getElementById('j_mapel').value; const tanggal = document.getElementById('j_tgl').value; const jam = document.getElementById('j_jam').value; const durasi = document.getElementById('j_durasi').value; if(!mapel || !tanggal || !jam || !durasi) return Swal.fire('Oops','Semua kolom jadwal wajib diisi!','warning'); const tglJamDB = `${tanggal}|${jam}`; Swal.fire({ title: 'Menyimpan Jadwal...', didOpen: () => Swal.showLoading() }); try { const response = await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: tglJamDB, durasi }) }); const data = await response.json(); if (data.status === 'success') { Swal.fire('Sukses!', 'Jadwal ujian berhasil dibuat.', 'success'); loadJadwal(); } else { Swal.fire('Gagal Menyimpan!', data.message || 'Pastikan kolom "status" sudah ditambahkan di tabel Supabase Anda.', 'error'); } } catch(e) { Swal.fire('Error Server', 'Terjadi kesalahan sistem database.', 'error'); } }
         async function loadJadwal() { const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); window.allSchedulesData = data; document.getElementById('list-jadwal').innerHTML = data.map(j => { let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tglTampil = tglJamArr[0] || j.tanggal; let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; let statusBadge = j.status === 'Aktif' ? '<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Aktif</span>' : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Ditutup</span>'; return `<div class="bg-white p-3 md:p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center relative"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-[10px] md:text-sm text-blue-900">${j.mapel}</h4> ${statusBadge}</div><p class="text-[8px] md:text-[10px] text-slate-400"><i class="fa fa-calendar-alt"></i> ${tglTampil}${jamTampil} • <i class="fa fa-clock"></i> ${j.durasi} Menit</p></div><div class="text-center px-3 md:px-4 border-l border-slate-100"><p class="text-[7px] md:text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-base md:text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div><div class="flex flex-col gap-1.5 pl-2 border-l border-slate-100"><button onclick="editJadwal(${j.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs" title="Edit Jadwal"><i class="fa fa-edit"></i></button><button onclick="hapusJadwal(${j.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs" title="Hapus Jadwal"><i class="fa fa-trash"></i></button></div></div>`; }).join(''); const resExams = await fetch(API + '/admin/available-exams' + getAuthParams()); const exams = await resExams.json(); const selectMapel = document.getElementById('j_mapel'); selectMapel.innerHTML = '<option value="">-- Pilih Kode Soal --</option>' + exams.map(e => `<option value="${e}">${e}</option>`).join(''); }
