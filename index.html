@@ -22,7 +22,7 @@
     <!-- LOGIN -->
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-        <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600">
+        <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
             <div class="text-center mb-6"><img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
             <div class="space-y-4">
                 <div><label class="text-[10px] md:text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"></div></div>
@@ -34,10 +34,46 @@
                         <button type="button" onclick="togglePass('login-pass', 'eye-icon-login')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-blue-600 focus:outline-none"><i id="eye-icon-login" class="fa fa-eye-slash"></i></button>
                     </div>
                 </div>
-                <!-- Tombol PWA (Instal) Dihapus Sepenuhnya -->
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 mt-2 text-sm md:text-base">MASUK APLIKASI</button>
             </div>
+            
+            <div class="mt-6 pt-4 border-t border-slate-200">
+                <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
+            </div>
+            
             <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @spenda-digi</p>
+        </div>
+    </div>
+
+    <!-- VIEW PUBLIC SCORE (ORANG TUA) -->
+    <div id="view-public-score" class="hidden min-h-screen bg-slate-100 flex-col p-4 relative">
+        <div class="max-w-5xl mx-auto w-full bg-white rounded-3xl shadow-xl p-4 md:p-6 flex flex-col h-[90vh]">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <div>
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase">LIVE SCORE UJIAN</h2>
+                    <p class="text-xs text-slate-500">Pantau pergerakan nilai siswa secara real-time</p>
+                </div>
+                <button onclick="keluarPublic()" class="bg-red-100 text-red-600 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs"><i class="fa fa-arrow-left"></i> Kembali</button>
+            </div>
+            
+            <div class="flex gap-2 mb-4">
+                <select id="pub-filter-mapel" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Mapel</option></select>
+                <select id="pub-filter-kelas" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Kelas</option></select>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-2 scroll-saver">
+                <table class="w-full text-left text-[10px] md:text-xs">
+                    <thead class="sticky top-0 bg-slate-200 text-slate-600 uppercase shadow-sm">
+                        <tr>
+                            <th class="p-2 md:p-3">Nama Siswa</th>
+                            <th class="p-2 md:p-3">Kelas / Mapel</th>
+                            <th class="p-2 md:p-3 text-center">Status</th>
+                            <th class="p-2 md:p-3 text-center">Skor Live</th>
+                        </tr>
+                    </thead>
+                    <tbody id="public-table-body" class="divide-y bg-white"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -103,7 +139,6 @@
                 <div id="page-dashboard" class="page-content space-y-3 md:space-y-4">
                     <div id="dashboard-tokens" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-3 md:mb-4"></div>
                     
-                    <!-- PEMISAHAN KOTAK TOTAL GURU DAN TOTAL SISWA -->
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
                         <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-[8px] font-bold text-slate-400">TOTAL SISWA</p><h1 id="stat-siswa" class="text-base md:text-xl font-black text-slate-700">0</h1></div>
                         <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-[8px] font-bold text-slate-400">TOTAL GURU</p><h1 id="stat-guru" class="text-base md:text-xl font-black text-slate-700">0</h1></div>
@@ -124,8 +159,6 @@
                                 <select id="filter-kelas" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
                             </div>
                         </div>
-                        
-                        <!-- WADAH TABEL LIVE (UNTUK SCROLL MANDIRI) -->
                         <div id="monitor-container" class="p-2 md:p-4 bg-slate-50/50 flex flex-col gap-3 md:gap-4 rounded-b-xl"></div>
                     </div>
                 </div>
@@ -144,7 +177,7 @@
                     
                     <div class="bg-white p-3 md:p-8 rounded-xl shadow-sm border mt-4">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-2 md:pb-3 mb-3 md:mb-4 gap-2"><h3 class="font-bold text-slate-700 text-xs md:text-sm">Input Soal Manual Beruntun</h3><div class="w-full md:w-1/3"><input type="text" id="s_judul_bulk" placeholder="KODE UJIAN" class="w-full p-2 border-2 border-blue-200 bg-blue-50 rounded-lg outline-none text-[10px] md:text-sm font-bold focus:border-blue-500"></div></div>
-                        <div id="bulk-questions-container" class="space-y-4 md:space-y-6"><div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative" data-no="1"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">1</div><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel)</option><option value="TS">9 - TS (Tabel Sesuai)</option><option value="SIFAT">10 - SIFAT (Komutatif dll)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="Isi Pilihan A ||| Pilihan B"></div></div></div></div>
+                        <div id="bulk-questions-container" class="space-y-4 md:space-y-6"><div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative" data-no="1"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">1</div><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai)</option><option value="SIFAT">10 - SIFAT (Komutatif dll)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div></div>
                         <div class="mt-4 md:mt-6 flex flex-col md:flex-row gap-2 md:gap-3"><button onclick="tambahBarisSoal()" class="flex-1 bg-blue-50 text-blue-600 border-2 border-dashed border-blue-200 py-2 md:py-3 rounded-xl font-bold hover:bg-blue-100 transition text-[10px] md:text-xs"><i class="fa fa-plus-circle mr-2"></i> TAMBAH NOMOR</button><button onclick="simpanSoalBulk()" class="flex-1 bg-slate-800 text-white py-2 md:py-3 rounded-xl font-black shadow-xl hover:bg-slate-900 transition text-[10px] md:text-xs"><i class="fa fa-save mr-2"></i> SIMPAN SEMUA</button></div>
                     </div>
                     <div class="flex justify-between items-center mb-2 mt-6 md:mt-8"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Soal</button></div>
@@ -186,6 +219,57 @@
         let isExamActive = false; let allActivityData = [];
         window.allResultsData = []; window.filteredResultsData = []; window.allSchedulesData = [];
 
+        // Fitur Publik Score
+        let publicInterval;
+        let publicActivityData = [];
+
+        async function showPublicScore() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-public-score').classList.remove('hidden');
+            document.getElementById('view-public-score').classList.add('flex');
+            await loadPublicData();
+            publicInterval = setInterval(loadPublicData, 5000);
+        }
+
+        function keluarPublic() {
+            clearInterval(publicInterval);
+            document.getElementById('view-public-score').classList.add('hidden');
+            document.getElementById('view-public-score').classList.remove('flex');
+            document.getElementById('view-login').classList.remove('hidden');
+        }
+
+        async function loadPublicData() {
+            try {
+                const res = await fetch(API + '/public/live-score');
+                publicActivityData = await res.json();
+                
+                if(document.getElementById('pub-filter-kelas').options.length === 1) {
+                    let kelasSet = new Set(); let mapelSet = new Set();
+                    publicActivityData.forEach(a => { if(a.kelas && a.kelas !== '-') kelasSet.add(a.kelas); if(a.exam_name) mapelSet.add(a.exam_name); });
+                    const fKelas = document.getElementById('pub-filter-kelas'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); });
+                    const fMapel = document.getElementById('pub-filter-mapel'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); });
+                }
+                renderPublicTable();
+            } catch(e) { console.log("Gagal memuat live score publik"); }
+        }
+
+        function renderPublicTable() {
+            const selKelas = document.getElementById('pub-filter-kelas').value; 
+            const selMapel = document.getElementById('pub-filter-mapel').value;
+            let filtered = publicActivityData.filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
+            
+            filtered.sort((a,b) => (parseFloat(b.score)||0) - (parseFloat(a.score)||0));
+
+            let html = filtered.map(a => {
+                let badge = a.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : (a.status.includes('Curang') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
+                let skor = a.score !== null ? a.score : '-';
+                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${skor}</td></tr>`;
+            }).join('');
+
+            if(!html) html = `<tr><td colspan="4" class="text-center p-4 text-slate-400">Belum ada data nilai langsung.</td></tr>`;
+            document.getElementById('public-table-body').innerHTML = html;
+        }
+
         function getAuthParams() { return !activeUser ? "" : `?role=${encodeURIComponent(activeUser.role)}&mapel=${encodeURIComponent(activeUser.mapel || '')}`; }
         function toggleAdminSidebar() { document.getElementById('admin-sidebar').classList.toggle('-translate-x-full'); document.getElementById('admin-overlay').classList.toggle('hidden'); }
         function toggleCbtNav() { document.getElementById('cbt-nav-panel').classList.toggle('translate-x-full'); document.getElementById('cbt-nav-overlay').classList.toggle('hidden'); }
@@ -193,6 +277,13 @@
 
         document.addEventListener('keyup', (e) => { if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) { navigator.clipboard.writeText(''); Swal.fire('Akses Dilarang!', 'Tangkapan layar (Screenshot) terdeteksi dan tidak diizinkan!', 'warning'); } });
         document.addEventListener('keydown', function(e) { if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } });
+
+        // Pendeteksi Layar Keluar/Notifikasi
+        document.addEventListener('fullscreenchange', () => {
+            if (isExamActive && !document.fullscreenElement) {
+                deteksiKecurangan();
+            }
+        });
 
         function deteksiKecurangan() {
             if (!isExamActive || !navigator.onLine) return;
@@ -237,7 +328,6 @@
                     cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '' })); cbtCurrentIndex = 0;
                     
                     let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`;
-                    // Reset Start Time agar selalu mulai dari 0 setiap mapel baru
                     localStorage.setItem(startTimeKey, Date.now()); 
 
                     loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; Swal.close();
@@ -420,12 +510,8 @@
         
         async function loadStats() { 
             if(!activeUser || activeUser.role === 'siswa') return; 
-            
-            // Mengambil Total Siswa dan Total Guru dari Server secara terpisah
-            const resStats = await fetch(API + '/admin/stats'); 
-            const dataStats = await resStats.json(); 
-            document.getElementById('stat-siswa').innerText = dataStats.total_siswa; 
-            document.getElementById('stat-guru').innerText = dataStats.total_guru; 
+            const resStats = await fetch(API + '/admin/stats'); const dataStats = await resStats.json(); 
+            document.getElementById('stat-siswa').innerText = dataStats.total_siswa; document.getElementById('stat-guru').innerText = dataStats.total_guru; 
             
             const resSch = await fetch(API + '/admin/schedules' + getAuthParams()); const schedules = await resSch.json(); 
             document.getElementById('dashboard-tokens').innerHTML = schedules.map(s => `<div class="bg-gradient-to-r from-blue-600 to-blue-800 p-3 md:p-4 rounded-xl shadow-md text-white flex justify-between items-center border border-blue-500"><div><p class="text-[8px] md:text-[10px] font-bold opacity-80 uppercase">${s.mapel}</p><h2 class="text-base md:text-xl font-black tracking-widest">${s.pin}</h2></div><i class="fa fa-key text-xl opacity-50"></i></div>`).join('');
@@ -463,6 +549,9 @@
         }
 
         function renderActivityTable() {
+            let scrollPositions = [];
+            document.querySelectorAll('.scroll-saver').forEach(el => scrollPositions.push(el.scrollTop));
+
             const selKelas = document.getElementById('filter-kelas').value; const selMapel = document.getElementById('filter-mapel').value;
             let filtered = allActivityData.filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
             
@@ -470,7 +559,6 @@
             let finished = filtered.filter(a => a.status === 'Selesai');
             let working = filtered.filter(a => a.status === 'Mengerjakan' || (!a.status.includes('Curang') && a.status !== 'Selesai'));
 
-            // UPDATE ANGKA STATISTIK SESUAI FILTER DINAMIS
             document.getElementById('stat-kerja').innerText = working.length;
             document.getElementById('stat-selesai').innerText = finished.length;
             document.getElementById('stat-curang').innerText = blocked.length;
@@ -503,17 +591,16 @@
                     let hantuBtn = isWorking ? `<button onclick="usirHantu(${a.id})" class="ml-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white px-2 py-1 rounded shadow-sm text-[8px]" title="Siswa sudah pulang? Klik ini"><i class="fa fa-times"></i></button>` : '';
 
                     return `<tr class="hover:bg-slate-50 border-b border-slate-100 ${rowColorClass}">
-                        <td class="p-2 md:p-3 font-bold ${textClass} min-w-[150px] whitespace-normal leading-snug">${a.student_name} ${hantuBtn}<br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td>
-                        <td class="p-2 md:p-3 font-medium min-w-[100px]">${a.exam_name}</td>
-                        <td class="p-2 md:p-3 min-w-[100px]"><span class="px-2 py-1 rounded-full text-[9px] md:text-[10px] font-bold ${badgeClass}">${a.status}</span> ${aksiBtn}</td>
-                        <td class="p-2 md:p-3 font-black text-sm min-w-[80px]">${skorTampil}</td>
-                        <td class="p-2 md:p-3 min-w-[100px]">${durasiFinal}</td>
-                        <td class="p-2 md:p-3 text-[9px] md:text-[10px] text-slate-500 min-w-[80px]">${jamUpdate}</td>
+                        <td class="p-2 md:p-3 font-bold ${textClass}">${a.student_name} ${hantuBtn}<br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td>
+                        <td class="p-2 md:p-3 font-medium">${a.exam_name}</td>
+                        <td class="p-2 md:p-3"><span class="px-2 py-1 rounded-full text-[9px] md:text-[10px] font-bold ${badgeClass}">${a.status}</span> ${aksiBtn}</td>
+                        <td class="p-2 md:p-3 font-black text-sm">${skorTampil}</td>
+                        <td class="p-2 md:p-3">${durasiFinal}</td>
+                        <td class="p-2 md:p-3 text-[9px] md:text-[10px] text-slate-500">${jamUpdate}</td>
                     </tr>`;
                 }).join('');
 
-                // Kotak Scroll Terpisah (Tinggi Max 40vh)
-                return `<div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white mb-4"><div class="p-2 md:p-3 text-[10px] md:text-xs font-black uppercase tracking-widest ${titleColorClass}"><i class="fa ${icon} mr-1"></i> ${title} <span class="float-right bg-white/80 px-2 py-0.5 rounded-full shadow-sm text-[9px] text-slate-700">${dataArray.length} Siswa</span></div><div class="overflow-x-auto"><div class="max-h-[40vh] overflow-y-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap min-w-[700px]"><thead class="text-[8px] md:text-[9px] text-slate-500 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-2 md:p-3 bg-slate-100">Nama Siswa</th><th class="p-2 md:p-3 bg-slate-100">Ujian</th><th class="p-2 md:p-3 bg-slate-100">Status / Aksi</th><th class="p-2 md:p-3 bg-slate-100">Skor</th><th class="p-2 md:p-3 bg-slate-100">Durasi</th><th class="p-2 md:p-3 bg-slate-100">Jam Update</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">${rows}</tbody></table></div></div></div>`;
+                return `<div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white mb-4"><div class="p-2 md:p-3 text-[10px] md:text-xs font-black uppercase tracking-widest ${titleColorClass}"><i class="fa ${icon} mr-1"></i> ${title} <span class="float-right bg-white/80 px-2 py-0.5 rounded-full shadow-sm text-[9px] text-slate-700">${dataArray.length} Siswa</span></div><div class="overflow-x-auto"><div class="max-h-[40vh] overflow-y-auto scroll-saver"><table class="w-full text-left text-[10px] md:text-xs"><thead class="text-[8px] md:text-[9px] text-slate-500 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-2 md:p-3 bg-slate-100">Nama Siswa</th><th class="p-2 md:p-3 bg-slate-100">Ujian</th><th class="p-2 md:p-3 bg-slate-100">Status / Aksi</th><th class="p-2 md:p-3 bg-slate-100">Skor</th><th class="p-2 md:p-3 bg-slate-100">Durasi</th><th class="p-2 md:p-3 bg-slate-100">Jam Update</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">${rows}</tbody></table></div></div></div>`;
             };
 
             html += renderTableGroup('Siswa Diblokir (Curang)', 'fa-ban', 'bg-red-50 text-red-600 border-b border-red-200', blocked, 'bg-red-50/30', 'text-red-700', 'bg-red-500 text-white animate-pulse', false);
@@ -521,6 +608,11 @@
             html += renderTableGroup('Selesai Ujian (Final)', 'fa-check-circle', 'bg-emerald-50 text-emerald-600 border-b border-emerald-200', finished, '', 'text-slate-800', 'bg-emerald-100 text-emerald-700', false);
             if(!html) html = `<div class="text-center p-8 text-slate-400 font-bold bg-white rounded-xl border border-slate-200 border-dashed"><i class="fa fa-info-circle text-3xl mb-2 text-slate-300"></i><br>Belum ada aktivitas siswa.</div>`;
             document.getElementById('monitor-container').innerHTML = html; 
+
+            // Kembalikan posisi scroll
+            document.querySelectorAll('.scroll-saver').forEach((el, index) => {
+                if(scrollPositions[index]) el.scrollTop = scrollPositions[index];
+            });
         }
 
         async function loadMaster() { const resC = await fetch(API + '/admin/config'); const conf = await resC.json(); document.getElementById('app-name-display').innerText = conf.find(c => c.key === 'app_name').value; }

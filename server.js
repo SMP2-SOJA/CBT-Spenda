@@ -32,7 +32,6 @@ app.get('/api/admin/available-exams', async (req, res) => { let { data } = await
 
 app.delete('/api/admin/delete-soal/:id', async (req, res) => { const { data: soal } = await supabase.from('questions').select('exam_id').eq('id', req.params.id).single(); if (soal) { await supabase.from('questions').delete().eq('id', req.params.id); const { count } = await supabase.from('questions').select('*', { count: 'exact', head: true }).eq('exam_id', soal.exam_id); if (count === 0) await supabase.from('schedules').delete().eq('mapel', soal.exam_id); res.json({status: "success"}); } else { res.json({status: "error"}); } });
 
-// Fitur Hapus Paket Soal Penuh
 app.delete('/api/admin/delete-exam/:exam_id', async (req, res) => { 
     await supabase.from('questions').delete().eq('exam_id', req.params.exam_id); 
     await supabase.from('schedules').delete().eq('mapel', req.params.exam_id); 
@@ -49,7 +48,6 @@ app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from
 app.delete('/api/admin/clear-users', async (req, res) => { await supabase.from('users').delete().neq('role', 'admin').neq('role', 'Admin'); res.json({status: "success"}); });
 app.delete('/api/admin/clear-monitoring', async (req, res) => { await supabase.from('activity').delete().neq('id', 0); res.json({status: "success"}); });
 
-// Fitur Menghapus Siswa Hantu dari Dashboard
 app.delete('/api/admin/remove-activity/:id', async (req, res) => { 
     await supabase.from('activity').delete().eq('id', req.params.id); 
     res.json({status: "success"}); 
@@ -94,7 +92,6 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
 app.post('/api/admin/add-schedule', async (req, res) => { const pin = Math.floor(100000 + Math.random() * 900000).toString(); const { error } = await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); if (error) return res.status(500).json({ status: "error", message: `Supabase Error: ${error.message} (Cek apakah kolom 'status' sudah ada di tabel schedules)` }); res.json({ status: "success", pin }); });
 app.get('/api/admin/schedules', async (req, res) => { let { data } = await supabase.from('schedules').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(s => isAuthorizedMapel(req.query.mapel, s.mapel)); res.json(data || []); });
 
-// Mengirim Total Siswa dan Total Guru Terpisah
 app.get('/api/admin/stats', async (req, res) => { 
     const { count: cSiswa } = await supabase.from('users').select('*', { count: 'exact', head: true }).ilike('role', 'siswa'); 
     const { count: cGuru } = await supabase.from('users').select('*', { count: 'exact', head: true }).ilike('role', 'guru'); 
@@ -103,6 +100,14 @@ app.get('/api/admin/stats', async (req, res) => {
 
 app.get('/api/admin/recent-activity', async (req, res) => { 
     let { data: acts } = await supabase.from('activity').select('*').order('last_seen', { ascending: false }); 
+    let { data: users } = await supabase.from('users').select('name, kelas');
+    let actsWithKelas = (acts || []).map(a => { let u = (users || []).find(x => x.name === a.student_name); return { ...a, kelas: u ? u.kelas : '-' }; });
+    res.json(actsWithKelas); 
+});
+
+// ENDPOINT BARU KHUSUS UNTUK AKSES PUBLIK
+app.get('/api/public/live-score', async (req, res) => { 
+    let { data: acts } = await supabase.from('activity').select('student_name, exam_name, status, score, last_seen').order('last_seen', { ascending: false }); 
     let { data: users } = await supabase.from('users').select('name, kelas');
     let actsWithKelas = (acts || []).map(a => { let u = (users || []).find(x => x.name === a.student_name); return { ...a, kelas: u ? u.kelas : '-' }; });
     res.json(actsWithKelas); 
@@ -120,7 +125,6 @@ app.get('/api/admin/results', async (req, res) => {
     res.json(resultsWithKelas); 
 });
 
-// Fitur Auto-Lock Batas Waktu
 app.post('/api/siswa/cek-pin', async (req, res) => { 
     const { data: row } = await supabase.from('schedules').select('*').eq('pin', req.body.pin).single(); 
     if(row) { 
@@ -135,7 +139,6 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
         if (scheduleTime) {
             if (req.body.client_time < scheduleTime) return res.status(403).json({status: "error", message: `Ujian belum dimulai! (Jadwal: ${scheduleTime})`});
             
-            // Logika Auto-Lock
             if (!isBypassed) {
                 let [sh, sm] = scheduleTime.split(':').map(Number);
                 let durasi = parseInt(row.durasi) || 0;
@@ -145,7 +148,7 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
                 let endStr = String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
 
                 if (req.body.client_time > endStr) {
-                    return res.status(403).json({status: "error", message: `Waktu ujian telah berakhir pada ${endStr}! Hubungi Guru Mapel untuk minta izin susulan.`});
+                    return res.status(403).json({status: "error", message: `Waktu ujian telah berakhir pada ${endStr}! Hubungi Guru jika Anda terlambat.`});
                 }
             }
         }
