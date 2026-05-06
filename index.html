@@ -23,7 +23,7 @@
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
-            <div class="text-center mb-6"><img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
+            <div class="text-center mb-6"><img src="logo-sekolah.png" id="logo-login" onerror="this.style.display='none'; document.getElementById('logo-placeholder-login').style.display='flex';" class="w-16 h-16 mx-auto mb-4 object-contain"><div id="logo-placeholder-login" class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full items-center justify-center" style="display:none"><i class="fa fa-school text-blue-600 text-2xl"></i></div><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
             <div class="space-y-4">
                 <div><label class="text-[10px] md:text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"></div></div>
                 <div>
@@ -69,6 +69,8 @@
                             <th class="p-2 md:p-3">Kelas / Mapel</th>
                             <th class="p-2 md:p-3 text-center">Status</th>
                             <th class="p-2 md:p-3 text-center">Skor Live</th>
+                            <th class="p-2 md:p-3 text-center">Progres Soal</th>
+                            <th class="p-2 md:p-3 text-center">Waktu</th>
                         </tr>
                     </thead>
                     <tbody id="public-table-body" class="divide-y bg-white"></tbody>
@@ -121,7 +123,7 @@
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
             <div class="p-6 text-center border-b border-slate-800">
-                <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
+                <img src="logo-sekolah.png" id="logo-sidebar" onerror="this.style.display='none'; document.getElementById('logo-placeholder-sidebar').style.display='flex';" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full"><div id="logo-placeholder-sidebar" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 bg-blue-700 rounded-full items-center justify-center" style="display:none"><i class="fa fa-school text-white text-lg"></i></div>
                 <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
             </div>
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
@@ -256,21 +258,43 @@
         function renderPublicTable() {
             const selKelas = document.getElementById('pub-filter-kelas').value; 
             const selMapel = document.getElementById('pub-filter-mapel').value;
-            let filtered = publicActivityData.filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
+            // FIX #5: Hanya tampilkan siswa yang sedang Mengerjakan (mapel aktif saja)
+            let filtered = publicActivityData.filter(a => { 
+                return a.status === 'Mengerjakan' && 
+                       (selKelas === "" || a.kelas === selKelas) && 
+                       (selMapel === "" || a.exam_name === selMapel); 
+            });
             
             filtered.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0));
 
             let html = filtered.map(a => {
-                let badge = a.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : (a.status.includes('Curang') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
+                let badge = 'bg-blue-100 text-blue-700';
                 
                 let skorMentah = a.score !== null && a.score !== undefined ? String(a.score) : '-';
                 let nilaiTampil = '-'; 
                 if (skorMentah.includes('|')) { let sParts = skorMentah.split('|'); nilaiTampil = sParts[0].trim(); } else { nilaiTampil = skorMentah; }
 
-                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${nilaiTampil}</td></tr>`;
+                // FIX #2: Parse last_seen untuk Waktu dan Progres
+                let waktuTampil = '-'; let progresTampil = '-';
+                if (a.last_seen && a.last_seen.includes('(')) {
+                    let parts = a.last_seen.split(' (');
+                    waktuTampil = parts[0];
+                    let dText = parts[1].replace(')', '');
+                    if (dText.includes('|')) {
+                        let subParts = dText.split('|');
+                        progresTampil = `<span class="font-bold text-blue-600"><i class="fa fa-tasks"></i> ${subParts[1].trim()}</span><br><span class="text-[9px] text-slate-500">${subParts[0].trim()}</span>`;
+                    } else {
+                        progresTampil = dText;
+                    }
+                } else if (a.last_seen) {
+                    waktuTampil = a.last_seen;
+                    progresTampil = '<span class="text-orange-500 text-[9px]"><i class="fa fa-spinner fa-spin"></i> Baru mulai</span>';
+                }
+
+                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${nilaiTampil}</td><td class="p-2 md:p-3 text-center text-[10px]">${progresTampil}</td><td class="p-2 md:p-3 text-center text-[10px] text-slate-500">${waktuTampil}</td></tr>`;
             }).join('');
 
-            if(!html) html = `<tr><td colspan="4" class="text-center p-4 text-slate-400">Belum ada data nilai langsung.</td></tr>`;
+            if(!html) html = `<tr><td colspan="6" class="text-center p-4 text-slate-400">Tidak ada siswa yang sedang mengerjakan ujian.</td></tr>`;
             document.getElementById('public-table-body').innerHTML = html;
         }
 
@@ -356,7 +380,14 @@
             if(cbtQuestions[0].tipe === 'GFORM') return 'G-Form';
             let totalMax = 0; let totalGet = 0;
             cbtQuestions.forEach((q, index) => {
-                let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1; totalMax += bobot;
+                let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1;
+                // FIX #4: Untuk ISIAN/ESAI, totalMax hanya ditambah jika kunci ada (sama dengan submitUjian)
+                if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') {
+                    let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || [];
+                    if(kWords.length > 0) totalMax += bobot; else return;
+                } else {
+                    totalMax += bobot;
+                }
                 if(!ans || ans === "" || (ans.indexOf('-') !== -1 && (q.tipe==='BS'||q.tipe==='TS'||q.tipe==='SIFAT'))) return;
                 let kArr, aArr, betul=0;
                 if (q.tipe === 'PG') { if(ans.replace(/\s/g, '').toLowerCase() === (q.kunci||"").replace(/\s/g, '').toLowerCase()) totalGet += bobot; } 
@@ -370,23 +401,30 @@
 
         setInterval(() => {
             if (isExamActive && navigator.onLine) {
-                let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey);
-                if (start) { 
-                    let diffMs = Date.now() - parseInt(start); let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
-                    
-                    let terjawab = 0; let totalSoal = cbtQuestions.length;
-                    for(let i=0; i<totalSoal; i++){
-                        let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i];
-                        if(a === "") continue;
-                        if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue;
-                        if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue;
-                        terjawab++;
-                    }
-                    
-                    let durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; 
-                    let lScore = getLiveScore(); 
-                    fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore}) }).catch(e=>console.log(e)); 
+                // FIX #1: Hitung progress soal selalu, di luar blok if(start)
+                let terjawab = 0; let totalSoal = cbtQuestions.length;
+                for(let i=0; i<totalSoal; i++){
+                    let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i];
+                    if(a === "") continue;
+                    if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue;
+                    if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue;
+                    terjawab++;
                 }
+
+                let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; 
+                let start = localStorage.getItem(startTimeKey);
+                let durasiTeks;
+                if (start) { 
+                    let diffMs = Date.now() - parseInt(start); 
+                    let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
+                    durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; 
+                } else {
+                    // Fallback: kirim progress soal saja tanpa durasi agar tetap muncul di monitoring
+                    durasiTeks = `- | ${terjawab}/${totalSoal} Soal`;
+                }
+                
+                let lScore = getLiveScore(); 
+                fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore}) }).catch(e=>console.log(e)); 
             }
         }, 15000);
 
