@@ -671,8 +671,18 @@
                     let nilaiTampil = '-'; let progressTampil = '';
                     if (skorMentah.includes('|')) { let sParts = skorMentah.split('|'); nilaiTampil = sParts[0].trim(); } else { nilaiTampil = skorMentah; }
 
-                    if(isWorking && a.status === 'Mengerjakan' && a.score) { skorTampil = `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${nilaiTampil}</span>`; } 
-                    else if (isWorking && a.status === 'Mengerjakan') { skorTampil = `<span class="text-orange-500 font-bold text-[9px] md:text-[10px]">-</span>`; }
+                    // FIX: deklarasi let agar tidak bocor antar baris/grup
+                    let skorTampil = '';
+                    if(isWorking && a.status === 'Mengerjakan' && a.score) { 
+                        skorTampil = `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${nilaiTampil}</span>`; 
+                    } else if (isWorking && a.status === 'Mengerjakan') { 
+                        skorTampil = `<span class="text-orange-500 font-bold text-[9px] md:text-[10px]">-</span>`; 
+                    } else if (a.status === 'Selesai') {
+                        // FIX: tampilkan skor final yang benar untuk siswa Selesai
+                        skorTampil = nilaiTampil !== '-' ? `<span class="text-emerald-600 font-black text-sm">${nilaiTampil}</span>` : `<span class="text-slate-400">-</span>`;
+                    } else {
+                        skorTampil = `<span class="text-slate-400">-</span>`;
+                    }
 
                     let durasiFinal = '<span class="text-slate-400">-</span>'; let jamUpdate = a.last_seen || '-';
                     if (a.last_seen && a.last_seen.includes('(')) { 
