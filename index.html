@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-<!-- @spenda-digi -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -19,11 +18,10 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
 
-    <!-- LOGIN -->
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
-            <div class="text-center mb-6"><img src="logo-sekolah.png" id="logo-login" onerror="this.style.display='none'; document.getElementById('logo-placeholder-login').style.display='flex';" class="w-16 h-16 mx-auto mb-4 object-contain"><div id="logo-placeholder-login" class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full items-center justify-center" style="display:none"><i class="fa fa-school text-blue-600 text-2xl"></i></div><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
+            <div class="text-center mb-6"><img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
             <div class="space-y-4">
                 <div><label class="text-[10px] md:text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"></div></div>
                 <div>
@@ -41,11 +39,10 @@
                 <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
             </div>
             
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya | @spenda-digi</p>
+            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026 Rahmat Hidayat H. (r4hmad-digital)</p>
         </div>
     </div>
 
-    <!-- VIEW PUBLIC SCORE (ORANG TUA) -->
     <div id="view-public-score" class="hidden min-h-screen bg-slate-100 flex-col p-4 relative">
         <div class="max-w-5xl mx-auto w-full bg-white rounded-3xl shadow-xl p-4 md:p-6 flex flex-col h-[90vh]">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -69,8 +66,6 @@
                             <th class="p-2 md:p-3">Kelas / Mapel</th>
                             <th class="p-2 md:p-3 text-center">Status</th>
                             <th class="p-2 md:p-3 text-center">Skor Live</th>
-                            <th class="p-2 md:p-3 text-center">Progres Soal</th>
-                            <th class="p-2 md:p-3 text-center">Waktu</th>
                         </tr>
                     </thead>
                     <tbody id="public-table-body" class="divide-y bg-white"></tbody>
@@ -79,7 +74,6 @@
         </div>
     </div>
 
-    <!-- TOKEN SISWA -->
     <div id="view-siswa-token" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-100">
         <div class="w-full max-w-sm bg-white p-6 md:p-8 rounded-3xl shadow-xl text-center border-t-8 border-emerald-500">
             <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa fa-unlock-alt text-lg md:text-xl"></i></div>
@@ -91,7 +85,6 @@
         </div>
     </div>
 
-    <!-- AREA UJIAN SISWA -->
     <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative anti-copas">
         <header class="bg-blue-800 text-white shadow-md flex justify-between items-center px-4 py-2 md:py-3 flex-shrink-0 z-20 relative">
             <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm md:text-lg tracking-wider uppercase">MAPEL</h1><p class="text-[10px] md:text-xs text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
@@ -118,12 +111,11 @@
         </div>
     </div>
 
-    <!-- ADMIN PANEL -->
     <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
             <div class="p-6 text-center border-b border-slate-800">
-                <img src="logo-sekolah.png" id="logo-sidebar" onerror="this.style.display='none'; document.getElementById('logo-placeholder-sidebar').style.display='flex';" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full"><div id="logo-placeholder-sidebar" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 bg-blue-700 rounded-full items-center justify-center" style="display:none"><i class="fa fa-school text-white text-lg"></i></div>
+                <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
                 <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
             </div>
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
@@ -187,9 +179,35 @@
                 </div>
 
                 <div id="page-nilai" class="page-content hidden space-y-3 md:space-y-4">
-                    <div class="flex justify-between items-center mb-1"><h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-chart-bar mr-2 text-blue-500"></i> Hasil Ujian</h3><div class="flex gap-1 md:gap-2"><select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Mapel</option></select><select id="filter-kelas-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select></div></div>
-                    <div class="flex justify-between items-center mb-3"><button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button><button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button></div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Siswa</th><th>Mapel</th><th>Waktu</th><th>Benar</th><th>Salah</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 gap-2">
+                        <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-chart-bar mr-2 text-blue-500"></i> Hasil Ujian</h3>
+                        <div class="flex flex-wrap gap-1 md:gap-2">
+                            <input type="number" id="input-kkm" placeholder="Set KKM (Cth: 75)" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-red-600 bg-white outline-none w-32 shadow-sm" oninput="renderNilaiTable()">
+                            <select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none shadow-sm" onchange="renderNilaiTable()"><option value="">Semua Mapel</option></select>
+                            <select id="filter-kelas-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none shadow-sm" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button>
+                        <button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-slate-200">
+                        <table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table">
+                            <thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase">
+                                <tr>
+                                    <th class="p-2 md:p-3 min-w-[150px]">Nama Siswa</th>
+                                    <th>Mapel</th>
+                                    <th>Waktu</th>
+                                    <th>Benar</th>
+                                    <th>Salah</th>
+                                    <th>Nilai</th>
+                                    <th>Status KKM</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nilai-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <div id="page-users" class="page-content hidden space-y-4">
@@ -200,7 +218,6 @@
         </main>
     </div>
 
-    <!-- MODAL DETAIL -->
     <div id="modal-detail" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-3 md:p-4">
         <div class="bg-white rounded-2xl w-full max-w-3xl h-[85vh] md:h-[80vh] flex flex-col shadow-2xl">
             <div class="p-3 md:p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl"><h3 class="font-bold text-blue-800 text-xs md:text-sm">Detail Analisis Butir Soal</h3><button onclick="document.getElementById('modal-detail').classList.add('hidden')" class="text-slate-400 hover:text-red-500"><i class="fa fa-times text-lg md:text-xl"></i></button></div>
@@ -258,52 +275,21 @@
         function renderPublicTable() {
             const selKelas = document.getElementById('pub-filter-kelas').value; 
             const selMapel = document.getElementById('pub-filter-mapel').value;
-
-            // FIX #5 (diperbaiki): Jika siswa punya entri Mengerjakan, sembunyikan entri Selesai-nya
-            // (agar mapel lama yang sudah selesai tidak muncul bersamaan dengan mapel baru yang aktif)
-            // Jika siswa sudah selesai semua, tetap tampilkan status Selesai
-            let studentsMengerjakan = new Set(
-                publicActivityData.filter(a => a.status === 'Mengerjakan').map(a => a.student_name)
-            );
-            let filtered = publicActivityData.filter(a => {
-                // Jika siswa ini sedang mengerjakan mapel lain, sembunyikan entri Selesai-nya
-                if (a.status === 'Selesai' && studentsMengerjakan.has(a.student_name)) return false;
-                // Sembunyikan status Curang dari tampilan publik
-                if (a.status && a.status.includes('Curang')) return false;
-                return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel);
-            });
+            let filtered = publicActivityData.filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
             
             filtered.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0));
 
             let html = filtered.map(a => {
-                let isSelesai = a.status === 'Selesai';
-                let badge = isSelesai ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700';
+                let badge = a.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : (a.status.includes('Curang') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
                 
                 let skorMentah = a.score !== null && a.score !== undefined ? String(a.score) : '-';
                 let nilaiTampil = '-'; 
                 if (skorMentah.includes('|')) { let sParts = skorMentah.split('|'); nilaiTampil = sParts[0].trim(); } else { nilaiTampil = skorMentah; }
 
-                // Parse last_seen untuk Waktu dan Progres
-                let waktuTampil = '-'; let progresTampil = '-';
-                if (a.last_seen && a.last_seen.includes('(')) {
-                    let parts = a.last_seen.split(' (');
-                    waktuTampil = parts[0];
-                    let dText = parts[1].replace(')', '');
-                    if (dText.includes('|')) {
-                        let subParts = dText.split('|');
-                        progresTampil = `<span class="font-bold text-blue-600"><i class="fa fa-tasks"></i> ${subParts[1].trim()}</span><br><span class="text-[9px] text-slate-500">${subParts[0].trim()}</span>`;
-                    } else {
-                        progresTampil = dText;
-                    }
-                } else if (a.last_seen) {
-                    waktuTampil = a.last_seen;
-                    progresTampil = isSelesai ? '<span class="text-emerald-600 text-[9px] font-bold"><i class="fa fa-check-circle"></i> Selesai</span>' : '<span class="text-orange-500 text-[9px]"><i class="fa fa-spinner fa-spin"></i> Baru mulai</span>';
-                }
-
-                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${nilaiTampil}</td><td class="p-2 md:p-3 text-center text-[10px]">${progresTampil}</td><td class="p-2 md:p-3 text-center text-[10px] text-slate-500">${waktuTampil}</td></tr>`;
+                return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${nilaiTampil}</td></tr>`;
             }).join('');
 
-            if(!html) html = `<tr><td colspan="6" class="text-center p-4 text-slate-400">Belum ada aktivitas siswa.</td></tr>`;
+            if(!html) html = `<tr><td colspan="4" class="text-center p-4 text-slate-400">Belum ada data nilai langsung.</td></tr>`;
             document.getElementById('public-table-body').innerHTML = html;
         }
 
@@ -315,7 +301,6 @@
         document.addEventListener('keyup', (e) => { if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) { navigator.clipboard.writeText(''); Swal.fire('Akses Dilarang!', 'Tangkapan layar (Screenshot) terdeteksi dan tidak diizinkan!', 'warning'); } });
         document.addEventListener('keydown', function(e) { if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } });
 
-        // Pendeteksi Layar Keluar/Notifikasi
         document.addEventListener('fullscreenchange', () => {
             if (isExamActive && !document.fullscreenElement) {
                 deteksiKecurangan();
@@ -342,7 +327,16 @@
                 if (data.status === "success") {
                     activeUser = data.user; Swal.close(); document.getElementById('view-login').classList.add('hidden');
                     if (activeUser.role.toLowerCase() === 'siswa') { document.getElementById('view-siswa-token').classList.remove('hidden'); document.getElementById('nama-siswa-welcome').innerText = activeUser.name; checkPendingSubmit(false); } 
-                    else { document.getElementById('view-admin').classList.remove('hidden'); if (activeUser.role.toLowerCase() === 'guru') { document.getElementById('menu-users').classList.add('hidden'); document.getElementById('menu-jadwal').classList.add('hidden'); document.getElementById('menu-banksoal').classList.add('hidden'); document.getElementById('role-badge').classList.remove('hidden'); document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`; } loadMaster(); showPage('dashboard'); }
+                    else { 
+                        document.getElementById('view-admin').classList.remove('hidden'); 
+                        if (activeUser.role.toLowerCase() === 'guru') { 
+                            document.getElementById('menu-users').classList.add('hidden'); 
+                            document.getElementById('menu-jadwal').classList.add('hidden'); 
+                            document.getElementById('role-badge').classList.remove('hidden'); 
+                            document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`; 
+                        } 
+                        loadMaster(); showPage('dashboard'); 
+                    }
                 } else Swal.fire('Gagal', data.message, 'error');
             } catch (e) { Swal.fire('Error', 'Server mati.', 'error'); }
         }
@@ -389,14 +383,7 @@
             if(cbtQuestions[0].tipe === 'GFORM') return 'G-Form';
             let totalMax = 0; let totalGet = 0;
             cbtQuestions.forEach((q, index) => {
-                let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1;
-                // FIX #4: Untuk ISIAN/ESAI, totalMax hanya ditambah jika kunci ada (sama dengan submitUjian)
-                if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') {
-                    let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || [];
-                    if(kWords.length > 0) totalMax += bobot; else return;
-                } else {
-                    totalMax += bobot;
-                }
+                let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1; totalMax += bobot;
                 if(!ans || ans === "" || (ans.indexOf('-') !== -1 && (q.tipe==='BS'||q.tipe==='TS'||q.tipe==='SIFAT'))) return;
                 let kArr, aArr, betul=0;
                 if (q.tipe === 'PG') { if(ans.replace(/\s/g, '').toLowerCase() === (q.kunci||"").replace(/\s/g, '').toLowerCase()) totalGet += bobot; } 
@@ -410,30 +397,23 @@
 
         setInterval(() => {
             if (isExamActive && navigator.onLine) {
-                // FIX #1: Hitung progress soal selalu, di luar blok if(start)
-                let terjawab = 0; let totalSoal = cbtQuestions.length;
-                for(let i=0; i<totalSoal; i++){
-                    let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i];
-                    if(a === "") continue;
-                    if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue;
-                    if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue;
-                    terjawab++;
-                }
-
-                let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; 
-                let start = localStorage.getItem(startTimeKey);
-                let durasiTeks;
+                let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey);
                 if (start) { 
-                    let diffMs = Date.now() - parseInt(start); 
-                    let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
-                    durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; 
-                } else {
-                    // Fallback: kirim progress soal saja tanpa durasi agar tetap muncul di monitoring
-                    durasiTeks = `- | ${terjawab}/${totalSoal} Soal`;
+                    let diffMs = Date.now() - parseInt(start); let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
+                    
+                    let terjawab = 0; let totalSoal = cbtQuestions.length;
+                    for(let i=0; i<totalSoal; i++){
+                        let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i];
+                        if(a === "") continue;
+                        if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue;
+                        if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue;
+                        terjawab++;
+                    }
+                    
+                    let durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; 
+                    let lScore = getLiveScore(); 
+                    fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore}) }).catch(e=>console.log(e)); 
                 }
-                
-                let lScore = getLiveScore(); 
-                fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore}) }).catch(e=>console.log(e)); 
             }
         }, 15000);
 
@@ -671,18 +651,8 @@
                     let nilaiTampil = '-'; let progressTampil = '';
                     if (skorMentah.includes('|')) { let sParts = skorMentah.split('|'); nilaiTampil = sParts[0].trim(); } else { nilaiTampil = skorMentah; }
 
-                    // FIX: deklarasi let agar tidak bocor antar baris/grup
-                    let skorTampil = '';
-                    if(isWorking && a.status === 'Mengerjakan' && a.score) { 
-                        skorTampil = `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${nilaiTampil}</span>`; 
-                    } else if (isWorking && a.status === 'Mengerjakan') { 
-                        skorTampil = `<span class="text-orange-500 font-bold text-[9px] md:text-[10px]">-</span>`; 
-                    } else if (a.status === 'Selesai') {
-                        // FIX: tampilkan skor final yang benar untuk siswa Selesai
-                        skorTampil = nilaiTampil !== '-' ? `<span class="text-emerald-600 font-black text-sm">${nilaiTampil}</span>` : `<span class="text-slate-400">-</span>`;
-                    } else {
-                        skorTampil = `<span class="text-slate-400">-</span>`;
-                    }
+                    if(isWorking && a.status === 'Mengerjakan' && a.score) { skorTampil = `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${nilaiTampil}</span>`; } 
+                    else if (isWorking && a.status === 'Mengerjakan') { skorTampil = `<span class="text-orange-500 font-bold text-[9px] md:text-[10px]">-</span>`; }
 
                     let durasiFinal = '<span class="text-slate-400">-</span>'; let jamUpdate = a.last_seen || '-';
                     if (a.last_seen && a.last_seen.includes('(')) { 
@@ -722,10 +692,95 @@
         }
 
         async function loadMaster() { const resC = await fetch(API + '/admin/config'); const conf = await resC.json(); document.getElementById('app-name-display').innerText = conf.find(c => c.key === 'app_name').value; }
-        async function loadNilai() { const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); window.allResultsData = data; if(document.getElementById('filter-kelas-nilai').options.length === 1) { let kelasSet = new Set(); let mapelSet = new Set(); window.allResultsData.forEach(r => { if(r.kelas && r.kelas !== '-') kelasSet.add(r.kelas); if(r.mapel) mapelSet.add(r.mapel); }); const fKelas = document.getElementById('filter-kelas-nilai'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); }); const fMapel = document.getElementById('filter-mapel-nilai'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); }); } renderNilaiTable(); }
-        function renderNilaiTable() { const selKelas = document.getElementById('filter-kelas-nilai').value; const selMapel = document.getElementById('filter-mapel-nilai').value; window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); }); document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${n.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${n.kelas||'-'}</span></td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black text-xs md:text-sm">${n.nilai}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "&#39;")})' class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1 rounded text-[9px] md:text-[10px] font-bold">Detail</button></td></tr>`).join(''); }
+        
+        async function loadNilai() { 
+            const res = await fetch(API + '/admin/results' + getAuthParams()); 
+            const data = await res.json(); 
+            window.allResultsData = data; 
+            
+            if(document.getElementById('filter-kelas-nilai').options.length === 1) { 
+                let kelasSet = new Set(); let mapelSet = new Set(); 
+                window.allResultsData.forEach(r => { if(r.kelas && r.kelas !== '-') kelasSet.add(r.kelas); if(r.mapel) mapelSet.add(r.mapel); }); 
+                const fKelas = document.getElementById('filter-kelas-nilai'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); }); 
+                const fMapel = document.getElementById('filter-mapel-nilai'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); }); 
+            } 
+            renderNilaiTable(); 
+        }
+
+        function renderNilaiTable() { 
+            const selKelas = document.getElementById('filter-kelas-nilai').value; 
+            const selMapel = document.getElementById('filter-mapel-nilai').value; 
+            const valKKM = parseFloat(document.getElementById('input-kkm').value);
+            
+            window.filteredResultsData = window.allResultsData.filter(r => { 
+                return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); 
+            }); 
+            
+            document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => {
+                let statusKKMHtml = '-';
+                if (!isNaN(valKKM)) {
+                    let nilaiSiswa = parseFloat(n.nilai) || 0;
+                    if (nilaiSiswa >= valKKM) {
+                        statusKKMHtml = `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[9px] md:text-[10px] font-bold">TUNTAS</span>`;
+                    } else {
+                        statusKKMHtml = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[9px] md:text-[10px] font-bold">REMEDIAL</span>`;
+                    }
+                }
+                
+                return `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${n.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${n.kelas||'-'}</span></td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black text-xs md:text-sm">${n.nilai}</td><td>${statusKKMHtml}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1 rounded text-[9px] md:text-[10px] font-bold">Detail</button></td></tr>`;
+            }).join(''); 
+        }
+
         function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \| /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); }
-        function exportExcelDetail() { if(!window.filteredResultsData || window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Belum ada data nilai pada filter ini', 'warning'); let maxQ = 0; window.filteredResultsData.forEach(r => { try { let details = JSON.parse(r.detail_jawaban); if(details.length > maxQ) maxQ = details.length; } catch(e){} }); let tableHtml = `<table border="1"><thead><tr><th style="background-color: #f8fafc; font-weight: bold;">Nama Siswa</th><th style="background-color: #f8fafc; font-weight: bold;">Kelas</th><th style="background-color: #f8fafc; font-weight: bold;">Mapel</th><th style="background-color: #f8fafc; font-weight: bold;">Waktu Pengerjaan</th><th style="background-color: #f8fafc; font-weight: bold;">Benar</th><th style="background-color: #f8fafc; font-weight: bold;">Salah</th><th style="background-color: #f8fafc; font-weight: bold;">Nilai Akhir</th>`; for(let i=1; i<=maxQ; i++) { tableHtml += `<th style="background-color: #f8fafc; font-weight: bold; vertical-align: top;">Soal No.${i}</th>`; } tableHtml += `</tr></thead><tbody>`; window.filteredResultsData.forEach(r => { let details = []; try { details = JSON.parse(r.detail_jawaban); } catch(e){} let tgl = r.tanggal || ''; let durasi = '-'; if (tgl.includes('|')) durasi = tgl.split('|')[1]; tableHtml += `<tr><td style="vertical-align: top;">${r.student_name}</td><td style="vertical-align: top;">${r.kelas||'-'}</td><td style="vertical-align: top;">${r.mapel}</td><td style="vertical-align: top; font-weight: bold;">${durasi}</td><td style="vertical-align: top;">${r.benar}</td><td style="vertical-align: top;">${r.salah}</td><td style="font-weight: bold; vertical-align: top;">${r.nilai}</td>`; let detMap = {}; details.forEach(d => { detMap[d.no] = d; }); for(let i=1; i<=maxQ; i++) { let d = detMap[i]; if(d) { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); tableHtml += `<td style="vertical-align: top;">${coloredJawab}</td>`; } else { tableHtml += `<td style="vertical-align: top;">-</td>`; } } tableHtml += `</tr>`; }); tableHtml += `</tbody></table>`; let blob = new Blob([tableHtml], {type: 'application/vnd.ms-excel'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hasil_Ujian_Lengkap_Berwarna.xls'; a.click(); }
+        
+        function exportExcelDetail() { 
+            if(!window.filteredResultsData || window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Belum ada data nilai pada filter ini', 'warning'); 
+            
+            const valKKM = parseFloat(document.getElementById('input-kkm').value);
+            let isKKMActive = !isNaN(valKKM);
+
+            let maxQ = 0; 
+            window.filteredResultsData.forEach(r => { try { let details = JSON.parse(r.detail_jawaban); if(details.length > maxQ) maxQ = details.length; } catch(e){} }); 
+            
+            let tableHtml = `<table border="1"><thead><tr><th style="background-color: #f8fafc; font-weight: bold;">Nama Siswa</th><th style="background-color: #f8fafc; font-weight: bold;">Kelas</th><th style="background-color: #f8fafc; font-weight: bold;">Mapel</th><th style="background-color: #f8fafc; font-weight: bold;">Waktu Pengerjaan</th><th style="background-color: #f8fafc; font-weight: bold;">Benar</th><th style="background-color: #f8fafc; font-weight: bold;">Salah</th><th style="background-color: #f8fafc; font-weight: bold;">Nilai Akhir</th>`; 
+            
+            if(isKKMActive) {
+                tableHtml += `<th style="background-color: #f8fafc; font-weight: bold;">Status (KKM: ${valKKM})</th>`;
+            }
+
+            for(let i=1; i<=maxQ; i++) { tableHtml += `<th style="background-color: #f8fafc; font-weight: bold; vertical-align: top;">Soal No.${i}</th>`; } 
+            tableHtml += `</tr></thead><tbody>`; 
+            
+            window.filteredResultsData.forEach(r => { 
+                let details = []; try { details = JSON.parse(r.detail_jawaban); } catch(e){} 
+                let tgl = r.tanggal || ''; let durasi = '-'; if (tgl.includes('|')) durasi = tgl.split('|')[1]; 
+                
+                tableHtml += `<tr><td style="vertical-align: top;">${r.student_name}</td><td style="vertical-align: top;">${r.kelas||'-'}</td><td style="vertical-align: top;">${r.mapel}</td><td style="vertical-align: top; font-weight: bold;">${durasi}</td><td style="vertical-align: top;">${r.benar}</td><td style="vertical-align: top;">${r.salah}</td><td style="font-weight: bold; vertical-align: top;">${r.nilai}</td>`; 
+                
+                if(isKKMActive) {
+                    let nilaiSiswa = parseFloat(r.nilai) || 0;
+                    let statusText = nilaiSiswa >= valKKM ? 'TUNTAS' : 'REMEDIAL';
+                    let colorText = nilaiSiswa >= valKKM ? '#047857' : '#dc2626';
+                    tableHtml += `<td style="font-weight: bold; vertical-align: top; color: ${colorText};">${statusText}</td>`;
+                }
+
+                let detMap = {}; details.forEach(d => { detMap[d.no] = d; }); 
+                for(let i=1; i<=maxQ; i++) { 
+                    let d = detMap[i]; 
+                    if(d) { 
+                        let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); 
+                        tableHtml += `<td style="vertical-align: top;">${coloredJawab}</td>`; 
+                    } else { 
+                        tableHtml += `<td style="vertical-align: top;">-</td>`; 
+                    } 
+                } 
+                tableHtml += `</tr>`; 
+            }); 
+            
+            tableHtml += `</tbody></table>`; 
+            let blob = new Blob([tableHtml], {type: 'application/vnd.ms-excel'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hasil_Ujian_Rekap_KKM.xls'; a.click(); 
+        }
+        
         async function clearMonitoring() { Swal.fire({title: 'Bersihkan Layar?', text: 'Seluruh riwayat akan dihapus dari layar ini.', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-monitoring', {method:'DELETE'}); loadStats(); Swal.fire('Bersih!', '', 'success'); } }); }
         async function clearResults() { Swal.fire({title: 'Hapus Semua Nilai?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-results', {method:'DELETE'}); loadNilai(); loadStats(); Swal.fire('Bersih!', '', 'success'); } }); }
         async function clearSchedules() { Swal.fire({title: 'Hapus Semua Jadwal?', icon: 'warning', showCancelButton: true}).then(async (r) => { if(r.isConfirmed) { await fetch(API + '/admin/clear-schedules', {method:'DELETE'}); loadJadwal(); Swal.fire('Bersih!', '', 'success'); } }); }
@@ -746,7 +801,7 @@
         async function loadBankSoal() { const res = await fetch(API + '/admin/questions' + getAuthParams()); const data = await res.json(); if (data.length === 0) { document.getElementById('banksoal-container').innerHTML = '<div class="text-center p-8 text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm"><i class="fa fa-box-open text-3xl mb-2"></i><br>Belum ada soal.</div>'; return; } const groups = {}; data.forEach(q => { if(!groups[q.exam_id]) groups[q.exam_id] = []; groups[q.exam_id].push(q); }); let html = ''; for (const [examId, questions] of Object.entries(groups)) { let tableRows = questions.map(q => { let det = q.tipe === 'GFORM' ? `<span class="text-purple-600 font-bold">Link G-Form: ${q.tanya || q.gform_url}</span>` : (q.tanya ? formatMath(q.tanya).substring(0,80)+'...' : '-'); det += `<br><span class="text-[9px] md:text-[10px] font-bold text-emerald-600 mt-1 md:mt-2 inline-block p-1 bg-emerald-50 border border-emerald-200 rounded"><i class="fa fa-key"></i> KUNCI: <b class="text-emerald-900">${formatMath(q.kunci) || '-'}</b></span> <span class="text-[9px] md:text-[10px] font-bold text-blue-600 mt-1 md:mt-2 inline-block p-1 bg-blue-50 border border-blue-200 rounded ml-1"><i class="fa fa-star"></i> SKOR: <b class="text-blue-900">${q.skor || 1}</b></span>`; return `<tr class="hover:bg-slate-50 transition"><td class="align-top pt-3 md:pt-4 w-16 md:w-20 px-2 md:px-4 border-b border-slate-100"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[8px] md:text-[9px] font-black shadow-sm">${q.tipe}</span></td><td class="text-[10px] md:text-xs text-slate-700 py-3 md:py-4 px-2 border-b border-slate-100 whitespace-normal min-w-[200px] md:min-w-[250px] leading-relaxed">${det}</td><td class="p-2 md:p-4 align-top text-right w-16 md:w-24 border-b border-slate-100"><button onclick="hapusSoal(${q.id})" class="text-red-500 hover:text-white hover:bg-red-500 border border-red-200 px-2 py-1 md:px-3 md:py-2 rounded-lg transition shadow-sm" title="Hapus Soal"><i class="fa fa-trash"></i></button></td></tr>`; }).join(''); html += `<div class="mb-3 md:mb-4 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"><div class="w-full bg-slate-50 p-3 md:p-4 font-bold text-slate-700 flex justify-between items-center hover:bg-blue-50 transition"><button onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')" class="flex-1 flex items-center text-[10px] md:text-sm text-left"><i class="fa fa-folder-open text-blue-500 mr-2 md:mr-3 text-base md:text-lg"></i> ${examId} <span class="bg-blue-100 text-blue-700 px-2 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] ml-2 md:ml-3 shadow-inner">${questions.length} Soal</span></button><div class="flex items-center gap-3"><button onclick="hapusPaketSoal('${examId.replace(/'/g, "\\'")}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 md:px-3 py-1 md:py-1.5 rounded text-[9px] md:text-xs font-bold transition shadow-sm"><i class="fa fa-trash mr-1"></i> Hapus Paket</button><i class="fa fa-chevron-down text-slate-400 text-xs md:text-sm cursor-pointer p-2" onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')"></i></div></div><div id="soal-${examId}" class="hidden overflow-x-auto border-t border-slate-100"><table class="w-full text-left text-xs whitespace-nowrap"><tbody class="divide-y divide-slate-100">${tableRows}</tbody></table></div></div>`; } document.getElementById('banksoal-container').innerHTML = html; }
 
         async function importUsers(inp) { if(!inp.files[0]) return; Swal.fire({ title: 'Importing...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('file_excel', inp.files[0]); await fetch(API + '/admin/import-users', { method: 'POST', body: fd }); Swal.fire('Selesai', 'Import berhasil', 'success'); loadUsers(); }
-        async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[9px] md:text-[10px]">${u.role}</span></td><td class="text-right p-2 md:p-3 min-w-[100px]"><button onclick='editUser(${JSON.stringify(u).replace(/'/g, "&#39;")})' class="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 rounded shadow-sm transition mr-1"><i class="fa fa-edit"></i> Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fa fa-trash"></i></button></td></tr>`).join(''); }
+        async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td><span class="px-2 py-1 bg-slate-100 rounded text-[9px] md:text-[10px]">${u.role}</span></td><td class="text-right p-2 md:p-3 min-w-[100px]"><button onclick='editUser(${JSON.stringify(u).replace(/'/g, "'")})' class="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 rounded shadow-sm transition mr-1"><i class="fa fa-edit"></i> Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fa fa-trash"></i></button></td></tr>`).join(''); }
 
         function tambahUserManual() { Swal.fire({ title: 'Tambah Pengguna', html: `<div class="space-y-3 text-left"><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Nama Lengkap</label><input id="a_name" class="w-full p-2 border rounded" placeholder="Nama Lengkap"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Username</label><input id="a_user" class="w-full p-2 border rounded" placeholder="Username (tanpa spasi)"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Password</label><input id="a_pass" class="w-full p-2 border rounded" placeholder="Password"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Akses Role</label><select id="a_role" class="w-full p-2 border rounded"><option value="siswa">Siswa</option><option value="guru">Guru</option><option value="admin">Admin</option></select></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Kelas (Khusus Siswa)</label><input id="a_kelas" class="w-full p-2 border rounded" placeholder="Contoh: VIII-A"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel (Khusus Guru)</label><input id="a_mapel" class="w-full p-2 border rounded" placeholder="Contoh: IPA, MTK"></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#059669', preConfirm: () => { return { name: document.getElementById('a_name').value, username: document.getElementById('a_user').value, password: document.getElementById('a_pass').value, role: document.getElementById('a_role').value, kelas: document.getElementById('a_kelas').value, mapel: document.getElementById('a_mapel').value } } }).then(async (res) => { if(res.isConfirmed) { if(!res.value.username || !res.value.password) return Swal.fire('Error', 'Username dan Password Wajib Diisi!', 'error'); Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); await fetch(API+'/admin/add-user', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); Swal.fire('Tersimpan!', 'Pengguna baru berhasil ditambahkan.', 'success'); } }); }
         function editUser(u) { Swal.fire({ title: 'Edit Pengguna', html: `<div class="space-y-3 text-left"><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Nama Lengkap</label><input id="e_name" class="w-full p-2 border rounded" value="${u.name}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Username</label><input id="e_user" class="w-full p-2 border rounded" value="${u.username}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Password</label><input id="e_pass" class="w-full p-2 border rounded" value="${u.password}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Akses Role</label><select id="e_role" class="w-full p-2 border rounded"><option value="siswa" ${u.role==='siswa'?'selected':''}>Siswa</option><option value="guru" ${u.role==='guru'?'selected':''}>Guru</option></select></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Kelas (Khusus Siswa)</label><input id="e_kelas" class="w-full p-2 border rounded" value="${u.kelas||''}"></div><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel (Khusus Guru)</label><input id="e_mapel" class="w-full p-2 border rounded" value="${u.mapel||''}"></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#2563eb', preConfirm: () => { return { old_username: u.username, name: document.getElementById('e_name').value, username: document.getElementById('e_user').value, password: document.getElementById('e_pass').value, role: document.getElementById('e_role').value, kelas: document.getElementById('e_kelas').value, mapel: document.getElementById('e_mapel').value } } }).then(async (res) => { if(res.isConfirmed) { Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()}); await fetch(API+'/admin/update-user', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); Swal.fire('Tersimpan!', 'Data berhasil diperbarui.', 'success'); } }); }

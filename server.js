@@ -61,35 +61,63 @@ app.post('/api/admin/add-soal-bulk', async (req, res) => { const { questions } =
 
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => { try { const exam_id = req.body.exam_id; if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"}); const workbook = XLSX.readFile(req.file.path); const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = data.map(row => { let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String); return { exam_id: exam_id, tipe: (row.Tipe || 'PG').toUpperCase(), tanya: row.Pertanyaan || '', opsi_json: opsi.join('|||'), kunci: row.Kunci ? String(row.Kunci).trim() : '', gform_url: row.Link_Gambar || '', skor: row.Skor || 1 }; }); if(insertData.length > 0) { const { error } = await supabase.from('questions').insert(insertData); if(error) throw error; } res.json({ status: "success", message: `${insertData.length} Soal berhasil di-import!` }); } catch(e) { res.status(500).json({status: "error", message: "Gagal memproses Excel. Pastikan kolom Skor sudah ada di Supabase."}); } });
 
+// PENGATURAN BARU IMPORT WORD SESUAI EXCEL
 app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) => { 
     try { 
         const exam_id = req.body.exam_id; 
         if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"}); 
+        
         const result = await mammoth.convertToHtml({path: req.file.path}); 
         const rows = result.value.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi); 
         if (!rows) return res.status(400).json({status: "error", message: "Tabel tidak ditemukan!"}); 
+        
         let insertData = []; 
         for(let i = 0; i < rows.length; i++) { 
             const cells = rows[i].match(/<td[^>]*>([\s\S]*?)<\/td>/gi); 
-            if (cells && cells.length >= 5) { 
+            // Mengecek apakah baris tabel memiliki minimal 10 sel
+            if (cells && cells.length >= 10) { 
                 const textCells = cells.map(c => c.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<\/?(?!(?:sup|sub|b|i|u|strong|em)\b)[^>]+>/gi, '').trim()); 
-                let jenisAngka = textCells[1] ? textCells[1].replace(/[^0-9]/g, '') : ""; 
-                if (!['1','2','3','4','5','6','9'].includes(jenisAngka)) continue; 
+                
+                // Melewati baris Header
+                let noStr = textCells[0] ? textCells[0].toLowerCase().trim() : "";
+                if (noStr === 'no' || noStr === 'nomor' || (textCells[1] && textCells[1].toLowerCase().includes('tipe'))) continue;
+                
+                let tipeRaw = textCells[1] ? textCells[1].trim().toUpperCase() : "";
+                if (!tipeRaw) continue; 
                 
                 let tipe = 'PG'; 
-                if (jenisAngka === '2') tipe = 'PGK'; else if (jenisAngka === '3') tipe = 'JODOH'; else if (jenisAngka === '4') tipe = 'ISIAN'; else if (jenisAngka === '5') tipe = 'ESAI'; else if (jenisAngka === '9') tipe = 'TS'; else if (jenisAngka === '6') tipe = 'SIFAT'; 
+                if (['PGK', '2'].includes(tipeRaw)) tipe = 'PGK'; 
+                else if (['JODOH', '3'].includes(tipeRaw)) tipe = 'JODOH'; 
+                else if (['ISIAN', '4'].includes(tipeRaw)) tipe = 'ISIAN'; 
+                else if (['ESAI', '5'].includes(tipeRaw)) tipe = 'ESAI'; 
+                else if (['BS', '7'].includes(tipeRaw)) tipe = 'BS'; 
+                else if (['TS', '9'].includes(tipeRaw)) tipe = 'TS'; 
+                else if (['SIFAT', '10', '6'].includes(tipeRaw)) tipe = 'SIFAT'; 
+                else tipe = tipeRaw; // Langsung mengambil format ketikan seperti PG, dll
                 
-                const tanya = textCells[3] || ""; const fileSoal = textCells[4] || ""; let opsi = []; 
-                for(let j=5; j<=9; j++) { if(textCells[j] && textCells[j].trim() !== '') opsi.push(textCells[j].trim()); } 
-                const kunci = textCells[10] || ""; 
-                if (tanya !== '') insertData.push({ exam_id, tipe, tanya, opsi_json: opsi.join('|||'), kunci: kunci.trim().toUpperCase(), gform_url: fileSoal, skor: 1 }); 
+                const tanya = textCells[2] || ""; 
+                const fileSoal = textCells[3] || ""; 
+                let opsi = []; 
+                for(let j=4; j<=8; j++) { if(textCells[j] && textCells[j].trim() !== '') opsi.push(textCells[j].trim()); } 
+                const kunci = textCells[9] || ""; 
+                
+                // Mengambil nilai skor dari kolom terakhir, mengubah koma jadi titik
+                const skorParsed = textCells[10] ? parseFloat(textCells[10].replace(/,/g, '.')) : 1;
+                const skor = isNaN(skorParsed) ? 1 : skorParsed;
+                
+                if (tanya !== '') insertData.push({ exam_id, tipe, tanya, opsi_json: opsi.join('|||'), kunci: kunci.trim().toUpperCase(), gform_url: fileSoal, skor: skor }); 
             } 
         } 
-        if(insertData.length > 0) { await supabase.from('questions').insert(insertData); res.json({status: 'success', message: `${insertData.length} Soal Bimasoft berhasil diekstrak!`}); } else { res.status(400).json({status: 'error', message: '0 Soal diekstrak.'}); } 
-    } catch (e) { res.status(500).json({status: 'error', message: 'Gagal ekstrak.'}); } 
+        if(insertData.length > 0) { 
+            await supabase.from('questions').insert(insertData); 
+            res.json({status: 'success', message: `${insertData.length} Soal berhasil diekstrak dari Word!`}); 
+        } else { 
+            res.status(400).json({status: 'error', message: '0 Soal diekstrak. Pastikan tabel formatnya benar (11 Kolom).'}); 
+        } 
+    } catch (e) { res.status(500).json({status: 'error', message: 'Gagal ekstrak dokumen Word.'}); } 
 });
 
-app.post('/api/admin/add-schedule', async (req, res) => { const pin = Math.floor(100000 + Math.random() * 900000).toString(); const { error } = await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); if (error) return res.status(500).json({ status: "error", message: `Supabase Error: ${error.message} (Cek apakah kolom 'status' sudah ada di tabel schedules)` }); res.json({ status: "success", pin }); });
+app.post('/api/admin/add-schedule', async (req, res) => { const pin = Math.floor(100000 + Math.random() * 900000).toString(); const { error } = await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); if (error) return res.status(500).json({ status: "error", message: `Supabase Error: ${error.message}` }); res.json({ status: "success", pin }); });
 app.get('/api/admin/schedules', async (req, res) => { let { data } = await supabase.from('schedules').select('*').order('id', { ascending: false }); if (req.query.role === 'guru') data = (data || []).filter(s => isAuthorizedMapel(req.query.mapel, s.mapel)); res.json(data || []); });
 
 app.get('/api/admin/stats', async (req, res) => { 
@@ -105,7 +133,6 @@ app.get('/api/admin/recent-activity', async (req, res) => {
     res.json(actsWithKelas); 
 });
 
-// ENDPOINT BARU KHUSUS UNTUK AKSES PUBLIK
 app.get('/api/public/live-score', async (req, res) => { 
     let { data: acts } = await supabase.from('activity').select('student_name, exam_name, status, score, last_seen').order('last_seen', { ascending: false }); 
     let { data: users } = await supabase.from('users').select('name, kelas');
