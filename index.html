@@ -2,239 +2,25 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CBT Online - SMPN 2 SOYO JAYA</title>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700;900&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Inter', sans-serif; } .hidden { display: none !important; } ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; } .drawer-transition { transition: transform 0.3s ease-in-out; } .gform-container { position: relative; width: 100%; height: 75vh; overflow: hidden; border-radius: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); } .gform-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .anti-copas { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-touch-callout: none; }
-        @media print { body { display: none !important; } }
-        img { pointer-events: none; }
-    </style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
+<body class="bg-slate-100">
 
-    <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-        <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
+    <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
+        <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border-t-8 border-blue-600">
             <div class="text-center mb-6">
-                <img src="/logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2>
+                <img src="/logo-sekolah.png" class="w-20 h-20 mx-auto mb-4 object-contain">
+                <h2 class="text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2>
             </div>
             <div class="space-y-4">
-                <div><label class="text-[10px] md:text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"></div></div>
-                <div>
-                    <label class="text-[10px] md:text-xs font-bold text-slate-500">PASSWORD</label>
-                    <div class="relative mt-1">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-lock"></i></span>
-                        <input type="password" id="login-pass" class="w-full pl-11 pr-10 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
-                        <button type="button" onclick="togglePass('login-pass', 'eye-icon-login')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-blue-600 focus:outline-none"><i id="eye-icon-login" class="fa fa-eye-slash"></i></button>
-                    </div>
-                </div>
-                <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 mt-2 text-sm md:text-base">MASUK APLIKASI</button>
+                <input type="text" id="login-user" placeholder="Username" class="w-full p-3 bg-slate-50 border rounded-xl">
+                <input type="password" id="login-pass" placeholder="Password" class="w-full p-3 bg-slate-50 border rounded-xl">
+                <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">MASUK</button>
             </div>
-            <div class="mt-6 pt-4 border-t border-slate-200">
-                <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
-            </div>
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta © 2026 Rahmat Hidayat H. (@spenda-digi)</p>
-        </div>
-    </div>
-
-    <div id="view-public-score" class="hidden min-h-screen bg-slate-100 flex-col p-4 relative">
-        <div class="max-w-5xl mx-auto w-full bg-white rounded-3xl shadow-xl p-4 md:p-6 flex flex-col h-[90vh]">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <div>
-                    <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase">LIVE SCORE UJIAN</h2>
-                    <p class="text-xs text-slate-500">Real-time monitoring</p>
-                </div>
-                <button onclick="keluarPublic()" class="bg-red-100 text-red-600 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs"><i class="fa fa-arrow-left"></i> Kembali</button>
-            </div>
-            <div class="flex gap-2 mb-4">
-                <select id="pub-filter-mapel" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Mapel</option></select>
-                <select id="pub-filter-kelas" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Kelas</option></select>
-            </div>
-            <div class="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-2">
-                <table class="w-full text-left text-[10px] md:text-xs">
-                    <thead class="sticky top-0 bg-slate-200 text-slate-600 uppercase">
-                        <tr>
-                            <th class="p-2 md:p-3">Nama Siswa</th>
-                            <th class="p-2 md:p-3">Kelas / Mapel</th>
-                            <th class="p-2 md:p-3 text-center">Status</th>
-                            <th class="p-2 md:p-3 text-center">Skor Live</th>
-                        </tr>
-                    </thead>
-                    <tbody id="public-table-body" class="divide-y bg-white"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-siswa-token" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-100">
-        <div class="w-full max-w-sm bg-white p-6 md:p-8 rounded-3xl shadow-xl text-center border-t-8 border-emerald-500">
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa fa-unlock-alt"></i></div>
-            <h2 class="text-base md:text-lg font-bold text-slate-800">Halo, <span id="nama-siswa-welcome" class="text-emerald-600 font-black">Siswa</span>!</h2>
-            <p class="text-xs text-slate-500 mb-6">Masukkan PIN ujian dari pengawas</p>
-            <input type="text" id="input-pin" class="w-full p-2 md:p-3 border-2 border-emerald-200 bg-emerald-50 rounded-xl text-center text-xl font-black uppercase mb-6 tracking-widest outline-none">
-            <button onclick="mulaiUjian()" class="w-full bg-emerald-600 text-white py-2 md:py-3 rounded-xl font-bold shadow-lg text-sm">MULAI UJIAN</button>
-            <button onclick="logout()" class="w-full mt-4 text-slate-400 text-xs hover:text-red-500"><i class="fa fa-sign-out-alt"></i> Keluar</button>
-        </div>
-    </div>
-
-    <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative anti-copas">
-        <header class="bg-blue-800 text-white shadow-md flex justify-between items-center px-4 py-2 flex-shrink-0 z-20 relative">
-            <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm tracking-wider uppercase">MAPEL</h1><p class="text-[10px] text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
-            <div class="flex items-center space-x-2"><div class="bg-blue-900 rounded-lg px-2 py-1 text-center"><div id="network-status" class="bg-emerald-500 text-[8px] font-bold uppercase mb-0.5 rounded-sm">ONLINE</div><div id="exam-countdown" class="font-mono font-black text-xs text-yellow-400">00:00:00</div></div><button onclick="toggleCbtNav()" class="md:hidden bg-blue-700 text-white p-1.5 rounded-lg"><i class="fa fa-th-large"></i></button></div>
-        </header>
-        <div class="flex-1 flex overflow-hidden max-w-7xl mx-auto w-full relative">
-            <div class="flex-1 bg-white md:rounded-xl md:my-4 md:ml-4 shadow-sm border flex flex-col overflow-hidden relative z-10">
-                <div id="offline-pending-alert" class="hidden bg-orange-100 border-b p-2 text-center flex justify-between items-center px-4"><p class="text-xs text-orange-800 font-bold"><i class="fa fa-wifi text-red-500"></i> Offline! Jawaban tertunda.</p><button onclick="checkPendingSubmit(true)" class="bg-orange-500 text-white text-[10px] px-3 py-1 rounded">Coba Kirim</button></div>
-                <div class="flex justify-between items-center p-2 border-b bg-slate-50"><div class="font-bold text-blue-800 text-sm">Soal <span id="cbt-no-soal" class="text-lg font-black">1</span></div><span id="cbt-tipe-soal" class="bg-blue-100 text-blue-800 text-[10px] font-bold px-3 py-1 rounded-full">PG</span></div>
-                <div class="flex-1 overflow-y-auto p-3 pb-24 flex flex-col">
-                    <div id="cbt-media-area" class="w-full mb-3 text-center"></div>
-                    <div id="cbt-tanya" class="prose max-w-none text-xs md:text-sm text-slate-800 mb-4 font-medium text-justify whitespace-pre-line"></div>
-                    <div id="cbt-opsi-area" class="space-y-2 w-full mt-auto"></div>
-                </div>
-                <div class="bg-slate-50 border-t p-2 flex justify-between items-center">
-                    <button onclick="cbtPrev()" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-bold text-[10px] hover:bg-slate-300"><i class="fa fa-arrow-left"></i> SEBELUM</button>
-                    <button onclick="cbtNext()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-[10px] hover:bg-blue-700">SELANJUTNYA <i class="fa fa-arrow-right"></i></button>
-                </div>
-            </div>
-            <div id="cbt-nav-overlay" onclick="toggleCbtNav()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
-            <div id="cbt-nav-panel" class="fixed inset-y-0 right-0 w-56 bg-white shadow-2xl transform translate-x-full md:translate-x-0 md:relative md:flex flex-col h-full z-40 md:my-4 md:mr-4 md:rounded-xl md:border drawer-transition"><div class="p-3 border-b bg-slate-50 flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm">Navigasi</h3><button onclick="toggleCbtNav()" class="md:hidden text-slate-400"><i class="fa fa-times"></i></button></div><div class="flex-1 overflow-y-auto p-3"><div id="cbt-grid" class="grid grid-cols-5 gap-1.5"></div></div><div class="p-3"><button id="btn-submit-ujian" onclick="submitUjian(true)" class="w-full bg-emerald-600 text-white py-2 rounded-xl font-black text-xs shadow-md">SELESAI UJIAN</button></div></div>
-        </div>
-    </div>
-
-    <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
-        <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
-        <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
-            <div class="p-6 text-center border-b border-slate-800">
-                <img src="/logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
-                <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
-            </div>
-            <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
-                <button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-home w-6"></i> Dashboard</button>
-                <button id="menu-jadwal" onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button>
-                <button id="menu-banksoal" onclick="showPage('banksoal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-database w-6"></i> Bank Soal</button>
-                <button onclick="showPage('nilai')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-chart-bar w-6"></i> Hasil Nilai</button>
-                <button id="menu-users" onclick="showPage('users')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-users w-6"></i> Manajemen Siswa</button>
-            </nav>
-            <div class="p-4 border-t border-slate-800"><button onclick="logout()" class="w-full flex justify-center p-3 rounded-lg bg-red-600/10 text-red-500 font-bold text-xs">Keluar</button></div>
-        </aside>
-        <main class="flex-1 flex flex-col overflow-hidden relative w-full">
-            <header class="h-14 bg-white border-b flex items-center justify-between px-4 shadow-sm z-10 flex-shrink-0"><div class="flex items-center"><button onclick="toggleAdminSidebar()" class="md:hidden mr-3 text-slate-600 p-2"><i class="fa fa-bars text-lg"></i></button><h3 id="page-title" class="font-bold text-slate-700 uppercase tracking-widest text-xs">Dashboard</h3><span id="role-badge" class="ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase hidden">Guru</span></div></header>
-            <div class="flex-1 overflow-y-auto p-3 md:p-8" id="content">
-                
-                <div id="page-dashboard" class="page-content space-y-4">
-                    <div id="dashboard-tokens" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-                        <div class="bg-white p-3 rounded-xl border-l-4 border-blue-500"><p class="text-[8px] font-bold text-slate-400">TOTAL SISWA</p><h1 id="stat-siswa" class="text-base font-black text-slate-700">0</h1></div>
-                        <div class="bg-white p-3 rounded-xl border-l-4 border-indigo-500"><p class="text-[8px] font-bold text-slate-400">TOTAL GURU</p><h1 id="stat-guru" class="text-base font-black text-slate-700">0</h1></div>
-                        <div class="bg-white p-3 rounded-xl border-l-4 border-orange-500"><p class="text-[8px] font-bold text-slate-400">MENGERJAKAN</p><h1 id="stat-kerja" class="text-base font-black text-orange-500">0</h1></div>
-                        <div class="bg-white p-3 rounded-xl border-l-4 border-emerald-500"><p class="text-[8px] font-bold text-slate-400">SELESAI</p><h1 id="stat-selesai" class="text-base font-black text-emerald-500">0</h1></div>
-                        <div class="bg-white p-3 rounded-xl border-l-4 border-red-500"><p class="text-[8px] font-bold text-slate-400">CURANG</p><h1 id="stat-curang" class="text-base font-black text-red-500">0</h1></div>
-                    </div>
-                    <div class="bg-white rounded-xl border flex flex-col">
-                        <div class="bg-slate-50 p-3 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                            <h3 class="font-bold text-slate-700 text-xs flex items-center">Live Monitoring Global</h3>
-                            <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                                <button onclick="clearMonitoring()" class="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold hover:bg-red-200">Bersihkan Layar</button>
-                                <select id="filter-mapel" class="p-1.5 border rounded-lg text-[10px] font-bold bg-white" onchange="renderActivityTable()"><option value="">Semua Mapel</option></select>
-                                <select id="filter-kelas" class="p-1.5 border rounded-lg text-[10px] font-bold bg-white" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
-                            </div>
-                        </div>
-                        <div id="monitor-container" class="p-2 bg-slate-50/50 flex flex-col gap-3 rounded-b-xl"></div>
-                    </div>
-                </div>
-                
-                <div id="page-jadwal" class="page-content hidden space-y-4">
-                    <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-[10px] bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold">Bersihkan Jadwal</button></div>
-                    <div class="bg-white p-3 rounded-xl border">
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
-                            <input type="text" id="j_mapel" placeholder="Kode Soal (Pisahkan dgn koma jika digabung)" class="p-2 border rounded-lg text-xs font-bold text-blue-700 w-full">
-                            <input type="date" id="j_tgl" class="p-2 border rounded-lg text-xs" title="Tanggal Mulai">
-                            <input type="time" id="j_jam" class="p-2 border rounded-lg text-xs" title="Jam Mulai">
-                            <input type="number" id="j_durasi" placeholder="Durasi (Mnt)" class="p-2 border rounded-lg text-xs">
-                            <button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 rounded-lg text-xs">BUAT JADWAL</button>
-                        </div>
-                    </div>
-                    <div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2"></div>
-                </div>
-                
-                <div id="page-banksoal" class="page-content hidden space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-sm"><h3 class="font-bold text-emerald-800 text-xs mb-2">Import Template Excel</h3><input type="text" id="ex_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-xs"><input type="file" id="ex_file" accept=".xlsx, .xls" class="w-full p-2 mb-2 border rounded bg-white text-[10px]"><button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-xs">GENERATE EXCEL</button></div>
-                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm"><h3 class="font-bold text-blue-800 text-xs mb-2">Import File Word (.docx)</h3><input type="text" id="w_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-xs font-bold"><input type="file" id="w_file" accept=".docx" class="w-full p-2 mb-2 border rounded bg-white text-[10px]"><button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-xs">EKSTRAK WORD</button></div>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border mt-4">
-                        <div class="flex justify-between items-center border-b pb-2 mb-3"><h3 class="font-bold text-slate-700 text-xs">Input Soal Manual Beruntun</h3><input type="text" id="s_judul_bulk" placeholder="KODE UJIAN" class="p-2 border rounded bg-blue-50 text-xs font-bold w-1/3"></div>
-                        <div id="bulk-questions-container" class="space-y-4">
-                            <div class="question-item bg-slate-50 p-3 rounded-xl border relative" data-no="1">
-                                <div class="grid grid-cols-1 gap-2">
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <select class="q-tipe p-2 border rounded text-xs"><option value="PG">1 - PG Biasa</option><option value="PGK">2 - PG Kompleks</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah</option><option value="TS">9 - Tabel Sesuai</option><option value="SIFAT">10 - SIFAT</option></select>
-                                        <input type="text" class="q-kunci p-2 border rounded text-xs" placeholder="Kunci">
-                                        <input type="number" class="q-skor p-2 border rounded text-xs" value="1">
-                                    </div>
-                                    <input type="text" class="q-image p-2 border rounded text-xs" placeholder="Link Gambar Drive">
-                                    <textarea class="q-tanya p-2 border rounded text-xs h-12" placeholder="Pertanyaan"></textarea>
-                                    <input type="text" class="q-opsi p-2 border rounded text-xs" placeholder="Opsi (Gunakan ||| sebagai pemisah)">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex gap-2"><button onclick="tambahBarisSoal()" class="flex-1 bg-blue-50 text-blue-600 border border-dashed py-2 rounded-xl font-bold text-xs">+ TAMBAH NOMOR</button><button onclick="simpanSoalBulk()" class="flex-1 bg-slate-800 text-white py-2 rounded-xl font-black text-xs">SIMPAN SEMUA</button></div>
-                    </div>
-                    <div class="flex justify-between items-center mb-2 mt-6"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-[10px] bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold">Bersihkan Soal</button></div>
-                    <div id="banksoal-container" class="space-y-2"></div>
-                </div>
-
-                <div id="page-nilai" class="page-content hidden space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                        <h3 class="font-bold text-slate-700 text-xs">Hasil Ujian</h3>
-                        <div class="flex flex-wrap gap-2">
-                            <input type="number" id="input-kkm" placeholder="Set KKM (Cth: 75)" class="p-1.5 border rounded-lg text-[10px] font-bold text-red-600 bg-white" oninput="renderNilaiTable()">
-                            <select id="filter-mapel-nilai" class="p-1.5 border rounded-lg text-[10px] font-bold text-blue-800 bg-white" onchange="renderNilaiTable()"><option value="">Semua Mapel</option></select>
-                            <select id="filter-kelas-nilai" class="p-1.5 border rounded-lg text-[10px] font-bold text-blue-800 bg-white" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center mb-3">
-                        <button onclick="exportExcelDetail()" class="text-[10px] bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold shadow-lg"><i class="fa fa-file-excel mr-1"></i> Download Excel</button>
-                        <button onclick="clearResults()" class="text-[10px] bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold">Bersihkan</button>
-                    </div>
-                    <div class="bg-white rounded-xl border overflow-x-auto">
-                        <table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table">
-                            <thead class="bg-slate-50 text-[9px] text-slate-400 uppercase">
-                                <tr>
-                                    <th class="p-2 md:p-3">Nama Siswa</th>
-                                    <th>Mapel</th>
-                                    <th>Waktu</th>
-                                    <th>Benar</th>
-                                    <th>Salah</th>
-                                    <th>Nilai</th>
-                                    <th>Status KKM</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="nilai-body" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div id="page-users" class="page-content hidden space-y-4">
-                    <div class="flex justify-between items-center mb-2"><div class="flex gap-2"><button onclick="tambahUserManual()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px]"><i class="fa fa-user-plus mr-1"></i> Tambah User</button><label class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] cursor-pointer"><i class="fa fa-upload mr-1"></i> Import Excel<input type="file" class="hidden" onchange="importUsers(this)"></label></div><button onclick="clearUsers()" class="text-[10px] bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold">Bersihkan User</button></div>
-                    <div class="bg-white rounded-xl border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="modal-detail" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-3">
-        <div class="bg-white rounded-2xl w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl">
-            <div class="p-3 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl"><h3 class="font-bold text-blue-800 text-xs">Detail Analisis Butir Soal</h3><button onclick="document.getElementById('modal-detail').classList.add('hidden')" class="text-slate-400"><i class="fa fa-times"></i></button></div>
-            <div class="p-3 flex-1 overflow-y-auto bg-slate-100"><div id="detail-content" class="space-y-3"></div></div>
         </div>
     </div>
 
