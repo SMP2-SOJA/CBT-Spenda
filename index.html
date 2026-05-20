@@ -21,7 +21,10 @@
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
-            <div class="text-center mb-6"><img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
+            <div class="text-center mb-6">
+                <img src="logo-sekolah.png" class="w-20 h-20 mx-auto mb-4 object-contain">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2>
+            </div>
             <div class="space-y-4">
                 <div><label class="text-[10px] md:text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"></div></div>
                 <div>
@@ -54,7 +57,13 @@
             <div class="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-2 scroll-saver">
                 <table class="w-full text-left text-[10px] md:text-xs">
                     <thead class="sticky top-0 bg-slate-200 text-slate-600 uppercase shadow-sm">
-                        <tr><th class="p-2 md:p-3">Nama Siswa</th><th class="p-2 md:p-3">Kelas / Mapel</th><th class="p-2 md:p-3 text-center">Status</th><th class="p-2 md:p-3 text-center">Skor Live</th><th class="p-2 md:p-3 text-center">Waktu & Progress</th></tr>
+                        <tr>
+                            <th class="p-3">Nama Siswa</th>
+                            <th class="p-3">Kelas / Mapel</th>
+                            <th class="p-3 text-center">Status</th>
+                            <th class="p-3 text-center">Skor Live</th>
+                            <th class="p-3 text-center">Waktu & Progress</th>
+                        </tr>
                     </thead>
                     <tbody id="public-table-body" class="divide-y bg-white"></tbody>
                 </table>
@@ -102,8 +111,8 @@
     <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
-            <div class="p-6 text-center border-b border-slate-800">
-                <img src="logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
+            <div class="p-5 text-center border-b border-slate-800">
+                <img src="logo-sekolah.png" class="w-12 h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
                 <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
             </div>
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
@@ -118,6 +127,7 @@
         <main class="flex-1 flex flex-col overflow-hidden relative w-full">
             <header class="h-14 md:h-16 bg-white border-b flex items-center justify-between px-4 shadow-sm z-10 flex-shrink-0"><div class="flex items-center"><button onclick="toggleAdminSidebar()" class="md:hidden mr-3 text-slate-600 p-2"><i class="fa fa-bars text-lg"></i></button><h3 id="page-title" class="font-bold text-slate-700 uppercase tracking-widest text-[10px] md:text-xs">Dashboard</h3><span id="role-badge" class="ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase hidden">Guru</span></div></header>
             <div class="flex-1 overflow-y-auto p-3 md:p-8" id="content">
+                
                 <div id="page-dashboard" class="page-content space-y-3 md:space-y-4">
                     <div id="dashboard-tokens" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-3 md:mb-4"></div>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
@@ -158,9 +168,33 @@
                 </div>
 
                 <div id="page-nilai" class="page-content hidden space-y-3 md:space-y-4">
-                    <div class="flex justify-between items-center mb-1"><h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-chart-bar mr-2 text-blue-500"></i> Hasil Ujian</h3><div class="flex gap-1 md:gap-2"><select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Mapel</option></select><select id="filter-kelas-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select></div></div>
-                    <div class="flex justify-between items-center mb-3"><button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button><button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button></div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Siswa</th><th>Mapel</th><th>Waktu</th><th>Benar</th><th>Salah</th><th>Nilai</th><th>Aksi</th></tr></thead><tbody id="nilai-body" class="divide-y"></tbody></table></div>
+                    <div class="flex justify-between items-center mb-1">
+                        <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-chart-bar mr-2 text-blue-500"></i> Hasil Ujian</h3>
+                        <div class="flex gap-1 md:gap-2">
+                            <select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Mapel</option></select>
+                            <select id="filter-kelas-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button>
+                        <button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+                        <table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table">
+                            <thead class="bg-slate-100 text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-wide border-b">
+                                <tr>
+                                    <th class="p-3 min-w-[150px]">Nama Siswa</th>
+                                    <th class="p-3">Mapel</th>
+                                    <th class="p-3">Waktu</th>
+                                    <th class="p-3 text-center">Benar</th>
+                                    <th class="p-3 text-center">Salah</th>
+                                    <th class="p-3 text-center">Nilai</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nilai-body" class="divide-y divide-slate-100 bg-white"></tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <div id="page-users" class="page-content hidden space-y-4">
