@@ -370,7 +370,7 @@ function renderNilaiTable() {
     const selMapel = document.getElementById('filter-mapel-nilai').value; 
     window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); }); 
     
-    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => `
+    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map((n, idx) => `
         <tr class="hover:bg-slate-50 transition border-b border-slate-100">
             <td class="p-3 font-semibold whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug text-slate-800">
                 ${n.student_name} <br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span>
@@ -381,13 +381,15 @@ function renderNilaiTable() {
             <td class="p-3 text-center text-red-500 font-bold">${n.salah || 0}</td>
             <td class="p-3 text-center font-black text-sm md:text-base text-blue-600">${n.nilai}</td>
             <td class="p-3 text-center">
-                <button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "&#39;")})' class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold hover:bg-blue-200 transition shadow-sm">
+                <button onclick="lihatDetailByIdx(${idx})" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold hover:bg-blue-200 transition shadow-sm">
                     <i class="fa fa-eye mr-1"></i> Detail
                 </button>
             </td>
         </tr>
     `).join(''); 
 }
+
+function lihatDetailByIdx(idx) { var n = window.filteredResultsData[idx]; lihatDetail(n ? (n.detail_jawaban || '[]') : '[]'); }
 
 function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \\ /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); }
 async function clearResults() { await fetch(API + '/admin/clear-results', {method:'DELETE'}); loadNilai(); loadStats(); }
