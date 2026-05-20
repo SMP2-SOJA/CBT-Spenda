@@ -1,18 +1,13 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["index.html", "logo-sekolah.png"]
-      }
-    }
-  ],
+  "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/cbt/(.*)",
+      "destination": "/cbt/$1"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/server.js"
+      "destination": "/index.html"
     }
   ]
 }
