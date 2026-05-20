@@ -21,7 +21,10 @@
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
-            <div class="text-center mb-6"><h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2></div>
+            <div class="text-center mb-6">
+                <img src="/logo-sekolah.png" onerror="this.style.display='none'" class="w-16 h-16 mx-auto mb-4 object-contain">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2>
+            </div>
             <div class="space-y-4">
                 <div><label class="text-[10px] md:text-xs font-bold text-slate-500">USERNAME</label><div class="relative mt-1"><span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa fa-user"></i></span><input type="text" id="login-user" class="w-full pl-11 p-2 md:p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"></div></div>
                 <div>
@@ -108,7 +111,10 @@
     <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
-            <div class="p-6 text-center border-b border-slate-800"><h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2></div>
+            <div class="p-6 text-center border-b border-slate-800">
+                <img src="/logo-sekolah.png" onerror="this.style.display='none'" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
+                <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
+            </div>
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
                 <button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-home w-6"></i> Dashboard</button>
                 <button id="menu-jadwal" onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button>
@@ -232,6 +238,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="/cbt/app.js"></script>
 </body>
 </html>
