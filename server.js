@@ -16,7 +16,35 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 const upload = multer({ dest: '/tmp' });
 
-function isAuthorizedMapel(reqMapelStr, examName) {
+
+// Normalize class names: VII-A, 7A, 7-A, vii-a all become "7a"
+function normalizeKelas(kelas) {
+    if (!kelas) return '';
+    // Roman to Arabic: IX→9, VIII→8, VII→7, VI→6, V→5, IV→4, III→3, II→2, I→1
+    let result = String(kelas).toUpperCase();
+    const romanMap = { 'IX': '9', 'VIII': '8', 'VII': '7', 'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1' };
+    for (const [roman, arabic] of Object.entries(romanMap)) {
+        result = result.split(roman).join(arabic);
+    }
+    // Remove spaces, dashes, dots
+    result = result.replace(/[\s\-\.]/g, '');
+    return result.toLowerCase();
+}
+
+// Normalize multiple classes (comma-separated)
+function normalizeKelasList(kelasList) {
+    if (!kelasList) return [];
+    return kelasList.split(',').map(k => normalizeKelas(k.trim())).filter(k => k);
+}
+
+// Check if a kelas matches any in allowed list (case & format insensitive)
+function isKelasAllowed(studentKelas, allowedKelasList) {
+    if (!allowedKelasList || allowedKelasList.length === 0) return true; // empty = all allowed
+    const normalized = normalizeKelas(studentKelas);
+    return allowedKelasList.some(allowed => normalizeKelas(allowed) === normalized);
+}
+
+        function isAuthorizedMapel(reqMapelStr, examName) {
     if (!reqMapelStr || reqMapelStr.trim() === '') return true; 
     if (!examName) return false;
     const allowed = reqMapelStr.split(',').map(m => m.trim().toLowerCase());
@@ -159,9 +187,8 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
         if (row.kelas && row.kelas.trim() !== '') {
             const { data: siswaData } = await supabase.from('users').select('kelas').eq('name', req.body.student_name).single();
             if (siswaData) {
-                const allowedKelas = row.kelas.split(',').map(k => k.trim().toLowerCase());
-                const siswaKelas = (siswaData.kelas || '').trim().toLowerCase();
-                if (!allowedKelas.some(k => siswaKelas === k)) {
+                const allowedKelas = normalizeKelasList(row.kelas);
+                if (!isKelasAllowed(siswaData.kelas, allowedKelas)) {
                     return res.status(403).json({status: "error", message: `Ujian ini hanya untuk kelas ${row.kelas}. Kelas Anda (${siswaData.kelas || '-'}) tidak diizinkan mengikuti ujian ini!`});
                 }
             }

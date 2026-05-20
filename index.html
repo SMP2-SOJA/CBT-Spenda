@@ -44,7 +44,7 @@
                 <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
             </div>
             
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026 (spenda-digital)</p>
+            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026 | (spenda-digital)</p>
         </div>
     </div>
 
@@ -255,6 +255,27 @@
                     throwOnError: false, errorColor: '#cc0000'
                 });
             } else { setTimeout(() => renderMath(el), 400); }
+
+        // Normalize class names: VII-A, 7A, 7-A, vii-a all become "7a"
+        function normalizeKelas(kelas) {
+            if (!kelas) return '';
+            let result = String(kelas).toUpperCase();
+            const romanMap = { 'IX': '9', 'VIII': '8', 'VII': '7', 'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1' };
+            for (const [roman, arabic] of Object.entries(romanMap)) {
+                result = result.split(roman).join(arabic);
+            }
+            result = result.replace(/[\s\-\.]/g, '');
+            return result.toLowerCase();
+        }
+        function normalizeKelasList(kelasList) {
+            if (!kelasList) return [];
+            return kelasList.split(',').map(k => normalizeKelas(k.trim())).filter(k => k);
+        }
+        function isKelasAllowed(studentKelas, allowedKelasList) {
+            if (!allowedKelasList || allowedKelasList.length === 0) return true;
+            const normalized = normalizeKelas(studentKelas);
+            return allowedKelasList.some(allowed => normalizeKelas(allowed) === normalized);
+        }
         }
 
         const API = "/api";
