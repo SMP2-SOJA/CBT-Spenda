@@ -54,9 +54,9 @@ app.delete('/api/admin/remove-activity/:id', async (req, res) => {
 });
 
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
-app.put('/api/admin/update-user', async (req, res) => { const { old_username, name, username, password, role, kelas, mapel } = req.body; await supabase.from('users').update({ name, username, password, role, kelas, mapel }).eq('username', old_username); res.json({status: "success"}); });
+app.put('/api/admin/update-user', async (req, res) => { const { old_username, name, username, password, role, kelas, mapel, kelas_akses } = req.body; await supabase.from('users').update({ name, username, password, role, kelas, mapel, kelas_akses: kelas_akses || '' }).eq('username', old_username); res.json({status: "success"}); });
 
-app.post('/api/admin/add-user', async (req, res) => { const { name, username, password, role, kelas, mapel } = req.body; await supabase.from('users').insert([{ name, username, password, role: role || 'siswa', kelas: kelas || '', mapel: mapel || '' }]); res.json({status: "success"}); });
+app.post('/api/admin/add-user', async (req, res) => { const { name, username, password, role, kelas, mapel, kelas_akses } = req.body; await supabase.from('users').insert([{ name, username, password, role: role || 'siswa', kelas: kelas || '', mapel: mapel || '', kelas_akses: kelas_akses || '' }]); res.json({status: "success"}); });
 app.post('/api/admin/add-soal-bulk', async (req, res) => { const { questions } = req.body; if (!questions || questions.length === 0) return res.status(400).json({status: "error"}); const { error } = await supabase.from('questions').insert(questions); if(error) return res.status(500).json({status: "error", message: error.message}); res.json({ status: "success" }); });
 
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => { try { const exam_id = req.body.exam_id; if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"}); const workbook = XLSX.readFile(req.file.path); const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = data.map(row => { let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String); return { exam_id: exam_id, tipe: (row.Tipe || 'PG').toUpperCase(), tanya: row.Pertanyaan || '', opsi_json: opsi.join('|||'), kunci: row.Kunci ? String(row.Kunci).trim() : '', gform_url: row.Link_Gambar || '', skor: row.Skor || 1 }; }); if(insertData.length > 0) { const { error } = await supabase.from('questions').insert(insertData); if(error) throw error; } res.json({ status: "success", message: `${insertData.length} Soal berhasil di-import!` }); } catch(e) { res.status(500).json({status: "error", message: "Gagal memproses Excel. Pastikan kolom Skor sudah ada di Supabase."}); } });
@@ -130,6 +130,18 @@ app.get('/api/admin/recent-activity', async (req, res) => {
     let { data: acts } = await supabase.from('activity').select('*').order('last_seen', { ascending: false }); 
     let { data: users } = await supabase.from('users').select('name, kelas');
     let actsWithKelas = (acts || []).map(a => { let u = (users || []).find(x => x.name === a.student_name); return { ...a, kelas: u ? u.kelas : '-' }; });
+    if (req.query.role === 'guru') {
+        if (req.query.mapel && req.query.mapel.trim() !== '') {
+            actsWithKelas = actsWithKelas.filter(a => isAuthorizedMapel(req.query.mapel, a.exam_name));
+        }
+        if (req.query.kelas_akses && req.query.kelas_akses.trim() !== '') {
+            const allowedKelas = req.query.kelas_akses.split(',').map(k => k.trim().toLowerCase());
+            actsWithKelas = actsWithKelas.filter(a => {
+                if (!a.kelas || a.kelas === '-') return false;
+                return allowedKelas.some(k => a.kelas.trim().toLowerCase() === k);
+            });
+        }
+    }
     res.json(actsWithKelas); 
 });
 
@@ -148,7 +160,16 @@ app.get('/api/admin/results', async (req, res) => {
     let { data: results } = await supabase.from('results').select('*').order('id', { ascending: false }); 
     let { data: users } = await supabase.from('users').select('name, kelas');
     let resultsWithKelas = (results || []).map(r => { let u = (users || []).find(x => x.name === r.student_name); return { ...r, kelas: u ? u.kelas : '-' }; });
-    if (req.query.role === 'guru') resultsWithKelas = resultsWithKelas.filter(r => isAuthorizedMapel(req.query.mapel, r.mapel)); 
+    if (req.query.role === 'guru') {
+        resultsWithKelas = resultsWithKelas.filter(r => isAuthorizedMapel(req.query.mapel, r.mapel));
+        if (req.query.kelas_akses && req.query.kelas_akses.trim() !== '') {
+            const allowedKelas = req.query.kelas_akses.split(',').map(k => k.trim().toLowerCase());
+            resultsWithKelas = resultsWithKelas.filter(r => {
+                if (!r.kelas || r.kelas === '-') return false;
+                return allowedKelas.some(k => r.kelas.trim().toLowerCase() === k);
+            });
+        }
+    }
     res.json(resultsWithKelas); 
 });
 
