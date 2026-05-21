@@ -82,9 +82,19 @@ app.delete('/api/admin/remove-activity/:id', async (req, res) => {
 });
 
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
-app.put('/api/admin/update-user', async (req, res) => { const { old_username, name, username, password, role, kelas, mapel } = req.body; await supabase.from('users').update({ name, username, password, role, kelas, mapel }).eq('username', old_username); res.json({status: "success"}); });
+app.put('/api/admin/update-user', async (req, res) => { 
+    let { old_username, name, username, password, role, kelas, mapel, mapel_kelas } = req.body;
+    if (mapel_kelas && role === 'guru') { const p = parseMapelKelas(mapel_kelas); mapel = p.mapel.join(','); kelas = p.kelas.join(','); }
+    await supabase.from('users').update({ name, username, password, role, kelas, mapel, mapel_detail: mapel_kelas || '' }).eq('username', old_username); 
+    res.json({status: "success"}); 
+});
 
-app.post('/api/admin/add-user', async (req, res) => { const { name, username, password, role, kelas, mapel } = req.body; await supabase.from('users').insert([{ name, username, password, role: role || 'siswa', kelas: kelas || '', mapel: mapel || '' }]); res.json({status: "success"}); });
+app.post('/api/admin/add-user', async (req, res) => { 
+    let { name, username, password, role, kelas, mapel, mapel_kelas } = req.body;
+    if (mapel_kelas && role === 'guru') { const p = parseMapelKelas(mapel_kelas); mapel = p.mapel.join(','); kelas = p.kelas.join(','); }
+    await supabase.from('users').insert([{ name, username, password, role: role || 'siswa', kelas: kelas || '', mapel: mapel || '', mapel_detail: mapel_kelas || '' }]); 
+    res.json({status: "success"}); 
+});
 app.post('/api/admin/add-soal-bulk', async (req, res) => { const { questions } = req.body; if (!questions || questions.length === 0) return res.status(400).json({status: "error"}); const { error } = await supabase.from('questions').insert(questions); if(error) return res.status(500).json({status: "error", message: error.message}); res.json({ status: "success" }); });
 
 app.post('/api/admin/import-soal', upload.single('file_excel'), async (req, res) => { try { const exam_id = req.body.exam_id; if(!exam_id) return res.status(400).json({status: "error", message: "KODE UJIAN harus diisi!"}); const workbook = XLSX.readFile(req.file.path); const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); let insertData = data.map(row => { let opsi = [row.Opsi_A, row.Opsi_B, row.Opsi_C, row.Opsi_D, row.Opsi_E].filter(Boolean).map(String); return { exam_id: exam_id, tipe: (row.Tipe || 'PG').toUpperCase(), tanya: row.Pertanyaan || '', opsi_json: opsi.join('|||'), kunci: row.Kunci ? String(row.Kunci).trim() : '', gform_url: row.Link_Gambar || '', skor: row.Skor || 1 }; }); if(insertData.length > 0) { const { error } = await supabase.from('questions').insert(insertData); if(error) throw error; } res.json({ status: "success", message: `${insertData.length} Soal berhasil di-import!` }); } catch(e) { res.status(500).json({status: "error", message: "Gagal memproses Excel. Pastikan kolom Skor sudah ada di Supabase."}); } });
@@ -142,7 +152,30 @@ app.post('/api/admin/import-word', upload.single('file_word'), async (req, res) 
         } else { 
             res.status(400).json({status: 'error', message: '0 Soal diekstrak. Pastikan tabel formatnya benar (11 Kolom).'}); 
         } 
-    } catch (e) { res.status(500).json({status: 'error', message: 'Gagal ekstrak dokumen Word.'}); } 
+    
+
+// Parse "MTK-7A,IPA-7B" into {mapel: ["MTK","IPA"], kelas: ["7A","7B"], details: ["MTK-7A","IPA-7B"]}
+function parseMapelKelas(mapelKelasStr) {
+    if (!mapelKelasStr || !mapelKelasStr.trim()) return { mapel: [], kelas: [], details: [] };
+    const pairs = mapelKelasStr.split(',').map(p => p.trim()).filter(p => p);
+    const mapel = [];
+    const kelas = [];
+    const details = [];
+    pairs.forEach(pair => {
+        const parts = pair.split('-');
+        if (parts.length === 2) {
+            const m = parts[0].trim();
+            const k = parts[1].trim();
+            if (m && k) {
+                mapel.push(m);
+                kelas.push(k);
+                details.push(pair);
+            }
+        }
+    });
+    return { mapel: [...new Set(mapel)], kelas: [...new Set(kelas)], details };
+}
+} catch (e) { res.status(500).json({status: 'error', message: 'Gagal ekstrak dokumen Word.'}); } 
 });
 
 app.post('/api/admin/add-schedule', async (req, res) => { const pin = Math.floor(100000 + Math.random() * 900000).toString(); const { error } = await supabase.from('schedules').insert([{ mapel: req.body.mapel, kelas: req.body.kelas || '', tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]); if (error) return res.status(500).json({ status: "error", message: `Supabase Error: ${error.message}` }); res.json({ status: "success", pin }); });
@@ -253,3 +286,79 @@ app.post('/api/siswa/flag-curang', async (req, res) => {
 
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 module.exports = app;
+// ===== IMPORT ENDPOINTS =====
+app.post('/api/admin/import-siswa', async (req, res) => {
+    try {
+        const { data } = req.body;
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            return res.status(400).json({status: "error", message: "Data kosong atau format salah"});
+        }
+        
+        const validated = data.filter(row => row.username && row.nama && row.password && row.kelas);
+        if (validated.length === 0) {
+            return res.status(400).json({status: "error", message: "Tidak ada data valid"});
+        }
+        
+        const toInsert = validated.map(row => ({
+            username: String(row.username).trim(),
+            nama: String(row.nama).trim(),
+            password: String(row.password).trim(),
+            role: 'siswa',
+            kelas: String(row.kelas).trim(),
+            mapel: '',
+            kelas_akses: '',
+            mapel_detail: ''
+        }));
+        
+        const { error } = await supabase.from('users').insert(toInsert);
+        if (error) return res.status(500).json({status: "error", message: error.message});
+        
+        res.json({status: "success", imported: toInsert.length});
+    } catch(e) {
+        res.status(500).json({status: "error", message: e.message});
+    }
+});
+
+app.post('/api/admin/import-guru', async (req, res) => {
+    try {
+        const { data } = req.body;
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            return res.status(400).json({status: "error", message: "Data kosong atau format salah"});
+        }
+        
+        const validated = data.filter(row => row.username && row.nama && row.password && (row.mapel_kelas || row.mapel));
+        if (validated.length === 0) {
+            return res.status(400).json({status: "error", message: "Tidak ada data valid"});
+        }
+        
+        const toInsert = validated.map(row => {
+            let mapel = '', kelas = '', mapel_detail = '';
+            if (row.mapel_kelas) {
+                const parsed = parseMapelKelas(row.mapel_kelas);
+                mapel = parsed.mapel.join(',');
+                kelas = parsed.kelas.join(',');
+                mapel_detail = row.mapel_kelas;
+            } else if (row.mapel) {
+                mapel = row.mapel;
+                kelas = row.kelas || '';
+            }
+            return {
+                username: String(row.username).trim(),
+                nama: String(row.nama).trim(),
+                password: String(row.password).trim(),
+                role: 'guru',
+                kelas: '',
+                mapel,
+                kelas_akses: kelas,
+                mapel_detail
+            };
+        });
+        
+        const { error } = await supabase.from('users').insert(toInsert);
+        if (error) return res.status(500).json({status: "error", message: error.message});
+        
+        res.json({status: "success", imported: toInsert.length});
+    } catch(e) {
+        res.status(500).json({status: "error", message: e.message});
+    }
+});
