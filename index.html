@@ -45,7 +45,7 @@
                 <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
             </div>
             
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026|spenda-digital</p>
+            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026 |(spenda-digital)</p>
         </div>
     </div>
 
@@ -246,7 +246,7 @@
             </div>
 </div>
                     <button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200 transition"><i class="fa fa-trash"></i> Bersihkan User</button>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3 min-w-[150px]">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-blue-50 text-[8px] md:text-[9px] text-slate-600 uppercase font-semibold"><tr><th class="p-3 min-w-[150px]">Nama Lengkap</th><th class="p-3 min-w-[120px]">Username</th><th class="p-3 min-w-[140px]">Kelas/Mapel</th><th class="p-3 min-w-[80px]">Role</th><th class="text-right p-3 min-w-[100px]">Aksi</th></tr></thead><tbody id="user-body" class="divide-y divide-slate-100"></tbody></table></div>
                 </div>
             </div>
         </main>
@@ -863,8 +863,14 @@
                     }
                 }
                 
-                return `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${n.student_name} <br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${n.kelas||'-'}</span></td><td>${n.mapel}</td><td class="text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-red-500 font-bold">${n.salah || 0}</td><td class="font-black text-xs md:text-sm">${n.nilai}</td><td>${statusKKMHtml}</td><td><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1 rounded text-[9px] md:text-[10px] font-bold">Detail</button></td></tr>`;
+                return `<tr><td class="p-2 md:p-3 font-medium whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug">${n.student_name}<br><span class="text-[8px] md:text-[9px] text-slate-400">${n.kelas||'-'}</span></td><td class="text-[10px]">${n.mapel}</td><td class="text-[10px] text-emerald-600 font-bold">${n.benar || 0}</td><td class="text-[10px] text-red-500 font-bold">${n.salah || 0}</td><td class="font-bold text-xs">${n.nilai}</td><td>${statusKKMHtml}</td><td><button onclick="showNilaiDetailByIdx(${window.filteredResultsData.indexOf(n)})" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-[9px] font-bold hover:bg-blue-200">Detail</button></td></tr>`;
             }).join(''); 
+        }
+
+        
+        function showNilaiDetailByIdx(idx) {
+            const n = window.filteredResultsData[idx];
+            if (n) lihatDetail(n.detail_jawaban || '[]');
         }
 
         function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \| /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); }
