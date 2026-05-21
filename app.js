@@ -68,14 +68,13 @@ async function mulaiUjian() {
         const clientDate = new Date().toLocaleDateString('en-CA'); 
         const clientTime = new Date().toTimeString().substring(0,5); 
         
-        // PENGIRIMAN DENGAN SENSOR KELAS AKTIF
         const res = await fetch(API + '/siswa/cek-pin', { 
             method: 'POST', 
             headers: {'Content-Type': 'application/json'}, 
             body: JSON.stringify({
                 pin: pin, 
                 student_name: activeUser.name, 
-                kelas: activeUser.kelas, // Baris Kunci: Kirim kelas siswa (misal: 7A) ke server
+                kelas: activeUser.kelas || '', 
                 client_date: clientDate, 
                 client_time: clientTime
             }) 
@@ -84,8 +83,6 @@ async function mulaiUjian() {
         const data = await res.json();
         if(data.status === "success") {
             currentExam = data.exam; 
-            
-            // Mengambil soal yang sudah disaring otomatis oleh server berdasarkan sensor kelas
             const resSoal = await fetch(API + '/siswa/get-soal', { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
@@ -94,7 +91,7 @@ async function mulaiUjian() {
             
             const dataSoal = await resSoal.json();
             if(!dataSoal.questions || dataSoal.questions.length === 0) {
-                return Swal.fire('Oops', 'Paket soal khusus untuk kelas Anda belum diatur atau nama bank soal tidak mengandung identitas kelas Anda!', 'error');
+                return Swal.fire('Oops', 'Paket soal khusus untuk kelas Anda belum diatur atau tidak ditemukan di PIN ini!', 'error');
             }
             
             document.getElementById('view-siswa-token').classList.add('hidden'); 
@@ -122,7 +119,17 @@ async function mulaiUjian() {
             Swal.fire('Gagal', data.message, 'error');
         }
     } catch(e) { 
-        Swal.fire('Error', 'Terputus dari server.', 'error'); 
+        console.error("CRASH UJIAN (Buka Inspect Element -> Console):", e);
+        
+        // Pembeda jenis error agar mudah dilacak
+        let pesanError = e.message;
+        if (e.name === 'SyntaxError') {
+            pesanError = "Server Vercel sedang memuat atau Sinkronisasi Kelas ditolak. Coba tekan tombol mulai lagi.";
+        } else if (pesanError.includes('fetch')) {
+            pesanError = "Koneksi internet tidak stabil / Server tidak merespon.";
+        }
+        
+        Swal.fire('Sistem Error Asli', pesanError, 'error'); 
     }
 }
 
