@@ -114,12 +114,22 @@ app.post('/api/admin/import-users', async (req, res) => {
         mapel: String(row.mapel || row.Mapel || '').trim()
     })).filter(r => r.username && r.password);
 
-    if(toInsert.length === 0) return res.json({status: "error", message: "Format kolom tidak terbaca. Pastikan Excel Anda memiliki kolom: username, nama, password."});
+    // SISTEM ANTI-DUPLIKAT SERVER
+    const uniqueData = [];
+    const seen = new Set();
+    for (const item of toInsert) {
+        if (!seen.has(item.username)) {
+            seen.add(item.username);
+            uniqueData.push(item);
+        }
+    }
 
-    const { error } = await supabase.from('users').upsert(toInsert, { onConflict: 'username' });
+    if(uniqueData.length === 0) return res.json({status: "error", message: "Format Excel tidak terbaca atau Username kosong."});
+
+    const { error } = await supabase.from('users').upsert(uniqueData, { onConflict: 'username' });
     if (error) return res.json({status: "error", message: error.message});
     
-    res.json({status: "success", imported: toInsert.length});
+    res.json({status: "success", imported: uniqueData.length});
 });
 
 module.exports = app;

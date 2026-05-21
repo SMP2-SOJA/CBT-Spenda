@@ -264,134 +264,128 @@
     <script>
         // LOGIKA SUPER PARSER EXCEL (KEBAL KOP SURAT, SPASI, DAN TYPO)
         async function prosesImportUser() {
-            const fileInput = document.getElementById('file-import-user');
-            const file = fileInput.files[0];
-            
-            if (!file) return Swal.fire('Perhatian', 'Silakan klik tombol "Pilih File Excel/CSV" terlebih dahulu.', 'warning');
-
-            Swal.fire({
-                title: 'Generate Data Pengguna?', text: `Upload dari file "${file.name}"?`, icon: 'question',
-                showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya, Simpan'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const reader = new FileReader();
-                        reader.onload = async (e) => {
-                            let parsedData = [];
-                            
-                            if (!file.name.endsWith('.csv')) {
-                                // Menggunakan Uint8Array & ArrayBuffer yang lebih handal untuk browser modern
-                                const data = new Uint8Array(e.target.result);
-                                const workbook = XLSX.read(data, { type: 'array' });
-                                
-                                // Membaca sebagai Array 2D (baris per baris) agar bisa mencari header secara cerdas
-                                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                                
-                                let headerRowIndex = -1;
-                                let colMap = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1 };
-
-                                // SCANNER: Cari baris mana yang merupakan Judul Kolom (Maksimal cari sampai baris 20)
-                                for (let i = 0; i < Math.min(rawData.length, 20); i++) {
-                                    let row = rawData[i];
-                                    if (!row || !row.length) continue;
-                                    
-                                    row.forEach((cell, idx) => {
-                                        if(!cell) return;
-                                        // Bersihkan spasi dan karakter aneh untuk pencocokan brutal
-                                        let str = String(cell).toLowerCase().replace(/[^a-z0-9]/g, ''); 
-                                        
-                                        if(['username','user','nis','nisn','nomorpeserta','noujian'].includes(str)) colMap.u = idx;
-                                        if(['nama','name','namasiswa','namalengkap','peserta'].includes(str)) colMap.n = idx;
-                                        if(['password','pass','sandi','katasandi','token'].includes(str)) colMap.p = idx;
-                                        if(['role','peran','level'].includes(str)) colMap.r = idx;
-                                        if(['kelas','rombel','ruangan'].includes(str)) colMap.k = idx;
-                                        if(['mapel','matapelajaran'].includes(str)) colMap.m = idx;
-                                    });
-
-                                    // Jika ketemu setidaknya Username/NIS dan Nama, tetapkan sebagai baris Header
-                                    if (colMap.u !== -1 && colMap.n !== -1) {
-                                        headerRowIndex = i;
-                                        break; 
-                                    }
-                                }
-
-                                if (headerRowIndex === -1) {
-                                    return Swal.fire('Gagal', 'Tabel Excel tidak valid. Sistem gagal mendeteksi kolom "NAMA" dan "USERNAME/NIS".', 'error');
-                                }
-
-                                // EKSTRAK DATA: Mulai ambil dari 1 baris setelah header
-                                for (let i = headerRowIndex + 1; i < rawData.length; i++) {
-                                    let row = rawData[i];
-                                    if (!row || row.length === 0) continue;
-                                    
-                                    let username = row[colMap.u];
-                                    let nama = row[colMap.n];
-                                    
-                                    // Jika kolom password tidak ada/kosong, paksa pakai username sebagai password default
-                                    let password = colMap.p !== -1 && row[colMap.p] ? row[colMap.p] : username; 
-
-                                    // Validasi akhir sebelum dimasukkan ke antrean database
-                                    if (username && nama) {
-                                        parsedData.push({
-                                            username: String(username).trim(),
-                                            nama: String(nama).trim(),
-                                            password: String(password).trim(),
-                                            role: colMap.r !== -1 && row[colMap.r] ? String(row[colMap.r]).toLowerCase().trim() : 'siswa',
-                                            kelas: colMap.k !== -1 && row[colMap.k] ? String(row[colMap.k]).trim() : '',
-                                            mapel: colMap.m !== -1 && row[colMap.m] ? String(row[colMap.m]).trim() : ''
-                                        });
-                                    }
-                                }
-                            } else {
-                                parsedData = parseCSV(e.target.result); // Eksekusi CSV lama jika formatnya .csv
-                            }
-
-                            if (parsedData.length === 0) return Swal.fire('Gagal', 'Data kosong atau format sel Excel berantakan.', 'error');
-
-                            // Sistem Chunk: Mengirim ke server per 100 data agar tidak timeout/lag
-                            let totalSuccess = 0;
-                            const chunkSize = 100;
-                            
-                            for (let i = 0; i < parsedData.length; i += chunkSize) {
-                                const chunk = parsedData.slice(i, i + chunkSize);
-                                Swal.fire({ title: `Menyimpan ${i + chunk.length} dari ${parsedData.length}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                                
-                                const response = await fetch('/api/admin/import-users', {
-                                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: chunk })
-                                });
-                                const serverResult = await response.json();
-                                
-                                if (serverResult.status === 'success') totalSuccess += chunk.length;
-                                else return Swal.fire('Gagal', serverResult.message, 'error');
-                            }
-                            
-                            Swal.fire('Sukses!', `Berhasil menarik ${totalSuccess} data pengguna dari Excel!`, 'success');
-                            loadUsers(); fileInput.value = '';
-                        };
-
-                        // Kunci Perubahan: Menggunakan ReadAsArrayBuffer untuk stabilisasi Vercel/Produksi
-                        if (file.name.endsWith('.csv')) reader.readAsText(file);
-                        else reader.readAsArrayBuffer(file);
-                        
-                    } catch(err) { Swal.fire('Error', err.message, 'error'); }
-                }
-            });
-        }
+        const fileInput = document.getElementById('file-import-user');
+        const file = fileInput.files[0];
         
-        function parseCSV(csv) {
-            const lines = csv.split('\n').filter(l => l.trim());
-            if (lines.length < 2) return [];
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim());
-                if (values.length !== headers.length) continue;
-                const row = {};
-                headers.forEach((h, idx) => { row[h] = values[idx]; });
-                data.push(row);
+        if (!file) return Swal.fire('Perhatian', 'Silakan klik "Pilih File Excel/CSV" terlebih dahulu.', 'warning');
+
+        Swal.fire({
+            title: 'Generate Data Pengguna?', text: `Upload file "${file.name}"?`, icon: 'question',
+            showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya, Simpan'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        let parsedData = [];
+                        console.log("1. MEMBACA FILE:", file.name);
+                        
+                        if (!file.name.endsWith('.csv')) {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                            console.log("2. RAW DATA EXCEL (Mentah):", rawData);
+                            
+                            let headerRowIndex = -1;
+                            let colMap = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1 };
+
+                            for (let i = 0; i < Math.min(rawData.length, 20); i++) {
+                                let row = rawData[i];
+                                if (!row || !row.length) continue;
+                                
+                                row.forEach((cell, idx) => {
+                                    if(!cell) return;
+                                    let str = String(cell).toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                                    if(['username','user','nis','nisn'].includes(str)) colMap.u = idx;
+                                    if(['nama','name','namasiswa'].includes(str)) colMap.n = idx;
+                                    if(['password','pass','sandi'].includes(str)) colMap.p = idx;
+                                    if(['role','peran'].includes(str)) colMap.r = idx;
+                                    if(['kelas','rombel'].includes(str)) colMap.k = idx;
+                                    if(['mapel','matapelajaran'].includes(str)) colMap.m = idx;
+                                });
+
+                                if (colMap.u !== -1 && colMap.n !== -1) { headerRowIndex = i; break; }
+                            }
+                            
+                            console.log("3. INFO HEADER -> Ditemukan di Baris:", headerRowIndex, "| Pemetaan Kolom:", colMap);
+
+                            if (headerRowIndex === -1) {
+                                return Swal.fire('Gagal', 'Sistem tidak menemukan kolom "NAMA" dan "USERNAME" di Excel Anda.', 'error');
+                            }
+
+                            for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+                                let row = rawData[i];
+                                if (!row || row.length === 0) continue;
+                                
+                                let username = row[colMap.u];
+                                let nama = row[colMap.n];
+                                let password = colMap.p !== -1 && row[colMap.p] ? row[colMap.p] : username; 
+
+                                if (username && nama) {
+                                    parsedData.push({
+                                        username: String(username).trim(),
+                                        nama: String(nama).trim(),
+                                        password: String(password).trim(),
+                                        role: colMap.r !== -1 && row[colMap.r] ? String(row[colMap.r]).toLowerCase().trim() : 'siswa',
+                                        kelas: colMap.k !== -1 && row[colMap.k] ? String(row[colMap.k]).trim() : '',
+                                        mapel: colMap.m !== -1 && row[colMap.m] ? String(row[colMap.m]).trim() : ''
+                                    });
+                                }
+                            }
+                        } else {
+                            parsedData = parseCSV(e.target.result); 
+                        }
+
+                        console.log("4. DATA SEBELUM FILTER:", parsedData);
+
+                        // SISTEM ANTI-DUPLIKAT FRONTEND (Mencegah Crash)
+                        const uniqueData = [];
+                        const seen = new Set();
+                        for(let item of parsedData) {
+                            if(!seen.has(item.username)) {
+                                seen.add(item.username);
+                                uniqueData.push(item);
+                            } else {
+                                console.log("🚨 PERINGATAN: Duplikat dihapus dari antrean -> Username:", item.username);
+                            }
+                        }
+
+                        if (uniqueData.length === 0) return Swal.fire('Gagal', 'Data kosong atau format sel berantakan.', 'error');
+                        console.log("5. DATA BERSIH SIAP KIRIM:", uniqueData);
+
+                        let totalSuccess = 0;
+                        const chunkSize = 100;
+                        
+                        for (let i = 0; i < uniqueData.length; i += chunkSize) {
+                            const chunk = uniqueData.slice(i, i + chunkSize);
+                            Swal.fire({ title: `Menyimpan ${i + chunk.length} dari ${uniqueData.length}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                            
+                            const response = await fetch('/api/admin/import-users', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: chunk })
+                            });
+                            const serverResult = await response.json();
+                            
+                            if (serverResult.status === 'success') totalSuccess += chunk.length;
+                            else {
+                                console.log("❌ ERROR SERVER:", serverResult);
+                                return Swal.fire('Gagal Server', serverResult.message, 'error');
+                            }
+                        }
+                        
+                        Swal.fire('Sukses!', `Berhasil menyimpan ${totalSuccess} data pengguna!`, 'success');
+                        loadUsers(); fileInput.value = '';
+                    };
+
+                    if (file.name.endsWith('.csv')) reader.readAsText(file);
+                    else reader.readAsArrayBuffer(file);
+                    
+                } catch(err) { 
+                    console.log("❌ ERROR LOKAL:", err);
+                    Swal.fire('Error Lokal', err.message, 'error'); 
+                }
             }
-            return data;
-        }
+        });
+    }
     </script>
     <script src="app.js"></script>
 </body>
