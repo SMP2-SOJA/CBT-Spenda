@@ -22,28 +22,43 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 2. SISTEM MULTI-MAPEL DALAM 1 PIN (SISWA)
+// 2. SISTEM MULTI-MAPEL DENGAN SENSOR KELAS (1 PIN BEDA SOAL GURU)
 // ==========================================
 app.post('/api/siswa/cek-pin', async (req, res) => {
-    const { pin } = req.body;
+    const { pin, kelas } = req.body; // Sekarang menerima data kelas dari siswa yang login
     const { data, error } = await supabase.from('schedules').select('*').eq('pin', pin).eq('status', 'Aktif');
     
     if (error || !data || data.length === 0) {
         return res.json({status: "error", message: "PIN Salah atau Ujian telah ditutup!"});
     }
     
-    const mapelGabungan = data.map(d => d.mapel).join(', ');
+    // 1. Kumpulkan semua kode bank soal yang ada di dalam PIN jadwal ini
+    let allMapels = [];
+    data.forEach(d => {
+        if(d.mapel) {
+            d.mapel.split(',').forEach(m => {
+                if(m.trim()) allMapels.push(m.trim());
+            });
+        }
+    });
+
+    // 2. SENSOR KELAS OTOMATIS (Mencocokkan nama paket soal dengan kelas siswa)
+    // Misal kelas siswa "7A", dibersihkan jadi "7a"
+    const cleanKelas = String(kelas || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    
+    let cocokKelas = allMapels.filter(m => {
+        // Misal kode bank soal "MTK-7A" atau "MTK7A-GURUA", dibersihkan jadi "mtk7a" atau "mtk7agurua"
+        const cleanM = m.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        return cleanM.includes(cleanKelas); // Apakah nama bank soal mengandung tulisan kelas siswa?
+    });
+
+    // 3. Penentuan Akhir Paket Soal
+    // Jika ditemukan paket soal yang spesifik sesuai kelas siswa, kunci paket itu saja.
+    // Jika tidak ditemukan (misal ujian umum gabungan satu angkatan), berikan seluruh mapel di PIN tersebut (Fallback).
+    const mapelGabungan = cocokKelas.length > 0 ? cocokKelas.join(', ') : allMapels.join(', ');
     const totalDurasi = data.reduce((sum, d) => sum + parseInt(d.durasi || 0), 0);
     
     res.json({ status: "success", exam: { mapel: mapelGabungan, durasi: totalDurasi } });
-});
-
-app.post('/api/siswa/get-soal', async (req, res) => { 
-    const { exam_id } = req.body; 
-    const mapelArray = exam_id.split(',').map(m => m.trim());
-    const { data, error } = await supabase.from('questions').select('*').in('exam_id', mapelArray); 
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ questions: data }); 
 });
 
 // ==========================================

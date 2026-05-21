@@ -60,21 +60,70 @@ function saveToLocal() { if(currentExam && activeUser) localStorage.setItem(`cbt
 function loadFromLocal() { if(currentExam && activeUser) { const saved = localStorage.getItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); if(saved) cbtAnswers = JSON.parse(saved); } }
 
 async function mulaiUjian() {
-    const pin = document.getElementById('input-pin').value; if(!pin) return Swal.fire('Error', 'PIN!', 'warning'); Swal.fire({ title: 'Menyiapkan...', didOpen: () => Swal.showLoading() });
+    const pin = document.getElementById('input-pin').value; 
+    if(!pin) return Swal.fire('Error', 'PIN Wajib diisi!', 'warning'); 
+    Swal.fire({ title: 'Menyiapkan lembar soal...', didOpen: () => Swal.showLoading() });
+    
     try {
-        const clientDate = new Date().toLocaleDateString('en-CA'); const clientTime = new Date().toTimeString().substring(0,5); 
-        const res = await fetch(API + '/siswa/cek-pin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pin: pin, student_name: activeUser.name, client_date: clientDate, client_time: clientTime}) }); const data = await res.json();
+        const clientDate = new Date().toLocaleDateString('en-CA'); 
+        const clientTime = new Date().toTimeString().substring(0,5); 
+        
+        // PENGIRIMAN DENGAN SENSOR KELAS AKTIF
+        const res = await fetch(API + '/siswa/cek-pin', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({
+                pin: pin, 
+                student_name: activeUser.name, 
+                kelas: activeUser.kelas, // Baris Kunci: Kirim kelas siswa (misal: 7A) ke server
+                client_date: clientDate, 
+                client_time: clientTime
+            }) 
+        }); 
+        
+        const data = await res.json();
         if(data.status === "success") {
-            currentExam = data.exam; const resSoal = await fetch(API + '/siswa/get-soal', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({exam_id: currentExam.mapel}) }); const dataSoal = await resSoal.json();
-            if(!dataSoal.questions || dataSoal.questions.length === 0) return Swal.fire('Oops', 'Soal belum diatur!', 'error');
-            document.getElementById('view-siswa-token').classList.add('hidden'); document.getElementById('view-siswa-ujian').classList.remove('hidden');
-            document.getElementById('ujian-mapel-title').innerText = currentExam.mapel; document.getElementById('ujian-nama-siswa').innerText = activeUser.name;
+            currentExam = data.exam; 
+            
+            // Mengambil soal yang sudah disaring otomatis oleh server berdasarkan sensor kelas
+            const resSoal = await fetch(API + '/siswa/get-soal', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({exam_id: currentExam.mapel}) 
+            }); 
+            
+            const dataSoal = await resSoal.json();
+            if(!dataSoal.questions || dataSoal.questions.length === 0) {
+                return Swal.fire('Oops', 'Paket soal khusus untuk kelas Anda belum diatur atau nama bank soal tidak mengandung identitas kelas Anda!', 'error');
+            }
+            
+            document.getElementById('view-siswa-token').classList.add('hidden'); 
+            document.getElementById('view-siswa-ujian').classList.remove('hidden');
+            document.getElementById('ujian-mapel-title').innerText = currentExam.mapel; 
+            document.getElementById('ujian-nama-siswa').innerText = activeUser.name;
+            
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-            cbtQuestions = dataSoal.questions; cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '' })); cbtCurrentIndex = 0;
-            let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; localStorage.setItem(startTimeKey, Date.now()); 
-            loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; Swal.close();
-        } else Swal.fire('Gagal', data.message, 'error');
-    } catch(e) { Swal.fire('Error', 'Terputus', 'error'); }
+            
+            cbtQuestions = dataSoal.questions; 
+            cbtAnswers = new Array(cbtQuestions.length).fill(null).map(() => ({ ans: '' })); 
+            cbtCurrentIndex = 0;
+            
+            let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; 
+            localStorage.setItem(startTimeKey, Date.now()); 
+            
+            loadFromLocal(); 
+            startTimer(currentExam.durasi || 60); 
+            renderCbtGrid(); 
+            showCbtQuestion(0); 
+            curangCount = 0; 
+            isExamActive = true; 
+            Swal.close();
+        } else {
+            Swal.fire('Gagal', data.message, 'error');
+        }
+    } catch(e) { 
+        Swal.fire('Error', 'Terputus dari server.', 'error'); 
+    }
 }
 
 function startTimer(durationMinutes) {
