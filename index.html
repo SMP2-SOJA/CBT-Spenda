@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CBT Online - SPENDA-DIGI-2026</title>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -50,7 +48,7 @@
                 <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
             </div>
             
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta © 2026 | SPENDA-DIGI-2026</p>
+            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026 | SPENDA-DIGI-2026</p>
         </div>
     </div>
 
@@ -155,7 +153,9 @@
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
                         <div class="bg-slate-50 p-3 md:p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3">
                             <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-desktop mr-2 text-blue-500"></i> Live Monitoring Global</h3>
-                            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                <button onclick="clearMonitoring()" class="text-[10px] md:text-xs bg-orange-100 text-orange-600 border border-orange-200 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold hover:bg-orange-200 transition flex items-center gap-1"><i class="fa fa-broom"></i> Bersihkan Layar</button>
+                                
                                 <select id="filter-mapel" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Mapel</option></select>
                                 <select id="filter-kelas" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
                             </div>
@@ -167,15 +167,16 @@
                 <div id="page-jadwal" class="page-content hidden space-y-4">
                     <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Jadwal</button></div>
                     <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border">
-                        <div class="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-3 items-start">
-                            <div class="col-span-2 relative">
-                                <select id="j_mapel" multiple class="w-full p-2 md:p-3 border rounded-lg text-xs md:text-sm h-24 outline-none focus:border-blue-500" title="Tahan tombol CTRL untuk memilih banyak mapel sekaligus"></select>
-                                <p class="text-[9px] text-emerald-600 font-bold mt-1"><i class="fa fa-info-circle"></i> Tahan tombol CTRL untuk klik 2 mapel atau lebih.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-start">
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold text-slate-500 block mb-1">PILIH 1 ATAU LEBIH MAPEL (1 PIN):</label>
+                                <div id="j_mapel_container" class="border rounded-lg p-2 bg-slate-50 max-h-28 overflow-y-auto space-y-1 text-xs">
+                                    </div>
                             </div>
                             <input type="date" id="j_tgl" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Tanggal Mulai">
                             <input type="time" id="j_jam" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Jam Mulai">
                             <input type="number" id="j_durasi" placeholder="Durasi (Mnt)" title="Durasi Total" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm">
-                            <button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 md:py-3 rounded-lg text-xs md:text-sm hover:bg-blue-700 h-10 md:h-auto">BUAT JADWAL</button>
+                            <button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 md:py-3 rounded-lg text-xs md:text-sm hover:bg-blue-700 h-10 md:h-auto mt-auto">BUAT JADWAL</button>
                         </div>
                     </div>
                     <div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"></div>
@@ -200,10 +201,10 @@
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 gap-2">
                         <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-chart-bar mr-2 text-blue-500"></i> Hasil Ujian</h3>
                         <div class="flex flex-wrap gap-1 md:gap-2 items-center bg-white p-1 md:p-2 rounded-lg shadow-sm border">
-                            <label class="text-[9px] md:text-[10px] font-bold text-slate-500 ml-1">SET KKM:</label>
-                            <input type="number" id="input-kkm-nilai" placeholder="Batas" class="p-1.5 md:p-2 border-2 border-red-300 rounded-lg text-[10px] md:text-xs font-black text-red-600 bg-red-50 outline-none w-16 md:w-20" onkeyup="renderNilaiTable()" onchange="renderNilaiTable()">
+                            <label class="text-[9px] md:text-[10px] font-bold text-slate-500 ml-1">KKM MAPEL FILTER:</label>
+                            <input type="number" id="input-kkm-nilai" placeholder="KKM" class="p-1.5 md:p-2 border-2 border-blue-300 rounded-lg text-[10px] md:text-xs font-black text-blue-600 bg-blue-50 outline-none w-16 md:w-20" onkeyup="updateKkmMapel(this.value)" onchange="updateKkmMapel(this.value)">
                             
-                            <select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Mapel</option></select>
+                            <select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="handleMapelNilaiChange()"><option value="">Semua Mapel</option></select>
                             <select id="filter-kelas-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select>
                         </div>
                     </div>
@@ -220,7 +221,8 @@
                                     <th class="p-4">Waktu</th>
                                     <th class="p-4 text-center">B / S</th>
                                     <th class="p-4 text-center">Nilai</th>
-                                    <th class="p-4 text-center">Status</th> <th class="p-4 text-center">Aksi</th>
+                                    <th class="p-4 text-center">Status Ketuntasan</th> 
+                                    <th class="p-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="nilai-body" class="divide-y divide-slate-100 bg-white"></tbody>
@@ -242,7 +244,6 @@
                         </div>
                         
                         <div class="flex gap-2">
-                            <button onclick="clearMonitoring()" class="text-[10px] md:text-xs bg-orange-100 text-orange-600 border border-orange-200 px-3 py-2 rounded-lg font-bold hover:bg-orange-200 transition flex items-center gap-1"><i class="fa fa-broom"></i> Bersihkan Layar</button>
                             <button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg font-bold hover:bg-red-200 transition flex items-center gap-1"><i class="fa fa-trash"></i> Bersihkan User</button>
                         </div>
                     </div>
@@ -261,7 +262,7 @@
     </div>
 
     <script>
-        // LOGIKA IMPORT USER CHUNK
+        // LOGIKA NORMALISASI KOLOM EXCEL AGAR KEBAL TYPO HURUF BESAR/KECIL & SPASI
         async function prosesImportUser() {
             const fileInput = document.getElementById('file-import-user');
             const file = fileInput.files[0];
@@ -280,12 +281,23 @@
                             if (file.name.endsWith('.csv')) {
                                 parsedData = parseCSV(e.target.result);
                             } else {
-                                // Memanfaatkan XLSX CDN Penuh
                                 const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                                parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                                
+                                // NORMALISASI SANGAT KETAT: Mengubah header kolom menjadi huruf kecil murni & membuang spasi
+                                parsedData = rawData.map(row => {
+                                    const normalizedRow = {};
+                                    for (let key in row) {
+                                        if (row.hasOwnProperty(key)) {
+                                            const cleanKey = key.replace(/\s+/g, '').toLowerCase();
+                                            normalizedRow[cleanKey] = row[key];
+                                        }
+                                    }
+                                    return normalizedRow;
+                                });
                             }
 
-                            if (parsedData.length === 0) return Swal.fire('Gagal', 'Tidak ada data valid.', 'error');
+                            if (parsedData.length === 0) return Swal.fire('Gagal', 'Tidak ada baris data valid di dalam file.', 'error');
 
                             let totalSuccess = 0;
                             const chunkSize = 100;
@@ -303,7 +315,7 @@
                                 else return Swal.fire('Gagal', serverResult.message, 'error');
                             }
                             
-                            Swal.fire('Sukses!', `Sebanyak ${totalSuccess} data berhasil disimpan.`, 'success');
+                            Swal.fire('Sukses!', `Sebanyak ${totalSuccess} data berhasil disimpan ke sistem!`, 'success');
                             loadUsers(); fileInput.value = '';
                         };
 
@@ -317,7 +329,7 @@
         function parseCSV(csv) {
             const lines = csv.split('\n').filter(l => l.trim());
             if (lines.length < 2) return [];
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const headers = lines[0].split(',').map(h => h.replace(/\s+/g, '').toLowerCase());
             const data = [];
             for (let i = 1; i < lines.length; i++) {
                 const values = lines[i].split(',').map(v => v.trim());

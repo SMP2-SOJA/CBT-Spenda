@@ -100,20 +100,21 @@ app.put('/api/admin/update-user', async (req, res) => { await supabase.from('use
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
 app.delete('/api/admin/clear-users', async (req, res) => { await supabase.from('users').delete().neq('id', 0); res.json({status: "success"}); });
 
+// ENGINE IMPORT USER KEBAL FORMAT DAN CASE-INSENSITIVE
 app.post('/api/admin/import-users', async (req, res) => {
     const { data } = req.body;
     if(!data || !data.length) return res.json({status: "error", message: "Data kosong"});
 
     const toInsert = data.map(row => ({
-        username: String(row.username || row.Username || '').trim(),
+        username: String(row.username || row.user || row.Username || '').trim(),
         name: String(row.nama || row.name || row.Nama || row.Name || '').trim(),
-        password: String(row.password || row.Password || '').trim(),
-        role: String(row.role || row.Role || 'siswa').toLowerCase(),
+        password: String(row.password || row.pass || row.Password || '').trim(),
+        role: String(row.role || 'siswa').toLowerCase(),
         kelas: String(row.kelas || row.Kelas || '').trim(),
         mapel: String(row.mapel || row.Mapel || '').trim()
     })).filter(r => r.username && r.password);
 
-    if(toInsert.length === 0) return res.json({status: "error", message: "Format tidak sesuai"});
+    if(toInsert.length === 0) return res.json({status: "error", message: "Format kolom tidak terbaca. Pastikan Excel Anda memiliki kolom: username, nama, password."});
 
     const { error } = await supabase.from('users').upsert(toInsert, { onConflict: 'username' });
     if (error) return res.json({status: "error", message: error.message});

@@ -297,10 +297,10 @@ function renderActivityTable() {
             let skorMentah = a.score !== null && a.score !== undefined ? String(a.score) : '-'; let nilaiTampil = skorMentah.includes('|') ? skorMentah.split('|')[0].trim() : skorMentah;
             let skorTampil = (isWorking && a.status === 'Mengerjakan' && a.score) ? `<span class="text-blue-600 font-bold"><i class="fa fa-chart-line"></i> Live: ${nilaiTampil}</span>` : ((isWorking && a.status === 'Mengerjakan') ? `-` : nilaiTampil);
             let durasiFinal = '-'; let jamUpdate = a.last_seen || '-';
-            if (a.last_seen && a.last_seen.includes('(')) { let parts = a.last_seen.split(' ('); jamUpdate = parts[0]; let dText = parts[1].replace(')', ''); if(dText.includes('|')) { let subParts = dText.split('|'); durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${subParts[0].trim()}</span><br><span class="text-[9px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 mt-1 inline-block"><i class="fa fa-tasks"></i> Progress: ${subParts[1].trim()}</span>`; } else { durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${dText}</span>`; } } else if (a.status === 'Mengerjakan') { durasiFinal = `<span class="font-bold text-orange-500"><i class="fa fa-spinner fa-spin mr-1"></i> Baru mulai</span>`; }
+            if (a.last_seen && a.last_seen.includes('(')) { let parts = a.last_seen.split(' ('); jamUpdate = parts[0]; let dText = parts[1].replace(')', ''); if(dText.includes('|')) { let subParts = dText.split('|'); durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${subParts[0].trim()}</span><br><span class="text-[9px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 mt-1 inline-block"><i class="fa fa-tasks"></i> Progress: ${subParts[1].trim()}</span>`; } else { durasiFinal = `<span class="font-bold text-slate-700"><i class="fa fa-clock text-slate-400 mr-1"></i> ${dText}</span>`; } } else if (a.status === 'Mengerjakan') { durasiFinal = `<span class="font-bold text-orange-500"><i class="fa fa-clock fa-spin mr-1"></i> Baru mulai</span>`; }
             let hantuBtn = (isWorking && activeUser && activeUser.role.toLowerCase() === 'admin') ? `<button onclick="usirHantu(${a.id})" class="ml-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white px-2 py-1 rounded shadow-sm text-[8px]"><i class="fa fa-times"></i></button>` : '';
 
-            return `<tr class="hover:bg-slate-50 border-b border-slate-100 ${rowColorClass}"><td class="p-2 md:p-3 font-bold ${textClass}">${a.student_name} ${hantuBtn}<br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td><td class="p-2 md:p-3 font-medium">${a.exam_name}</td><td class="p-2 md:p-3"><span class="px-2 py-1 rounded-full text-[9px] md:text-[10px] font-bold ${badgeClass}">${a.status}</span> ${aksiBtn}</td><td class="p-2 md:p-3 font-black text-sm">${skorTampil}</td><td class="p-2 md:p-3">${durasiFinal}</td><td class="p-2 md:p-3 text-[9px] md:text-[10px] text-slate-500">${jamUpdate}</td></tr>`;
+            return `<tr class="hover:bg-slate-50 border-b border-slate-100 ${rowColorClass}"><td class="p-2 md:p-3 font-bold ${textClass}">${a.student_name} ${hantuBtn}<br><span class="text-[8px] md:text-[9px] text-slate-400">Kelas: ${a.kelas||'-'}</span></td><td class="p-2 md:p-3 font-medium">${a.exam_name}</td><td class="p-2 md:p-3"><span class="px-2 py-1 rounded-full text-[9px] md:text-[10px] font-bold ${badgeClass}">${a.status}</span></td><td class="p-2 md:p-3 font-black text-sm">${skorTampil}</td><td class="p-2 md:p-3">${durasiFinal}</td><td class="p-2 md:p-3 text-[9px] md:text-[10px] text-slate-500">${jamUpdate}</td></tr>`;
         }).join('');
         return `<div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white mb-4"><div class="p-2 md:p-3 text-[10px] md:text-xs font-black uppercase tracking-widest ${titleColorClass}"><i class="fa ${icon} mr-1"></i> ${title} <span class="float-right bg-white/80 px-2 py-0.5 rounded-full shadow-sm text-[9px] text-slate-700">${dataArray.length} Siswa</span></div><div class="overflow-x-auto"><div class="max-h-[40vh] overflow-y-auto scroll-saver"><table class="w-full text-left text-[10px] md:text-xs"><thead class="text-[8px] md:text-[9px] text-slate-500 uppercase sticky top-0 z-10 shadow-sm"><tr><th class="p-2 md:p-3 bg-slate-100">Nama Siswa</th><th class="p-2 md:p-3 bg-slate-100">Ujian</th><th class="p-2 md:p-3 bg-slate-100">Status / Aksi</th><th class="p-2 md:p-3 bg-slate-100">Skor</th><th class="p-2 md:p-3 bg-slate-100">Durasi / Progress</th><th class="p-2 md:p-3 bg-slate-100">Jam Update</th></tr></thead><tbody class="divide-y divide-slate-100 bg-white">${rows}</tbody></table></div></div></div>`;
     };
@@ -312,7 +312,42 @@ function renderActivityTable() {
     document.querySelectorAll('.scroll-saver').forEach((el, index) => { if(scrollPositions[index]) el.scrollTop = scrollPositions[index]; });
 }
 
-// NILAI & EKSPOR EXCEL DENGAN LOGIKA KKM DINAMIS
+// LOGIKA GET & SET KKM BERDASARKAN MAPEL DENGAN STORAGE TERSTRUKTUR
+function getKkmStorage() {
+    try {
+        return JSON.parse(localStorage.getItem('cbt_kkm_mapel') || '{}');
+    } catch(e) { return {}; }
+}
+
+function handleMapelNilaiChange() {
+    const selMapel = document.getElementById('filter-mapel-nilai').value;
+    const kkmMap = getKkmStorage();
+    const inputKkm = document.getElementById('input-kkm-nilai');
+    if(selMapel && kkmMap[selMapel]) {
+        inputKkm.value = kkmMap[selMapel];
+    } else {
+        inputKkm.value = '';
+    }
+    renderNilaiTable();
+}
+
+function updateKkmMapel(val) {
+    const selMapel = document.getElementById('filter-mapel-nilai').value;
+    if(!selMapel) {
+        Swal.fire('Perhatian', 'Silakan pilih opsi "Mata Pelajaran" pada filter terlebih dahulu untuk menetapkan batas nilai KKM!', 'info');
+        document.getElementById('input-kkm-nilai').value = '';
+        return;
+    }
+    const kkmMap = getKkmStorage();
+    if(val && parseFloat(val) > 0) {
+        kkmMap[selMapel] = parseFloat(val);
+    } else {
+        delete kkmMap[selMapel];
+    }
+    localStorage.setItem('cbt_kkm_mapel', JSON.stringify(kkmMap));
+    renderNilaiTable();
+}
+
 async function loadNilai() { 
     const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); window.allResultsData = data; 
     if(document.getElementById('filter-kelas-nilai').options.length === 1) { 
@@ -325,16 +360,30 @@ async function loadNilai() {
 function renderNilaiTable() { 
     const selKelas = document.getElementById('filter-kelas-nilai').value; 
     const selMapel = document.getElementById('filter-mapel-nilai').value; 
-    const kkmLimit = parseFloat(document.getElementById('input-kkm-nilai').value) || 0;
+    const kkmMap = getKkmStorage();
 
-    window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); }); 
+    window.filteredResultsData = window.allResultsData.filter(r => { 
+        return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); 
+    }); 
     
     document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => {
-        let statusKKM = '-';
+        let kkmLimit = 0;
+        if(selMapel) {
+            kkmLimit = kkmMap[selMapel] || 0;
+        } else {
+            for(let mKey in kkmMap) {
+                if(n.mapel && n.mapel.includes(mKey)) {
+                    kkmLimit = kkmMap[mKey];
+                    break;
+                }
+            }
+        }
+
+        let statusKetuntasan = '<span class="text-slate-400 font-medium italic">Belum di-set KKM</span>';
         if (kkmLimit > 0) {
-            statusKKM = n.nilai >= kkmLimit 
-                ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[9px] font-bold">TUNTAS</span>' 
-                : '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[9px] font-bold">REMEDIAL</span>';
+            statusKetuntasan = n.nilai >= kkmLimit 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black"><i class="fa fa-check-circle"></i> TUNTAS</span>' 
+                : '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black"><i class="fa fa-times-circle"></i> REMEDIAL</span>';
         }
 
         return `
@@ -342,9 +391,9 @@ function renderNilaiTable() {
             <td class="p-3 font-semibold whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug text-slate-800">${n.student_name} <br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td>
             <td class="p-3 text-slate-700 font-medium">${n.mapel}</td>
             <td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td>
-            <td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} / ${n.salah || 0}</td>
+            <td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} B / ${n.salah || 0} S</td>
             <td class="p-3 text-center font-black text-sm md:text-base text-blue-600">${n.nilai}</td>
-            <td class="p-3 text-center">${statusKKM}</td>
+            <td class="p-3 text-center">${statusKetuntasan}</td>
             <td class="p-3 text-center"><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold hover:bg-blue-200 transition shadow-sm"><i class="fa fa-eye mr-1"></i> Detail</button></td>
         </tr>
     `}).join(''); 
@@ -353,10 +402,26 @@ function renderNilaiTable() {
 function exportExcelDetail() {
     if(window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Tidak ada data nilai untuk di-export.', 'info');
     
-    const kkmValue = parseFloat(document.getElementById('input-kkm-nilai').value) || 0;
+    const kkmMap = getKkmStorage();
+    const selMapel = document.getElementById('filter-mapel-nilai').value;
+    
     const dataToExport = window.filteredResultsData.map(n => {
-        let isTuntas = '-';
-        if (kkmValue > 0) { isTuntas = n.nilai >= kkmValue ? 'Tuntas' : 'Remedial'; }
+        let kkmLimit = 0;
+        if(selMapel) {
+            kkmLimit = kkmMap[selMapel] || 0;
+        } else {
+            for(let mKey in kkmMap) {
+                if(n.mapel && n.mapel.includes(mKey)) {
+                    kkmLimit = kkmMap[mKey];
+                    break;
+                }
+            }
+        }
+
+        let isTuntas = 'Belum di-set KKM';
+        if (kkmLimit > 0) { 
+            isTuntas = n.nilai >= kkmLimit ? 'Tuntas' : 'Remedial'; 
+        }
         
         return {
             "Nama Siswa": n.student_name,
@@ -373,30 +438,48 @@ function exportExcelDetail() {
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Hasil_Nilai");
-    XLSX.writeFile(wb, `Hasil_Ujian_CBT.xlsx`);
+    XLSX.writeFile(wb, `Hasil_Ujian_CBT_Spenda.xlsx`);
 }
 
 function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \\ /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); }
 
-// JADWAL (MULTI-MAPEL)
+// JADWAL (SISTEM SELEKSI KOTAK CENTANG MULTI-MAPEL 1 PIN)
 async function loadMaster() { document.getElementById('app-name-display').innerText = 'SPENDA-DIGI-2026'; }
-async function loadJadwal() { const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); window.allSchedulesData = data; document.getElementById('list-jadwal').innerHTML = data.map(j => { let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tglTampil = tglJamArr[0] || j.tanggal; let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; let statusBadge = j.status === 'Aktif' ? '<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Aktif</span>' : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Ditutup</span>'; return `<div class="bg-white p-3 md:p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center relative"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-[10px] md:text-sm text-blue-900">${j.mapel}</h4> ${statusBadge}</div><p class="text-[8px] md:text-[10px] text-slate-400"><i class="fa fa-calendar-alt"></i> ${tglTampil}${jamTampil} • <i class="fa fa-clock"></i> ${j.durasi} Menit</p></div><div class="text-center px-3 md:px-4 border-l border-slate-100"><p class="text-[7px] md:text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-base md:text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div><div class="flex flex-col gap-1.5 pl-2 border-l border-slate-100"><button onclick="editJadwal(${j.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-edit"></i></button><button onclick="hapusJadwal(${j.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-trash"></i></button></div></div>`; }).join(''); const resExams = await fetch(API + '/admin/available-exams' + getAuthParams()); const exams = await resExams.json(); const selectMapel = document.getElementById('j_mapel'); selectMapel.innerHTML = exams.map(e => `<option value="${e}">${e}</option>`).join(''); }
+async function loadJadwal() { 
+    const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); window.allSchedulesData = data; 
+    document.getElementById('list-jadwal').innerHTML = data.map(j => { let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tglTampil = tglJamArr[0] || j.tanggal; let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; let statusBadge = j.status === 'Aktif' ? '<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Aktif</span>' : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Ditutup</span>'; return `<div class="bg-white p-3 md:p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center relative"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-[10px] md:text-sm text-blue-900">${j.mapel}</h4> ${statusBadge}</div><p class="text-[8px] md:text-[10px] text-slate-400"><i class="fa fa-calendar-alt"></i> ${tglTampil}${jamTampil} • <i class="fa fa-clock"></i> ${j.durasi} Menit</p></div><div class="text-center px-3 md:px-4 border-l border-slate-100"><p class="text-[7px] md:text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-base md:text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div><div class="flex flex-col gap-1.5 pl-2 border-l border-slate-100"><button onclick="editJadwal(${j.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-edit"></i></button><button onclick="hapusJadwal(${j.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-trash"></i></button></div></div>`; }).join(''); 
+    
+    const resExams = await fetch(API + '/admin/available-exams' + getAuthParams()); const exams = await resExams.json(); 
+    
+    // Me-render mapel ke dalam susunan Checkbox yang solid di HP/Desktop
+    const containerMapel = document.getElementById('j_mapel_container');
+    if(containerMapel) {
+        containerMapel.innerHTML = exams.map(e => `
+            <label class="flex items-center space-x-2 cursor-pointer p-1 hover:bg-slate-200 rounded transition">
+                <input type="checkbox" name="j_mapel_cb" value="${e}" class="w-4 h-4 text-blue-600 rounded accent-blue-600">
+                <span class="font-semibold text-slate-700">${e}</span>
+            </label>
+        `).join('') || '<span class="text-slate-400 italic">Belum ada paket bank soal</span>';
+    }
+}
 
 async function saveJadwal() { 
-    // Menangkap pilihan ganda dari tag select
-    const selectBox = document.getElementById('j_mapel');
-    const selectedOptions = Array.from(selectBox.selectedOptions).map(opt => opt.value);
+    // Mengumpulkan semua mapel yang dicentang oleh user
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="j_mapel_cb"]:checked')).map(cb => cb.value);
+    if (checkedBoxes.length === 0) return Swal.fire('Oops', 'Centang minimal 1 Mata Pelajaran!', 'warning');
     
-    if (selectedOptions.length === 0) return Swal.fire('Oops', 'Pilih minimal 1 Mapel!', 'warning');
-    const mapel = selectedOptions.join(', '); // Menggabungkan mapel dengan koma
-    
+    const mapel = checkedBoxes.join(', '); // Menyusun teks gabungan otomatis
     const tgl = document.getElementById('j_tgl').value; 
     const jam = document.getElementById('j_jam').value; 
     const durasi = document.getElementById('j_durasi').value; 
     
-    if(!tgl || !jam || !durasi) return Swal.fire('Oops', 'Lengkapi tanggal dan durasi!', 'warning'); 
+    if(!tgl || !jam || !durasi) return Swal.fire('Oops', 'Lengkapi seluruh field tanggal, jam, dan durasi!', 'warning'); 
     
-    await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: `${tgl}|${jam}`, durasi }) }); 
+    await fetch(API + '/admin/add-schedule', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ mapel, tanggal: `${tgl}|${jam}`, durasi }) 
+    }); 
     loadJadwal(); 
 }
 
@@ -415,7 +498,7 @@ async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_j
 
 async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = data.map(u => `<tr><td class="p-2 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td>${u.role}</td><td class="text-right p-2"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 px-2 py-1 rounded mr-1">Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 px-2 py-1 rounded">Hapus</button></td></tr>`).join(''); }
 function tambahUserManual() { Swal.fire({ title: 'Tambah User', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama</label><input id="a_name" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="a_user" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="a_pass" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Role</label><select id="a_role" class="w-full p-2 border rounded"><option value="siswa">Siswa</option><option value="guru">Guru</option><option value="admin">Admin</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas</label><input id="a_kelas" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Mapel</label><input id="a_mapel" class="w-full p-2 border rounded"></div></div>`, showCancelButton: true, preConfirm: () => { return { name: document.getElementById('a_name').value, username: document.getElementById('a_user').value, password: document.getElementById('a_pass').value, role: document.getElementById('a_role').value, kelas: document.getElementById('a_kelas').value, mapel: document.getElementById('a_mapel').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/add-user', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); } }); }
-function editUser(u) { Swal.fire({ title: 'Edit User', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama</label><input id="e_name" class="w-full p-2 border rounded" value="${u.name}"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="e_user" class="w-full p-2 border rounded" value="${u.username}"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="e_pass" class="w-full p-2 border rounded" value="${u.password}"></div><div><label class="text-xs font-bold text-slate-500">Role</label><select id="e_role" class="w-full p-2 border rounded"><option value="siswa" ${u.role==='siswa'?'selected':''}>Siswa</option><option value="guru" ${u.role==='guru'?'selected':''}>Guru</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas</label><input id="e_kelas" class="w-full p-2 border rounded" value="${u.kelas||''}"></div><div><label class="text-xs font-bold text-slate-500">Mapel</label><input id="e_mapel" class="w-full p-2 border rounded" value="${u.mapel||''}"></div></div>`, showCancelButton: true, preConfirm: () => { return { old_username: u.username, name: document.getElementById('e_name').value, username: document.getElementById('e_user').value, password: document.getElementById('e_pass').value, role: document.getElementById('e_role').value, kelas: document.getElementById('e_kelas').value, mapel: document.getElementById('e_mapel').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/update-user', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); } }); }
+function editUser(u) { Swal.fire({ title: 'Edit User', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama</label><input id="e_name" class="w-full p-2 border rounded" value="${u.name}"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="e_user" class="w-full p-2 border rounded" value="${u.username}"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="e_pass" class="w-full p-2 border rounded" value="${u.password}"></div><div><label class="text-xs font-bold text-slate-500">Role</label><select id="e_role" class="w-full p-2 border rounded"><option value="siswa" ${u.role==='siswa'?'selected':''}>Siswa</option><option value="guru" ${u.role==='guru'?'selected':''}>Guru</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas</label><input id="e_kelas" class="w-full p-2 border rounded" value="${u.kelas||''}"></div><div><label class="text-xs font-bold text-slate-500">Mapel</label><input id="e_mapel" class="w-full p-2 border rounded" value="${u.mapel||''}"></div></div>`, showCancelButton: true, preConfirm: () => { return { old_username: u.username, name: document.getElementById('e_name').value, username: document.getElementById('e_user').value, password: document.getElementById('e_pass').value, role: u.role, kelas: u.role === 'siswa' ? document.getElementById('e_kelas').value : '', mapel: u.role === 'guru' ? document.getElementById('e_kelas').value : '' } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/update-user', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); } }); }
 
 async function hapusUser(usr) { await fetch(API+'/admin/delete-user/'+usr, {method:'DELETE'}); loadUsers(); }
 async function hapusJadwal(id) { await fetch(API+'/admin/delete-schedule/'+id, {method:'DELETE'}); loadJadwal(); }
