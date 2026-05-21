@@ -45,7 +45,7 @@
                 <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
             </div>
             
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026 | (spenda-digital)</p>
+            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SMP Negeri 2 Soyo Jaya <br> Hak Cipta &copy; 2026|spenda-digital</p>
         </div>
     </div>
 
@@ -217,8 +217,14 @@
                 </div>
                 
                 <div id="page-users" class="page-content hidden space-y-4">
-                    <div class="flex justify-between items-center mb-2"><div class="flex gap-2"><button onclick="tambahUserManual()" class="bg-blue-600 text-white px-3 py-1.5 md:py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-blue-700 transition"><i class="fa fa-user-plus mr-1"></i> Tambah User</button><label class="bg-emerald-600 text-white px-3 py-1.5 md:py-2 rounded-lg font-bold text-[10px] md:text-xs cursor-pointer shadow hover:bg-emerald-700 transition"><i class="fa fa-upload mr-1"></i> Import Excel<input type="file" class="hidden" onchange="importUsers(this)"></label></div>
-            <div id="import-tabs" style="display:none;margin-top:16px" class="bg-green-50 border border-green-300 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                    <div class="flex gap-2">
+                        <button onclick="tambahUserManual()" class="bg-blue-600 text-white px-3 py-1.5 md:py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-blue-700 transition"><i class="fa fa-user-plus mr-1"></i> Tambah User</button>
+                        <button onclick="document.getElementById('import-tabs').classList.toggle('hidden')" class="bg-emerald-600 text-white px-3 py-1.5 md:py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-emerald-700 transition"><i class="fa fa-upload mr-1"></i> Import Excel</button>
+                    </div>
+                </div>
+                
+                <div id="import-tabs" class="hidden mb-4 class="bg-green-50 border border-green-300 rounded-lg p-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Import Siswa -->
                     <div class="bg-white p-4 rounded-lg border border-green-200">
@@ -238,7 +244,8 @@
                     <i class="fa fa-info-circle"></i> <strong>Tips:</strong> Download template terlebih dahulu, isi data sesuai format, lalu upload file CSV atau XLSX
                 </div>
             </div>
-<button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200 transition"><i class="fa fa-trash"></i> Bersihkan User</button></div>
+</div>
+                    <button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200 transition"><i class="fa fa-trash"></i> Bersihkan User</button>
                     <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3 min-w-[150px]">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
                 </div>
             </div>
@@ -940,11 +947,30 @@
     
         // ===== IMPORT FUNCTIONS =====
         function downloadTemplate(type) {
-            const filename = type === 'siswa' ? 'TEMPLATE_SISWA.csv' : 'TEMPLATE_GURU.csv';
-            const link = document.createElement('a');
-            link.href = `/${filename}`;
-            link.download = filename;
-            link.click();
+            let csv, filename;
+            if (type === 'siswa') {
+                csv = `username,nama,password,kelas
+siswa001,Andi Putra,Password123,7A
+siswa002,Budi Santoso,Password123,7A
+siswa003,Citra Dewi,Password123,7B
+siswa004,Dani Rahman,Password123,7B
+siswa005,Eka Putri,Password123,8A`;
+                filename = 'TEMPLATE_SISWA.csv';
+            } else {
+                csv = `username,nama,password,mapel_kelas
+guru001,Pak Budi,Password123,"MTK-7A,MTK-7B"
+guru002,Bu Ani,Password123,"IPA-7A,IPA-7B,IPA-8A"
+guru003,Pak Candra,Password123,"MTK-8A,IPA-8B,BINDO-8C"
+guru004,Bu Desi,Password123,"BINDO-7A,BINDO-7B"`;
+                filename = 'TEMPLATE_GURU.csv';
+            }
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
         }
         
         async function handleImportFile(e, type) {
