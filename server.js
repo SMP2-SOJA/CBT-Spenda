@@ -30,9 +30,8 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
     
     const mapelGabungan = data.map(d => d.mapel).join(', ');
     const totalDurasi = data.reduce((sum, d) => sum + parseInt(d.durasi || 0), 0);
-    const kkmMaster = data[0].kkm || 0;
     
-    res.json({ status: "success", exam: { mapel: mapelGabungan, durasi: totalDurasi, kkm: kkmMaster } });
+    res.json({ status: "success", exam: { mapel: mapelGabungan, durasi: totalDurasi } });
 });
 
 app.post('/api/siswa/get-soal', async (req, res) => { 
@@ -77,10 +76,10 @@ app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from
 app.get('/api/admin/schedules', async (req, res) => { const { data } = await supabase.from('schedules').select('*').order('id', {ascending: false}); res.json(data); });
 app.post('/api/admin/add-schedule', async (req, res) => {
     const pin = Math.floor(1000 + Math.random() * 9000).toString();
-    await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, kkm: req.body.kkm, pin, status: 'Aktif' }]);
+    await supabase.from('schedules').insert([{ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, pin, status: 'Aktif' }]);
     res.json({status: "success"});
 });
-app.put('/api/admin/update-schedule', async (req, res) => { await supabase.from('schedules').update({ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, kkm: req.body.kkm, status: req.body.status }).eq('id', req.body.id); res.json({status: "success"}); });
+app.put('/api/admin/update-schedule', async (req, res) => { await supabase.from('schedules').update({ mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: req.body.durasi, status: req.body.status }).eq('id', req.body.id); res.json({status: "success"}); });
 app.delete('/api/admin/delete-schedule/:id', async (req, res) => { await supabase.from('schedules').delete().eq('id', req.params.id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-schedules', async (req, res) => { await supabase.from('schedules').delete().neq('id', 0); res.json({status: "success"}); });
 
@@ -101,7 +100,6 @@ app.put('/api/admin/update-user', async (req, res) => { await supabase.from('use
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
 app.delete('/api/admin/clear-users', async (req, res) => { await supabase.from('users').delete().neq('id', 0); res.json({status: "success"}); });
 
-// ANTI-TIMEOUT IMPORT DATA
 app.post('/api/admin/import-users', async (req, res) => {
     const { data } = req.body;
     if(!data || !data.length) return res.json({status: "error", message: "Data kosong"});

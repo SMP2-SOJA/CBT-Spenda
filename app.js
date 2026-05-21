@@ -312,7 +312,7 @@ function renderActivityTable() {
     document.querySelectorAll('.scroll-saver').forEach((el, index) => { if(scrollPositions[index]) el.scrollTop = scrollPositions[index]; });
 }
 
-// NILAI
+// NILAI & EKSPOR EXCEL DENGAN LOGIKA KKM DINAMIS
 async function loadNilai() { 
     const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); window.allResultsData = data; 
     if(document.getElementById('filter-kelas-nilai').options.length === 1) { 
@@ -325,37 +325,86 @@ async function loadNilai() {
 function renderNilaiTable() { 
     const selKelas = document.getElementById('filter-kelas-nilai').value; 
     const selMapel = document.getElementById('filter-mapel-nilai').value; 
+    const kkmLimit = parseFloat(document.getElementById('input-kkm-nilai').value) || 0;
+
     window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); }); 
-    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => `
+    
+    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => {
+        let statusKKM = '-';
+        if (kkmLimit > 0) {
+            statusKKM = n.nilai >= kkmLimit 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[9px] font-bold">TUNTAS</span>' 
+                : '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[9px] font-bold">REMEDIAL</span>';
+        }
+
+        return `
         <tr class="hover:bg-slate-50 transition border-b border-slate-100">
             <td class="p-3 font-semibold whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug text-slate-800">${n.student_name} <br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td>
             <td class="p-3 text-slate-700 font-medium">${n.mapel}</td>
             <td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td>
-            <td class="p-3 text-center text-emerald-600 font-bold">${n.benar || 0}</td>
-            <td class="p-3 text-center text-red-500 font-bold">${n.salah || 0}</td>
+            <td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} / ${n.salah || 0}</td>
             <td class="p-3 text-center font-black text-sm md:text-base text-blue-600">${n.nilai}</td>
+            <td class="p-3 text-center">${statusKKM}</td>
             <td class="p-3 text-center"><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold hover:bg-blue-200 transition shadow-sm"><i class="fa fa-eye mr-1"></i> Detail</button></td>
         </tr>
-    `).join(''); 
+    `}).join(''); 
+}
+
+function exportExcelDetail() {
+    if(window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Tidak ada data nilai untuk di-export.', 'info');
+    
+    const kkmValue = parseFloat(document.getElementById('input-kkm-nilai').value) || 0;
+    const dataToExport = window.filteredResultsData.map(n => {
+        let isTuntas = '-';
+        if (kkmValue > 0) { isTuntas = n.nilai >= kkmValue ? 'Tuntas' : 'Remedial'; }
+        
+        return {
+            "Nama Siswa": n.student_name,
+            "Kelas": n.kelas || '-',
+            "Mata Pelajaran": n.mapel,
+            "Waktu Selesai": (n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-',
+            "Jawaban Benar": n.benar,
+            "Jawaban Salah": n.salah,
+            "Nilai Akhir": n.nilai,
+            "Status KKM": isTuntas
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Hasil_Nilai");
+    XLSX.writeFile(wb, `Hasil_Ujian_CBT.xlsx`);
 }
 
 function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \\ /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); }
 
-// JADWAL & KKM
+// JADWAL (MULTI-MAPEL)
 async function loadMaster() { document.getElementById('app-name-display').innerText = 'SPENDA-DIGI-2026'; }
-async function loadJadwal() { const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); window.allSchedulesData = data; document.getElementById('list-jadwal').innerHTML = data.map(j => { let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tglTampil = tglJamArr[0] || j.tanggal; let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; let statusBadge = j.status === 'Aktif' ? '<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Aktif</span>' : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Ditutup</span>'; return `<div class="bg-white p-3 md:p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center relative"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-[10px] md:text-sm text-blue-900">${j.mapel}</h4> ${statusBadge}</div><p class="text-[8px] md:text-[10px] text-slate-400"><i class="fa fa-calendar-alt"></i> ${tglTampil}${jamTampil} • <i class="fa fa-clock"></i> ${j.durasi} Menit • KKM: <span class="font-bold text-blue-600">${j.kkm||0}</span></p></div><div class="text-center px-3 md:px-4 border-l border-slate-100"><p class="text-[7px] md:text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-base md:text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div><div class="flex flex-col gap-1.5 pl-2 border-l border-slate-100"><button onclick="editJadwal(${j.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-edit"></i></button><button onclick="hapusJadwal(${j.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-trash"></i></button></div></div>`; }).join(''); const resExams = await fetch(API + '/admin/available-exams' + getAuthParams()); const exams = await resExams.json(); const selectMapel = document.getElementById('j_mapel'); selectMapel.innerHTML = '<option value="">-- Pilih Kode Soal --</option>' + exams.map(e => `<option value="${e}">${e}</option>`).join(''); }
+async function loadJadwal() { const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); window.allSchedulesData = data; document.getElementById('list-jadwal').innerHTML = data.map(j => { let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tglTampil = tglJamArr[0] || j.tanggal; let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; let statusBadge = j.status === 'Aktif' ? '<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Aktif</span>' : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Ditutup</span>'; return `<div class="bg-white p-3 md:p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center relative"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-[10px] md:text-sm text-blue-900">${j.mapel}</h4> ${statusBadge}</div><p class="text-[8px] md:text-[10px] text-slate-400"><i class="fa fa-calendar-alt"></i> ${tglTampil}${jamTampil} • <i class="fa fa-clock"></i> ${j.durasi} Menit</p></div><div class="text-center px-3 md:px-4 border-l border-slate-100"><p class="text-[7px] md:text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-base md:text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div><div class="flex flex-col gap-1.5 pl-2 border-l border-slate-100"><button onclick="editJadwal(${j.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-edit"></i></button><button onclick="hapusJadwal(${j.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-trash"></i></button></div></div>`; }).join(''); const resExams = await fetch(API + '/admin/available-exams' + getAuthParams()); const exams = await resExams.json(); const selectMapel = document.getElementById('j_mapel'); selectMapel.innerHTML = exams.map(e => `<option value="${e}">${e}</option>`).join(''); }
 
 async function saveJadwal() { 
-    const mapel = document.getElementById('j_mapel').value; const tgl = document.getElementById('j_tgl').value; const jam = document.getElementById('j_jam').value; const durasi = document.getElementById('j_durasi').value; const kkm = document.getElementById('j_kkm').value || 0;
-    if(!mapel || !tgl || !jam || !durasi) return Swal.fire('Oops', 'Lengkapi semua jadwal!', 'warning'); 
-    await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: `${tgl}|${jam}`, durasi, kkm }) }); loadJadwal(); 
+    // Menangkap pilihan ganda dari tag select
+    const selectBox = document.getElementById('j_mapel');
+    const selectedOptions = Array.from(selectBox.selectedOptions).map(opt => opt.value);
+    
+    if (selectedOptions.length === 0) return Swal.fire('Oops', 'Pilih minimal 1 Mapel!', 'warning');
+    const mapel = selectedOptions.join(', '); // Menggabungkan mapel dengan koma
+    
+    const tgl = document.getElementById('j_tgl').value; 
+    const jam = document.getElementById('j_jam').value; 
+    const durasi = document.getElementById('j_durasi').value; 
+    
+    if(!tgl || !jam || !durasi) return Swal.fire('Oops', 'Lengkapi tanggal dan durasi!', 'warning'); 
+    
+    await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: `${tgl}|${jam}`, durasi }) }); 
+    loadJadwal(); 
 }
 
 function editJadwal(id) { 
     const j = window.allSchedulesData.find(x => x.id === id); if(!j) return; 
     let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tgl = tglJamArr[0] || ''; let jam = tglJamArr[1] || ''; 
     Swal.fire({ 
-        title: 'Edit Jadwal', html: `<div class="space-y-3 text-left"><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel / Kode Soal</label><input id=\"e_j_mapel\" class=\"w-full p-2 border rounded bg-slate-100 font-bold\" value=\"${j.mapel}\" readonly></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Tanggal Mulai</label><input type=\"date\" id=\"e_j_tgl\" class=\"w-full p-2 border rounded\" value=\"${tgl}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Jam Mulai</label><input type=\"time\" id=\"e_j_jam\" class=\"w-full p-2 border rounded\" value=\"${jam}\"></div><div class="flex gap-2"><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Durasi</label><input type=\"number\" id=\"e_j_durasi\" class=\"w-full p-2 border rounded font-bold\" value=\"${j.durasi}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">KKM</label><input type=\"number\" id=\"e_j_kkm\" class=\"w-full p-2 border rounded bg-blue-50 text-blue-700 font-bold\" value=\"${j.kkm||0}\"></div></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Status</label><select id=\"e_j_status\" class=\"w-full p-2 border rounded font-bold text-blue-700\"><option value=\"Aktif\" ${j.status==='Aktif'?'selected':''}>Aktif</option><option value=\"Ditutup\" ${j.status!=='Aktif'?'selected':''}>Ditutup (Kunci Ujian)</option></select></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan', preConfirm: () => { return { id: j.id, mapel: document.getElementById('e_j_mapel').value, tanggal: document.getElementById('e_j_tgl').value + '|' + document.getElementById('e_j_jam').value, durasi: document.getElementById('e_j_durasi').value, kkm: document.getElementById('e_j_kkm').value, status: document.getElementById('e_j_status').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/update-schedule', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadJadwal(); } }); 
+        title: 'Edit Jadwal', html: `<div class="space-y-3 text-left"><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel / Kode Soal</label><input id=\"e_j_mapel\" class=\"w-full p-2 border rounded bg-slate-100 font-bold\" value=\"${j.mapel}\" readonly></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Tanggal Mulai</label><input type=\"date\" id=\"e_j_tgl\" class=\"w-full p-2 border rounded\" value=\"${tgl}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Jam Mulai</label><input type=\"time\" id=\"e_j_jam\" class=\"w-full p-2 border rounded\" value=\"${jam}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Durasi</label><input type=\"number\" id=\"e_j_durasi\" class=\"w-full p-2 border rounded font-bold\" value=\"${j.durasi}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Status</label><select id=\"e_j_status\" class=\"w-full p-2 border rounded font-bold text-blue-700\"><option value=\"Aktif\" ${j.status==='Aktif'?'selected':''}>Aktif</option><option value=\"Ditutup\" ${j.status!=='Aktif'?'selected':''}>Ditutup (Kunci Ujian)</option></select></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan', preConfirm: () => { return { id: j.id, mapel: document.getElementById('e_j_mapel').value, tanggal: document.getElementById('e_j_tgl').value + '|' + document.getElementById('e_j_jam').value, durasi: document.getElementById('e_j_durasi').value, status: document.getElementById('e_j_status').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/update-schedule', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadJadwal(); } }); 
 }
 
 // MANAGEMENT BANK SOAL & USERS
