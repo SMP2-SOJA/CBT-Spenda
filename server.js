@@ -11,7 +11,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// OTENTIKASI
+// ==========================================
+// 1. OTENTIKASI & LOGIN
+// ==========================================
 app.post('/api/login', async (req, res) => { 
     const { username, password } = req.body; 
     const { data } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single(); 
@@ -19,7 +21,9 @@ app.post('/api/login', async (req, res) => {
     res.json({status: "success", user: data}); 
 });
 
-// MULTI-MAPEL DALAM 1 PIN
+// ==========================================
+// 2. SISTEM MULTI-MAPEL DALAM 1 PIN (SISWA)
+// ==========================================
 app.post('/api/siswa/cek-pin', async (req, res) => {
     const { pin } = req.body;
     const { data, error } = await supabase.from('schedules').select('*').eq('pin', pin).eq('status', 'Aktif');
@@ -42,7 +46,9 @@ app.post('/api/siswa/get-soal', async (req, res) => {
     res.json({ questions: data }); 
 });
 
-// AKTIVITAS & SUBMIT NILAI
+// ==========================================
+// 3. AKTIVITAS & REKAP SUBMIT NILAI
+// ==========================================
 app.post('/api/siswa/ping', async (req, res) => { 
     const lstText = new Date().toLocaleTimeString('id-ID') + ' (' + req.body.durasi + ')'; 
     await supabase.from('activity').upsert({ student_name: req.body.student_name, exam_name: req.body.mapel, status: 'Mengerjakan', score: req.body.live_score, last_seen: lstText, kelas: req.body.kelas || '-' }, {onConflict: 'student_name,exam_name'}); 
@@ -61,7 +67,9 @@ app.post('/api/siswa/flag-curang', async (req, res) => {
     res.json({status: "success"}); 
 });
 
-// ADMIN SYSTEM
+// ==========================================
+// 4. PANEL DASHBOARD MONITORING & STATISTIK
+// ==========================================
 app.get('/api/admin/stats', async (req, res) => {
     const { count: cSiswa } = await supabase.from('users').select('*', {count: 'exact', head: true}).eq('role', 'siswa');
     const { count: cGuru } = await supabase.from('users').select('*', {count: 'exact', head: true}).eq('role', 'guru');
@@ -73,6 +81,9 @@ app.get('/api/admin/results', async (req, res) => { const { data } = await supab
 app.delete('/api/admin/clear-monitoring', async (req, res) => { await supabase.from('activity').delete().neq('id', 0); res.json({status:"success"}); });
 app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from('results').delete().neq('id', 0); res.json({status:"success"}); });
 
+// ==========================================
+// 5. MANAJEMEN JADWAL UJIAN
+// ==========================================
 app.get('/api/admin/schedules', async (req, res) => { const { data } = await supabase.from('schedules').select('*').order('id', {ascending: false}); res.json(data); });
 app.post('/api/admin/add-schedule', async (req, res) => {
     const pin = Math.floor(1000 + Math.random() * 9000).toString();
@@ -83,6 +94,9 @@ app.put('/api/admin/update-schedule', async (req, res) => { await supabase.from(
 app.delete('/api/admin/delete-schedule/:id', async (req, res) => { await supabase.from('schedules').delete().eq('id', req.params.id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-schedules', async (req, res) => { await supabase.from('schedules').delete().neq('id', 0); res.json({status: "success"}); });
 
+// ==========================================
+// 6. REPOSITORI BANK SOAL
+// ==========================================
 app.get('/api/admin/available-exams', async (req, res) => {
     const { data } = await supabase.from('questions').select('exam_id');
     const exams = [...new Set(data.map(q => q.exam_id))];
@@ -94,42 +108,78 @@ app.delete('/api/admin/delete-question/:id', async (req, res) => { await supabas
 app.delete('/api/admin/delete-exam/:exam_id', async (req, res) => { await supabase.from('questions').delete().eq('exam_id', req.params.exam_id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
 
+// ==========================================
+// 7. MANAJEMEN AKUN PENGGUNA MANUAl
+// ==========================================
 app.get('/api/admin/users', async (req, res) => { const { data } = await supabase.from('users').select('*').order('id', {ascending: false}); res.json(data); });
 app.post('/api/admin/add-user', async (req, res) => { await supabase.from('users').insert([req.body]); res.json({status: "success"}); });
 app.put('/api/admin/update-user', async (req, res) => { await supabase.from('users').update({ name: req.body.name, username: req.body.username, password: req.body.password, role: req.body.role, kelas: req.body.kelas, mapel: req.body.mapel }).eq('username', req.body.old_username); res.json({status: "success"}); });
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
 app.delete('/api/admin/clear-users', async (req, res) => { await supabase.from('users').delete().neq('id', 0); res.json({status: "success"}); });
 
-// ENGINE IMPORT USER KEBAL FORMAT DAN CASE-INSENSITIVE
+// ==========================================
+// 8. ENGINE IMPORT USER MASAL (CRASH-PROOF & ANTI CONFLICT)
+// ==========================================
 app.post('/api/admin/import-users', async (req, res) => {
-    const { data } = req.body;
-    if(!data || !data.length) return res.json({status: "error", message: "Data kosong"});
+    try {
+        const { data } = req.body;
+        if(!data || !data.length) return res.json({status: "error", message: "Data kosong dari klien"});
 
-    const toInsert = data.map(row => ({
-        username: String(row.username || row.user || row.Username || '').trim(),
-        name: String(row.nama || row.name || row.Nama || row.Name || '').trim(),
-        password: String(row.password || row.pass || row.Password || '').trim(),
-        role: String(row.role || 'siswa').toLowerCase(),
-        kelas: String(row.kelas || row.Kelas || '').trim(),
-        mapel: String(row.mapel || row.Mapel || '').trim()
-    })).filter(r => r.username && r.password);
+        // Pemetaan data mentah hasil pembacaan file Excel ke format tabel database
+        const toProcess = data.map(row => ({
+            username: String(row.username || '').trim(),
+            name: String(row.nama || row.name || '').trim(),
+            password: String(row.password || row.pass || '').trim(),
+            role: String(row.role || 'siswa').toLowerCase().trim(),
+            kelas: String(row.kelas || '').trim(),
+            mapel: String(row.mapel || '').trim()
+        })).filter(r => r.username && r.password);
 
-    // SISTEM ANTI-DUPLIKAT SERVER
-    const uniqueData = [];
-    const seen = new Set();
-    for (const item of toInsert) {
-        if (!seen.has(item.username)) {
-            seen.add(item.username);
-            uniqueData.push(item);
+        if(toProcess.length === 0) return res.json({status: "error", message: "Data tidak valid, pastikan kolom Username dan Password terisi."});
+
+        // Tarik data semua akun yang sudah ada saat ini untuk dicocokkan demi menghindari error ganda
+        const { data: existingUsers, error: fetchErr } = await supabase.from('users').select('username');
+        if (fetchErr) throw new Error("Gagal membaca status database: " + fetchErr.message);
+        
+        const existingUsernames = new Set(existingUsers.map(u => u.username));
+        
+        const toInsert = [];
+        const toUpdate = [];
+
+        // Pemisahan otomatis: Akun baru dimasukkan ke Insert, akun lama dimasukkan ke Update
+        toProcess.forEach(user => {
+            if (existingUsernames.has(user.username)) {
+                toUpdate.push(user);
+            } else {
+                toInsert.push(user);
+            }
+        });
+
+        // Eksekusi penambahan massal untuk akun baru
+        if (toInsert.length > 0) {
+            const { error: insErr } = await supabase.from('users').insert(toInsert);
+            if (insErr) throw new Error("Gagal menyimpan akun baru: " + insErr.message);
         }
+
+        // Eksekusi pembaruan satu per satu untuk menjaga integritas data akun lama
+        if (toUpdate.length > 0) {
+            for (const user of toUpdate) {
+                await supabase.from('users').update({
+                    name: user.name,
+                    password: user.password,
+                    role: user.role,
+                    kelas: user.kelas,
+                    mapel: user.mapel
+                }).eq('username', user.username);
+            }
+        }
+
+        res.json({status: "success", imported: toProcess.length});
+
+    } catch (err) {
+        console.error("CRASH IMPORT SERVER:", err);
+        res.json({status: "error", message: err.message || JSON.stringify(err)});
     }
-
-    if(uniqueData.length === 0) return res.json({status: "error", message: "Format Excel tidak terbaca atau Username kosong."});
-
-    const { error } = await supabase.from('users').upsert(uniqueData, { onConflict: 'username' });
-    if (error) return res.json({status: "error", message: error.message});
-    
-    res.json({status: "success", imported: uniqueData.length});
 });
 
 module.exports = app;
