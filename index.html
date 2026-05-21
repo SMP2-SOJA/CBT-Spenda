@@ -164,7 +164,7 @@
                 
                 <div id="page-jadwal" class="page-content hidden space-y-4">
                     <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Jadwal</button></div>
-                    <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border"><div class="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-3"><select id="j_mapel" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm"></select><input type="date" id="j_tgl" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Tanggal Mulai"><input type="time" id="j_jam" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Jam Mulai"><input type="number" id="j_durasi" placeholder="Durasi (Mnt)" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm"><button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 md:py-3 rounded-lg text-xs md:text-sm hover:bg-blue-700">BUAT JADWAL</button></div></div>
+                    <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border"><div class="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-3"><select id="j_mapel" class="col-span-2 p-2 md:p-3 border rounded-lg text-xs md:text-sm"></select><input type="date" id="j_tgl" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Tanggal Mulai"><input type="time" id="j_jam" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Jam Mulai"><div class="flex gap-1"><input type="number" id="j_durasi" placeholder="Mnt" title="Durasi" class="w-1/2 p-2 md:p-3 border rounded-lg text-xs md:text-sm"><input type="number" id="j_kkm" placeholder="KKM" title="KKM" class="w-1/2 p-2 md:p-3 border rounded-lg text-xs md:text-sm border-blue-300 bg-blue-50 font-bold text-blue-700"></div><button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 md:py-3 rounded-lg text-xs md:text-sm hover:bg-blue-700">BUAT JADWAL</button></div></div>
                     <div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"></div>
                 </div>
                 
@@ -246,105 +246,68 @@
     </div>
 
     <script>
-        // CORE LOGIC IMPORT USER MANUAL GENERATE
+        // LOGIKA IMPORT USER CHUNK (ANTI-TIMEOUT VERCEL)
         async function prosesImportUser() {
             const fileInput = document.getElementById('file-import-user');
             const file = fileInput.files[0];
             
-            if (!file) {
-                return Swal.fire({
-                    title: 'File Belum Dipilih',
-                    text: 'Silakan klik tombol "Pilih File Excel/CSV" terlebih dahulu.',
-                    icon: 'warning',
-                    confirmButtonColor: '#3085d6'
-                });
-            }
+            if (!file) return Swal.fire('Perhatian', 'Silakan klik tombol "Pilih File Excel/CSV" terlebih dahulu.', 'warning');
 
-            // Meminta Konfirmasi Jelas Sebelum Generate & Simpan
             Swal.fire({
-                title: 'Generate Data Pengguna?',
-                text: `Apakah Anda yakin ingin memproses dan mengunggah data dari file "${file.name}" ke sistem?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#059669',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Generate & Simpan',
-                cancelButtonText: 'Batal'
+                title: 'Generate Data Pengguna?', text: `Upload dari file "${file.name}"?`, icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya, Simpan'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    Swal.fire({ title: 'Memproses data file...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-                    
                     try {
                         const reader = new FileReader();
                         reader.onload = async (e) => {
                             let parsedData = [];
-                            let type = 'users';
-                            
                             if (file.name.endsWith('.csv')) {
                                 parsedData = parseCSV(e.target.result);
-                                type = 'csv';
                             } else {
-                                const binaryData = e.target.result;
-                                const workbook = XLSX.read(binaryData, { type: 'binary' });
-                                const targetSheet = workbook.SheetNames[0];
-                                parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheet]);
-                                type = 'excel';
+                                const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                                parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                             }
 
-                            if (parsedData.length === 0) {
-                                return Swal.fire('Gagal', 'Sistem tidak menemukan baris data valid di dalam file tersebut.', 'error');
-                            }
+                            if (parsedData.length === 0) return Swal.fire('Gagal', 'Tidak ada data valid.', 'error');
 
-                            // Pengiriman data terstruktur ke REST API endpoint backend
-                            const response = await fetch(API + '/admin/import-users', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ data: parsedData })
-                            });
-                            const serverResult = await response.json();
+                            let totalSuccess = 0;
+                            const chunkSize = 100;
                             
-                            if (serverResult.status === 'success') {
-                                Swal.fire({
-                                    title: 'Generate Sukses!',
-                                    text: `Sebanyak ${serverResult.imported || parsedData.length} data akun berhasil diverifikasi dan disimpan.`,
-                                    icon: 'success',
-                                    confirmButtonColor: '#059669'
+                            for (let i = 0; i < parsedData.length; i += chunkSize) {
+                                const chunk = parsedData.slice(i, i + chunkSize);
+                                Swal.fire({ title: `Menyimpan ${i + chunk.length} dari ${parsedData.length}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                                
+                                const response = await fetch('/api/admin/import-users', {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: chunk })
                                 });
-                                loadUsers();
-                                fileInput.value = ''; // Mengosongkan cache penamaan file
-                            } else {
-                                Swal.fire('Gagal Menyimpan', serverResult.message || 'Gagal mengeksekusi data ke server.', 'error');
+                                const serverResult = await response.json();
+                                
+                                if (serverResult.status === 'success') totalSuccess += chunk.length;
+                                else return Swal.fire('Gagal', serverResult.message, 'error');
                             }
+                            
+                            Swal.fire('Sukses!', `Sebanyak ${totalSuccess} data berhasil disimpan.`, 'success');
+                            loadUsers(); fileInput.value = '';
                         };
 
-                        if (file.name.endsWith('.csv')) {
-                            reader.readAsText(file);
-                        } else {
-                            reader.readAsBinaryString(file);
-                        }
-                    } catch(err) {
-                        Swal.fire('Error Kompilasi', err.message, 'error');
-                    }
+                        if (file.name.endsWith('.csv')) reader.readAsText(file);
+                        else reader.readAsBinaryString(file);
+                    } catch(err) { Swal.fire('Error', err.message, 'error'); }
                 }
             });
         }
         
-        // CSV PARSER UTILITY ENGINE
         function parseCSV(csv) {
             const lines = csv.split('\n').filter(l => l.trim());
             if (lines.length < 2) return [];
-            
             const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
             const data = [];
-            
             for (let i = 1; i < lines.length; i++) {
                 const values = lines[i].split(',').map(v => v.trim());
                 if (values.length !== headers.length) continue;
-                
                 const row = {};
-                headers.forEach((h, idx) => {
-                    row[h] = values[idx];
-                });
+                headers.forEach((h, idx) => { row[h] = values[idx]; });
                 data.push(row);
             }
             return data;
