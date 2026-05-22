@@ -18,7 +18,6 @@ let publicActivityData = [];
 // ENGINE MATEMATIKA AMAN DARI KONFLIK
 function formatMath(text) {
     if (typeof text !== 'string') return text;
-    // Jika ada tanda KaTeX ($, \(), jangan diformat manual
     if (text.includes('$') || text.includes('\\(') || text.includes('\\[')) return text;
     return text.replace(/\^\((.*?)\)/g, '<sup>$1</sup>').replace(/\^([a-zA-Z0-9]+)/g, '<sup>$1</sup>').replace(/_\((.*?)\)/g, '<sub>$1</sub>').replace(/_([a-zA-Z0-9]+)/g, '<sub>$1</sub>');
 }
@@ -55,8 +54,8 @@ function deteksiKecurangan() {
     
     if (curangCount >= 3) { 
         isExamActive = false; 
-        clearInterval(examTimerInterval); // Matikan timer
-        document.getElementById('view-siswa-ujian').classList.add('hidden'); // Tutup lembar soal
+        clearInterval(examTimerInterval);
+        document.getElementById('view-siswa-ujian').classList.add('hidden'); 
         
         Swal.fire({
             title: 'UJIAN TERKUNCI!', 
@@ -64,9 +63,7 @@ function deteksiKecurangan() {
             icon: 'error', 
             allowOutsideClick: false,
             confirmButtonText: 'Tutup'
-        }).then(() => { 
-            location.reload(); // Balik ke halaman awal
-        }); 
+        }).then(() => { location.reload(); }); 
     } else { 
         Swal.fire('PERINGATAN!', `Dilarang meminimalkan layar atau membuka aplikasi lain! Peringatan ke: (${curangCount}/3)`, 'warning'); 
     }
@@ -140,7 +137,6 @@ async function mulaiUjian() {
             cbtCurrentIndex = 0;
             
             let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; 
-            // Jika resume, timer dan data dilanjutkan tanpa ditimpa
             if(!localStorage.getItem(startTimeKey)) { localStorage.setItem(startTimeKey, Date.now()); }
             
             loadFromLocal(); startTimer(currentExam.durasi || 60); renderCbtGrid(); showCbtQuestion(0); curangCount = 0; isExamActive = true; 
@@ -236,7 +232,7 @@ function showCbtQuestion(index) {
         } divOpsi.innerHTML = htmlOpsi; 
     } 
     renderCbtGrid();
-    applyMathRendering(); // PICU RENDER MATEMATIKA SETELAH SOAL TERBENTUK
+    applyMathRendering();
 }
 
 function cbtSaveCheckbox() { let checked = []; document.querySelectorAll('.cbt-pgk-cb:checked').forEach(cb => checked.push(cb.value)); cbtSaveAnswer(checked.join(',')); }
@@ -354,7 +350,6 @@ function renderActivityTable() {
     let scrollPositions = []; document.querySelectorAll('.scroll-saver').forEach(el => scrollPositions.push(el.scrollTop));
     const selKelas = document.getElementById('filter-kelas').value; const selMapel = document.getElementById('filter-mapel').value;
     
-    // Fallback: Jika data kosong, panggil ulang
     if (!allActivityData || allActivityData.length === 0) return;
 
     let filtered = (allActivityData || []).filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
@@ -436,10 +431,12 @@ function lihatDetail(detailJson) {
     let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \\ /g, '<br>'))}</strong></div></div></div>` }).join(''); 
     document.getElementById('detail-content').innerHTML = html; 
     document.getElementById('modal-detail').classList.remove('hidden'); 
-    applyMathRendering(); // TRIGGER KETIKA PANEL DETAIL DIBUKA
+    applyMathRendering(); 
 }
 
+// INI BAGIAN YANG DIKEMBALIKAN KE NAMA SEKOLAH
 async function loadMaster() { document.getElementById('app-name-display').innerText = 'SMP Negeri 2 Soyo Jaya'; }
+
 async function loadJadwal() { 
     const res = await fetch(API + '/admin/schedules' + getAuthParams()); const data = await res.json(); window.allSchedulesData = data || []; 
     document.getElementById('list-jadwal').innerHTML = window.allSchedulesData.map(j => { let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tglTampil = tglJamArr[0] || j.tanggal; let jamTampil = tglJamArr[1] ? ` • Jam ${tglJamArr[1]}` : ''; let statusBadge = j.status === 'Aktif' ? '<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Aktif</span>' : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold">Ditutup</span>'; return `<div class="bg-white p-3 md:p-4 rounded-xl border border-l-4 border-blue-500 shadow-sm flex justify-between items-center relative"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-[10px] md:text-sm text-blue-900">${j.mapel}</h4> ${statusBadge}</div><p class="text-[8px] md:text-[10px] text-slate-400"><i class="fa fa-calendar-alt"></i> ${tglTampil}${jamTampil} • <i class="fa fa-clock"></i> ${j.durasi} Menit</p></div><div class="text-center px-3 md:px-4 border-l border-slate-100"><p class="text-[7px] md:text-[8px] font-bold text-slate-400">PIN UJIAN</p><p class="text-base md:text-lg font-black text-blue-600 font-mono tracking-widest">${j.pin}</p></div><div class="flex flex-col gap-1.5 pl-2 border-l border-slate-100"><button onclick="editJadwal(${j.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-edit"></i></button><button onclick="hapusJadwal(${j.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1.5 rounded transition shadow-sm text-[10px] md:text-xs"><i class="fa fa-trash"></i></button></div></div>`; }).join(''); 
