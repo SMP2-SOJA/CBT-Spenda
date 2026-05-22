@@ -1,5 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const XLSX = require('xlsx');
+const mammoth = require('mammoth'); 
+const fs = require('fs');
+
+const upload = multer({ dest: '/tmp' }); // Folder penyimpanan sementara Vercel
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://uftiednbhdmexxlabhad.supabase.co';
@@ -164,7 +170,44 @@ app.post('/api/admin/add-soal-bulk', async (req, res) => { await supabase.from('
 app.delete('/api/admin/delete-question/:id', async (req, res) => { await supabase.from('questions').delete().eq('id', req.params.id); res.json({status: "success"}); });
 app.delete('/api/admin/delete-exam/:exam_id', async (req, res) => { await supabase.from('questions').delete().eq('exam_id', req.params.exam_id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
+app.post('/api/admin/upload-excel', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) return res.json({status: "error", message: "File kosong!"});
+        
+        const workbook = XLSX.readFile(req.file.path);
+        const sheetName = workbook.SheetNames[0];
+        const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        
+        // Meneruskan data mentah dari Excel ke Supabase
+        const { error } = await supabase.from('questions').insert(data);
+        if (error) throw error;
 
+        fs.unlinkSync(req.file.path); // Bersihkan memori Vercel
+        res.json({status: "success", message: "Soal Excel berhasil digenerate!"});
+    } catch (err) {
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.json({status: "error", message: "Gagal memproses Excel: " + err.message});
+    }
+});
+
+app.post('/api/admin/upload-word', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) return res.json({status: "error", message: "File kosong!"});
+        
+        // Membaca isi teks dari file Word
+        const result = await mammoth.extractRawText({path: req.file.path});
+        const text = result.value;
+        
+        // CATATAN: Silakan masukkan kembali rumus pemisah (split) teks Word 
+        // milik Bapak di area ini agar datanya terbentuk menjadi format array soal.
+        
+        fs.unlinkSync(req.file.path);
+        res.json({status: "success", text_mentah: text});
+    } catch (err) {
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.json({status: "error", message: "Gagal memproses Word: " + err.message});
+    }
+});
 // ==========================================
 // 7. MANAJEMEN PENGGUNA 
 // ==========================================
