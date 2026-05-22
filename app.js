@@ -232,7 +232,7 @@ function showCbtQuestion(index) {
         } divOpsi.innerHTML = htmlOpsi; 
     } 
     renderCbtGrid();
-    applyMathRendering();
+    applyMathRendering(); // TRIGGER SETIAP KALI SOAL BERPINDAH
 }
 
 function cbtSaveCheckbox() { let checked = []; document.querySelectorAll('.cbt-pgk-cb:checked').forEach(cb => checked.push(cb.value)); cbtSaveAnswer(checked.join(',')); }
@@ -271,12 +271,12 @@ function getFullAnswerText(q, rawAnswer) {
     if(q.tipe === 'PGK') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`${a}. ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(', '); }
     if(q.tipe === 'JODOH') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let num = a.replace(/[a-zA-Z]/g, ''); let letPart = a.replace(/[0-9]/g, ''); let idx = abjad.indexOf(letPart); if(idx !== -1 && opsiArray[idx]) texts.push(`No.${num} -> ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(' | '); }
     if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') { 
-        let hd = []; if (q.tipe === 'BS') hd = ['Benar', 'Salah']; else if (q.tipe === 'TS') hd = ['Sesuai', 'Tidak Sesuai']; else if (q.tipe === 'SIFAT') hd = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
+        let hd = []; if (q.tipe === 'BS') headers = ['Benar', 'Salah']; else if (q.tipe === 'TS') hd = ['Sesuai', 'Tidak Sesuai']; else if (q.tipe === 'SIFAT') hd = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
         let ansArr = rawAnswer.split(','); let tx = []; ansArr.forEach((a, i) => { let idx = abjad.indexOf(a); if (q.tipe === 'BS' || q.tipe === 'TS') { if(a === 'B' && hd.length === 2 && idx === 1) {} else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } } if(idx !== -1 && hd[idx]) tx.push(`No.${i+1}:${hd[idx]}`); else tx.push(`No.${i+1}:-`); }); return tx.join(', '); 
     } return rawAnswer;
 }
 
-async function submitUjian(showConfirm = true) {
+async function submitUjian(showConfirm = true, isForceCurang = false) {
     let benar = 0; let salah = 0; let detail = []; let isGformOnly = cbtQuestions.length > 0 && cbtQuestions[0].tipe === 'GFORM'; let nilaiAkhir = 0; let totalSkorMaksimal = 0; let totalSkorDiperoleh = 0;
     if(!isGformOnly) {
         cbtQuestions.forEach((q, index) => {
@@ -297,7 +297,7 @@ async function submitUjian(showConfirm = true) {
         let terjawab = 0; for(let i=0; i<cbtQuestions.length; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
         durasiText = `${dMins}m ${dSecs}s | ${terjawab}/${cbtQuestions.length} Soal`; 
     }
-    const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), durasi: durasiText };
+    const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
 
     const sendLogic = async () => {
         clearInterval(examTimerInterval); isExamActive = false;
@@ -306,12 +306,12 @@ async function submitUjian(showConfirm = true) {
         try {
             await fetch(API + '/siswa/submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
             if(document.exitFullscreen) document.exitFullscreen(); 
-            localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(startTimeKey);
+            if(!isForceCurang) { localStorage.removeItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(`cbt_time_${currentExam.mapel}_${activeUser.username}`); localStorage.removeItem(startTimeKey); }
             Swal.fire('Selesai!', isGformOnly ? 'Terkirim.' : `Nilai Anda: ${nilaiAkhir}`, 'success').then(() => location.reload());
         } catch(e) { localStorage.setItem(`pending_submit_${activeUser.username}`, JSON.stringify(payload)); Swal.fire('Error Server', 'Disimpan di HP.', 'warning'); }
     };
 
-    if (showConfirm) {
+    if (showConfirm && !isForceCurang) {
         let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') return a === "" || a.indexOf('-') !== -1; if(q.tipe === 'JODOH') { return a.split(',').length < (q.kunci||"").split(',').length; } return a === ""; }).length;
         let text = isGformOnly ? "Pastikan sudah Submit G-Form!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Yakin?` : "Kirim sekarang?");
         Swal.fire({ title: 'Kumpulkan Ujian?', html: text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya!' }).then((r) => { if(r.isConfirmed) sendLogic(); });
@@ -343,7 +343,7 @@ async function loadStats() {
     } renderActivityTable();
 }
 
-async function resetSiswa(nama, mapel) { Swal.fire({ title: 'Buka Akses?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Buka!' }).then(async (r) => { if (r.isConfirmed) { await fetch(API + '/admin/reset-siswa', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: nama, mapel: mapel}) }); loadStats(); } }); }
+async function resetSiswa(nama, mapel) { Swal.fire({ title: 'Buka Akses Ujian?', text: 'Siswa akan melanjutkan ujian dari waktu dan jawaban terakhirnya.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Buka!' }).then(async (r) => { if (r.isConfirmed) { await fetch(API + '/admin/reset-siswa', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: nama, mapel: mapel}) }); loadStats(); } }); }
 async function usirHantu(id) { await fetch(API + '/admin/remove-activity/' + id, { method: 'DELETE' }); loadStats(); }
 
 function renderActivityTable() {
@@ -403,15 +403,37 @@ async function loadNilai() {
 }
 
 function renderNilaiTable() { 
-    const selKelas = document.getElementById('filter-kelas-nilai').value; const selMapel = document.getElementById('filter-mapel-nilai').value; const kkmMap = getKkmStorage();
-    window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); }); 
+    const selKelas = document.getElementById('filter-kelas-nilai').value; 
+    const selMapel = document.getElementById('filter-mapel-nilai').value; 
+    const kkmInput = document.getElementById('input-kkm-nilai');
+    const kkmValue = kkmInput ? parseFloat(kkmInput.value) || 0 : 0;
     
-    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => {
-        let kkmLimit = 0; if(selMapel) { kkmLimit = kkmMap[selMapel] || 0; } else { for(let mKey in kkmMap) { if(n.mapel && n.mapel.includes(mKey)) { kkmLimit = kkmMap[mKey]; break; } } }
-        let statusKetuntasan = '<span class="text-slate-400 font-medium italic">Belum di-set</span>';
-        if (kkmLimit > 0) { statusKetuntasan = n.nilai >= kkmLimit ? '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black">TUNTAS</span>' : '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black">REMEDIAL</span>'; }
-        return `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="p-3 font-semibold whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug text-slate-800">${n.student_name} <br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td><td class="p-3 text-slate-700 font-medium">${n.mapel}</td><td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td><td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} B / ${n.salah || 0} S</td><td class="p-3 text-center font-black text-sm md:text-base text-blue-600">${n.nilai}</td><td class="p-3 text-center">${statusKetuntasan}</td><td class="p-3 text-center"><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm"><i class="fa fa-eye mr-1"></i> Detail</button></td></tr>`;
+    window.filteredResultsData = window.allResultsData.filter(r => { 
+        return (selKelas === "" || (r.kelas||'') === selKelas) && (selMapel === "" || r.mapel === selMapel); 
+    }); 
+    
+    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map((n, idx) => {
+        let statusKetuntasan = '<span class="text-slate-400 font-medium italic text-[9px]">KKM belum di-set</span>';
+        if (kkmValue > 0) { 
+            statusKetuntasan = n.nilai >= kkmValue 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black">TUNTAS</span>' 
+                : '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black">REMEDIAL</span>'; 
+        }
+        return `<tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-3 font-semibold whitespace-normal min-w-[120px] leading-snug text-slate-800">${n.student_name}<br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td>
+            <td class="p-3 text-slate-700 font-medium text-[10px]">${n.mapel}</td>
+            <td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td>
+            <td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} B / ${n.salah || 0} S</td>
+            <td class="p-3 text-center font-black text-sm text-blue-600">${n.nilai}</td>
+            <td class="p-3 text-center">${statusKetuntasan}</td>
+            <td class="p-3 text-center"><button onclick="lihatDetailByIdx(${idx})" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] font-bold shadow-sm hover:bg-blue-200"><i class="fa fa-eye mr-1"></i> Detail</button></td>
+        </tr>`;
     }).join(''); 
+}
+
+function lihatDetailByIdx(idx) { 
+    const n = window.filteredResultsData[idx]; 
+    if (n) lihatDetail(n.detail_jawaban || '[]'); 
 }
 
 function exportExcelDetail() {
@@ -434,7 +456,6 @@ function lihatDetail(detailJson) {
     applyMathRendering(); 
 }
 
-// INI BAGIAN YANG DIKEMBALIKAN KE NAMA SEKOLAH
 async function loadMaster() { document.getElementById('app-name-display').innerText = 'SMP Negeri 2 Soyo Jaya'; }
 
 async function loadJadwal() { 
@@ -454,6 +475,90 @@ async function loadBankSoal() { const res = await fetch(API + '/admin/questions'
 let questionCount = 1;
 function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border relative mt-4" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-7 h-7 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah</option><option value="TS">9 - TS (Tabel Sesuai)</option><option value="SIFAT">10 - SIFAT</option><option value="GFORM">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500">LINK DRIVE GAMBAR</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI (Pemisah |||)</label><input type="text" class="q-opsi w-full p-2 border rounded-lg text-xs"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); }
 async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return; const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); location.reload(); }
+
+// ===============================================
+// SISTEM PARSER SOAL EXCEL DAN WORD (FRONTEND)
+// ===============================================
+async function importExcelSoal() {
+    const kodeUjian = document.getElementById('ex_judul').value;
+    const fileInput = document.getElementById('ex_file');
+    const file = fileInput.files[0];
+
+    if (!kodeUjian) return Swal.fire('Oops', 'Isi Kode Ujian dulu!', 'warning');
+    if (!file) return Swal.fire('Oops', 'Pilih file Excel dulu!', 'warning');
+
+    Swal.fire({ title: 'Membaca File...', didOpen: () => Swal.showLoading() });
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
+
+            let questions = [];
+            rawData.forEach(row => {
+                let cleanRow = {};
+                for (let key in row) { cleanRow[key.trim().toLowerCase()] = String(row[key]).trim(); }
+
+                let tanya = cleanRow['pertanyaan'] || cleanRow['soal'] || cleanRow['tanya'] || '';
+                let tipe = cleanRow['tipe'] || cleanRow['jenis'] || cleanRow['type'] || 'PG';
+                let opsi = cleanRow['opsi'] || cleanRow['pilihan'] || cleanRow['opsi_json'] || '';
+                let kunci = cleanRow['kunci'] || cleanRow['jawaban'] || cleanRow['kunci_jawaban'] || '';
+                let skor = parseFloat(cleanRow['skor'] || cleanRow['bobot']) || 1;
+                let img = cleanRow['gambar'] || cleanRow['link'] || cleanRow['gform_url'] || '';
+
+                if (tanya || img) {
+                    questions.push({
+                        exam_id: kodeUjian, tipe: tipe.toUpperCase(), tanya: tanya,
+                        opsi_json: opsi, kunci: kunci.toUpperCase(), skor: skor, gform_url: img
+                    });
+                }
+            });
+
+            if (questions.length === 0) return Swal.fire('Gagal', 'Tidak ada soal ditemukan atau header kolom tidak sesuai (Pastikan ada kolom Pertanyaan/Soal).', 'error');
+
+            Swal.fire({ title: 'Menyimpan Soal...', didOpen: () => Swal.showLoading() });
+            const res = await fetch(API + '/admin/add-soal-bulk', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions })
+            });
+            const result = await res.json();
+            if (result.status === 'success') {
+                Swal.fire('Sukses!', `${questions.length} Soal berhasil dimasukkan ke Bank Soal!`, 'success');
+                loadBankSoal(); fileInput.value = ''; document.getElementById('ex_judul').value = '';
+            } else { Swal.fire('Gagal', result.message, 'error'); }
+        } catch (err) { Swal.fire('Error Lokal', err.message, 'error'); }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function importWord() {
+    const kodeUjian = document.getElementById('w_judul').value;
+    const fileInput = document.getElementById('w_file');
+    const file = fileInput.files[0];
+    
+    if (!file) return Swal.fire('Oops', 'Pilih file Word (.docx) terlebih dahulu!', 'warning');
+
+    Swal.fire({ title: 'Mengekstrak Teks...', didOpen: () => Swal.showLoading() });
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        mammoth.extractRawText({ arrayBuffer: event.target.result })
+            .then(function(result) {
+                if (kodeUjian) document.getElementById('s_judul_bulk').value = kodeUjian;
+                Swal.fire({
+                    title: 'Hasil Ekstraksi Word',
+                    html: `<p class="text-xs text-red-500 mb-2 font-bold">Silakan COPY teks di bawah ini dan susun ke form Input Beruntun atau Excel.</p>
+                           <textarea class="w-full h-64 p-3 border rounded text-xs outline-none bg-slate-50" readonly>${result.value}</textarea>`,
+                    width: '80%', confirmButtonColor: '#3085d6', confirmButtonText: 'Tutup'
+                });
+                fileInput.value = '';
+            })
+            .catch(function(err) { Swal.fire('Gagal', 'Format file tidak didukung. Pastikan file menggunakan .docx', 'error'); });
+    };
+    reader.readAsArrayBuffer(file);
+}
 
 async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = (data || []).map(u => `<tr><td class="p-2 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td>${u.role}</td><td class="text-right p-2"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 px-2 py-1 rounded mr-1">Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 px-2 py-1 rounded">Hapus</button></td></tr>`).join(''); }
 function tambahUserManual() { Swal.fire({ title: 'Tambah User', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama</label><input id="a_name" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="a_user" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="a_pass" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Role</label><select id="a_role" class="w-full p-2 border rounded"><option value="siswa">Siswa</option><option value="guru">Guru</option><option value="admin">Admin</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas</label><input id="a_kelas" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Mapel</label><input id="a_mapel" class="w-full p-2 border rounded"></div></div>`, showCancelButton: true, preConfirm: () => { return { name: document.getElementById('a_name').value, username: document.getElementById('a_user').value, password: document.getElementById('a_pass').value, role: document.getElementById('a_role').value, kelas: document.getElementById('a_kelas').value, mapel: document.getElementById('a_mapel').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/add-user', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); } }); }

@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBT Online - SPENDA-DIGI-2026</title>
+    <title>CBT Online - @spenda-digi</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -28,7 +30,7 @@
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
             <div class="text-center mb-6">
-                <img src="logo-sekolah.png" class="w-16 h-16 mx-auto mb-4 object-contain">
+                <img src="logo-sekolah.png" class="w-16 h-16 mx-auto mb-4 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
                 <h2 class="text-xl md:text-2xl font-black text-slate-800 uppercase">CBT EXAM V.3</h2>
             </div>
             <div class="space-y-4">
@@ -48,7 +50,7 @@
                 <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-slate-800 text-sm md:text-base"><i class="fa fa-users mr-2"></i> LIHAT LIVE SCORE PUBLIK</button>
             </div>
             
-            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">SPENDA-DIGI-2026 <br> Hak Cipta &copy; 2026 | spenda-digi-2026</p>
+            <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-6 font-medium tracking-wide">Hak Cipta &copy; 2026 | @spenda-digi</p>
         </div>
     </div>
 
@@ -124,7 +126,7 @@
         <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
         <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
             <div class="p-5 text-center border-b border-slate-800">
-                <img src="logo-sekolah.png" class="w-12 h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full">
+                <img src="logo-sekolah.png" class="w-12 h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
                 <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
             </div>
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
@@ -171,7 +173,7 @@
                             <div class="col-span-2">
                                 <label class="text-[10px] font-bold text-slate-500 block mb-1">PILIH 1 ATAU LEBIH MAPEL (1 PIN):</label>
                                 <div id="j_mapel_container" class="border rounded-lg p-2 bg-slate-50 max-h-28 overflow-y-auto space-y-1 text-xs">
-                                    </div>
+                                </div>
                             </div>
                             <input type="date" id="j_tgl" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Tanggal Mulai">
                             <input type="time" id="j_jam" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Jam Mulai">
@@ -184,8 +186,19 @@
                 
                 <div id="page-banksoal" class="page-content hidden space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        <div class="bg-emerald-50 p-3 md:p-4 rounded-xl border border-emerald-200 shadow-sm relative"><span class="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg">PALING DISARANKAN</span><h3 class="font-bold text-emerald-800 text-[10px] md:text-xs mb-2 md:mb-3">Import Template Excel</h3><input type="text" id="ex_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs"><input type="file" id="ex_file" accept=".xlsx, .xls" class="w-full p-2 mb-2 border rounded bg-white text-[10px]"><button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-emerald-700">GENERATE DARI EXCEL</button></div>
-                        <div class="bg-blue-50 p-3 md:p-4 rounded-xl border border-blue-200 shadow-sm"><h3 class="font-bold text-blue-800 text-[10px] md:text-xs mb-2 md:mb-3">Import File Word (.docx)</h3><input type="text" id="w_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold"><input type="file" id="w_file" accept=".docx" class="w-full p-2 mb-2 border rounded bg-white text-[10px]"><button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-blue-700">EKSTRAK SOAL WORD</button></div>
+                        <div class="bg-emerald-50 p-3 md:p-4 rounded-xl border border-emerald-200 shadow-sm relative">
+                            <span class="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg">PALING DISARANKAN</span>
+                            <h3 class="font-bold text-emerald-800 text-[10px] md:text-xs mb-2 md:mb-3">Import Template Excel</h3>
+                            <input type="text" id="ex_judul" placeholder="Kode Ujian (Misal: MTK-7A)" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold outline-none border-emerald-300">
+                            <input type="file" id="ex_file" accept=".xlsx, .xls" class="w-full p-2 mb-2 border rounded bg-white text-[10px] outline-none">
+                            <button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-emerald-700 transition">GENERATE DARI EXCEL</button>
+                        </div>
+                        <div class="bg-blue-50 p-3 md:p-4 rounded-xl border border-blue-200 shadow-sm">
+                            <h3 class="font-bold text-blue-800 text-[10px] md:text-xs mb-2 md:mb-3">Import File Word (.docx)</h3>
+                            <input type="text" id="w_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold outline-none border-blue-300 hidden">
+                            <input type="file" id="w_file" accept=".docx" class="w-full p-2 mb-2 border rounded bg-white text-[10px] outline-none">
+                            <button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-blue-700 transition">EKSTRAK TEKS DARI WORD</button>
+                        </div>
                     </div>
                     
                     <div class="bg-white p-3 md:p-8 rounded-xl shadow-sm border mt-4">
@@ -236,7 +249,7 @@
                             <button onclick="tambahUserManual()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-blue-700 transition flex items-center gap-1"><i class="fa fa-user-plus"></i> Tambah User</button>
                             
                             <label class="bg-slate-100 text-slate-700 border border-slate-300 px-3 py-2 rounded-lg font-bold text-[10px] md:text-xs cursor-pointer shadow hover:bg-slate-200 transition flex items-center gap-1">
-                                <i class="fa fa-folder-open text-amber-500"></i> Pilih File Excel/CSV
+                                <i class="fa fa-folder-open text-amber-500"></i> Pilih File Excel
                                 <input type="file" id="file-import-user" class="hidden" accept=".xlsx, .xls, .csv">
                             </label>
                             
@@ -262,130 +275,133 @@
     </div>
 
     <script>
-        // LOGIKA SUPER PARSER EXCEL (KEBAL KOP SURAT, SPASI, DAN TYPO)
         async function prosesImportUser() {
-        const fileInput = document.getElementById('file-import-user');
-        const file = fileInput.files[0];
-        
-        if (!file) return Swal.fire('Perhatian', 'Silakan klik "Pilih File Excel/CSV" terlebih dahulu.', 'warning');
+            const fileInput = document.getElementById('file-import-user');
+            const file = fileInput.files[0];
+            
+            if (!file) return Swal.fire('Perhatian', 'Silakan klik "Pilih File Excel" terlebih dahulu.', 'warning');
 
-        Swal.fire({
-            title: 'Generate Data Pengguna?', text: `Upload file "${file.name}"?`, icon: 'question',
-            showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya, Simpan'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        let parsedData = [];
-                        console.log("1. MEMBACA FILE:", file.name);
-                        
-                        if (!file.name.endsWith('.csv')) {
-                            const data = new Uint8Array(e.target.result);
-                            const workbook = XLSX.read(data, { type: 'array' });
-                            const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                            console.log("2. RAW DATA EXCEL (Mentah):", rawData);
+            Swal.fire({
+                title: 'Generate Data Pengguna?', text: `Upload file "${file.name}"?`, icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya, Simpan'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            let parsedData = [];
                             
-                            let headerRowIndex = -1;
-                            let colMap = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1 };
-
-                            for (let i = 0; i < Math.min(rawData.length, 20); i++) {
-                                let row = rawData[i];
-                                if (!row || !row.length) continue;
+                            if (!file.name.endsWith('.csv')) {
+                                const data = new Uint8Array(e.target.result);
+                                const workbook = XLSX.read(data, { type: 'array' });
+                                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
                                 
-                                row.forEach((cell, idx) => {
-                                    if(!cell) return;
-                                    let str = String(cell).toLowerCase().replace(/[^a-z0-9]/g, ''); 
-                                    if(['username','user','nis','nisn'].includes(str)) colMap.u = idx;
-                                    if(['nama','name','namasiswa'].includes(str)) colMap.n = idx;
-                                    if(['password','pass','sandi'].includes(str)) colMap.p = idx;
-                                    if(['role','peran'].includes(str)) colMap.r = idx;
-                                    if(['kelas','rombel'].includes(str)) colMap.k = idx;
-                                    if(['mapel','matapelajaran'].includes(str)) colMap.m = idx;
-                                });
+                                let headerRowIndex = -1;
+                                let colMap = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1 };
 
-                                if (colMap.u !== -1 && colMap.n !== -1) { headerRowIndex = i; break; }
-                            }
-                            
-                            console.log("3. INFO HEADER -> Ditemukan di Baris:", headerRowIndex, "| Pemetaan Kolom:", colMap);
-
-                            if (headerRowIndex === -1) {
-                                return Swal.fire('Gagal', 'Sistem tidak menemukan kolom "NAMA" dan "USERNAME" di Excel Anda.', 'error');
-                            }
-
-                            for (let i = headerRowIndex + 1; i < rawData.length; i++) {
-                                let row = rawData[i];
-                                if (!row || row.length === 0) continue;
-                                
-                                let username = row[colMap.u];
-                                let nama = row[colMap.n];
-                                let password = colMap.p !== -1 && row[colMap.p] ? row[colMap.p] : username; 
-
-                                if (username && nama) {
-                                    parsedData.push({
-                                        username: String(username).trim(),
-                                        nama: String(nama).trim(),
-                                        password: String(password).trim(),
-                                        role: colMap.r !== -1 && row[colMap.r] ? String(row[colMap.r]).toLowerCase().trim() : 'siswa',
-                                        kelas: colMap.k !== -1 && row[colMap.k] ? String(row[colMap.k]).trim() : '',
-                                        mapel: colMap.m !== -1 && row[colMap.m] ? String(row[colMap.m]).trim() : ''
+                                for (let i = 0; i < Math.min(rawData.length, 20); i++) {
+                                    let row = rawData[i];
+                                    if (!row || !row.length) continue;
+                                    
+                                    row.forEach((cell, idx) => {
+                                        if(!cell) return;
+                                        let str = String(cell).toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                                        if(['username','user','nis','nisn'].includes(str)) colMap.u = idx;
+                                        if(['nama','name','namasiswa'].includes(str)) colMap.n = idx;
+                                        if(['password','pass','sandi'].includes(str)) colMap.p = idx;
+                                        if(['role','peran'].includes(str)) colMap.r = idx;
+                                        if(['kelas','rombel'].includes(str)) colMap.k = idx;
+                                        if(['mapel','matapelajaran'].includes(str)) colMap.m = idx;
                                     });
+
+                                    if (colMap.u !== -1 && colMap.n !== -1) { headerRowIndex = i; break; }
+                                }
+                                
+                                if (headerRowIndex === -1) {
+                                    return Swal.fire('Gagal', 'Sistem tidak menemukan kolom "NAMA" dan "USERNAME" di Excel Anda.', 'error');
+                                }
+
+                                for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+                                    let row = rawData[i];
+                                    if (!row || row.length === 0) continue;
+                                    
+                                    let username = row[colMap.u];
+                                    let nama = row[colMap.n];
+                                    let password = colMap.p !== -1 && row[colMap.p] ? row[colMap.p] : username; 
+
+                                    if (username && nama) {
+                                        parsedData.push({
+                                            username: String(username).trim(),
+                                            nama: String(nama).trim(),
+                                            password: String(password).trim(),
+                                            role: colMap.r !== -1 && row[colMap.r] ? String(row[colMap.r]).toLowerCase().trim() : 'siswa',
+                                            kelas: colMap.k !== -1 && row[colMap.k] ? String(row[colMap.k]).trim() : '',
+                                            mapel: colMap.m !== -1 && row[colMap.m] ? String(row[colMap.m]).trim() : ''
+                                        });
+                                    }
+                                }
+                            } else {
+                                parsedData = parseCSV(e.target.result); 
+                            }
+
+                            const uniqueData = [];
+                            const seen = new Set();
+                            for(let item of parsedData) {
+                                if(!seen.has(item.username)) {
+                                    seen.add(item.username);
+                                    uniqueData.push(item);
                                 }
                             }
-                        } else {
-                            parsedData = parseCSV(e.target.result); 
-                        }
 
-                        console.log("4. DATA SEBELUM FILTER:", parsedData);
+                            if (uniqueData.length === 0) return Swal.fire('Gagal', 'Data kosong atau format sel berantakan.', 'error');
 
-                        // SISTEM ANTI-DUPLIKAT FRONTEND (Mencegah Crash)
-                        const uniqueData = [];
-                        const seen = new Set();
-                        for(let item of parsedData) {
-                            if(!seen.has(item.username)) {
-                                seen.add(item.username);
-                                uniqueData.push(item);
-                            } else {
-                                console.log("🚨 PERINGATAN: Duplikat dihapus dari antrean -> Username:", item.username);
-                            }
-                        }
-
-                        if (uniqueData.length === 0) return Swal.fire('Gagal', 'Data kosong atau format sel berantakan.', 'error');
-                        console.log("5. DATA BERSIH SIAP KIRIM:", uniqueData);
-
-                        let totalSuccess = 0;
-                        const chunkSize = 100;
-                        
-                        for (let i = 0; i < uniqueData.length; i += chunkSize) {
-                            const chunk = uniqueData.slice(i, i + chunkSize);
-                            Swal.fire({ title: `Menyimpan ${i + chunk.length} dari ${uniqueData.length}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                            let totalSuccess = 0;
+                            const chunkSize = 100;
                             
-                            const response = await fetch('/api/admin/import-users', {
-                                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: chunk })
-                            });
-                            const serverResult = await response.json();
-                            
-                            if (serverResult.status === 'success') totalSuccess += chunk.length;
-                            else {
-                                console.log("❌ ERROR SERVER:", serverResult);
-                                return Swal.fire('Gagal Server', serverResult.message, 'error');
+                            for (let i = 0; i < uniqueData.length; i += chunkSize) {
+                                const chunk = uniqueData.slice(i, i + chunkSize);
+                                Swal.fire({ title: `Menyimpan ${i + chunk.length} dari ${uniqueData.length}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                                
+                                const response = await fetch('/api/admin/import-users', {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: chunk })
+                                });
+                                const serverResult = await response.json();
+                                
+                                if (serverResult.status === 'success') totalSuccess += chunk.length;
+                                else {
+                                    return Swal.fire('Gagal Server', serverResult.message, 'error');
+                                }
                             }
-                        }
-                        
-                        Swal.fire('Sukses!', `Berhasil menyimpan ${totalSuccess} data pengguna!`, 'success');
-                        loadUsers(); fileInput.value = '';
-                    };
+                            
+                            Swal.fire('Sukses!', `Berhasil menyimpan ${totalSuccess} data pengguna!`, 'success');
+                            loadUsers(); fileInput.value = '';
+                        };
 
-                    if (file.name.endsWith('.csv')) reader.readAsText(file);
-                    else reader.readAsArrayBuffer(file);
-                    
-                } catch(err) { 
-                    console.log("❌ ERROR LOKAL:", err);
-                    Swal.fire('Error Lokal', err.message, 'error'); 
+                        if (file.name.endsWith('.csv')) reader.readAsText(file);
+                        else reader.readAsArrayBuffer(file);
+                        
+                    } catch(err) { Swal.fire('Error Lokal', err.message, 'error'); }
                 }
-            }
-        });
-    }
+            });
+        }
+        
+        function parseCSV(text) {
+            const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+            if (lines.length < 2) return [];
+            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+            return lines.slice(1).map(line => {
+                const values = []; let cur = ''; let inQ = false;
+                for (let ch of line) {
+                    if (ch === '"') { inQ = !inQ; } 
+                    else if (ch === ',' && !inQ) { values.push(cur.trim()); cur = ''; } 
+                    else { cur += ch; }
+                }
+                values.push(cur.trim());
+                const row = {};
+                headers.forEach((h, i) => { row[h] = (values[i] || '').replace(/"/g, '').trim(); });
+                return row;
+            }).filter(r => Object.values(r).some(v => v));
+        }
     </script>
     <script src="app.js"></script>
 </body>
