@@ -17,7 +17,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.get('/api/admin/darurat', async (req, res) => {
     const { error } = await supabase.from('users').upsert({ username: 'admin', password: '123', name: 'Administrator Utama', role: 'admin', kelas: 'Admin', mapel: 'Semua' }, { onConflict: 'username' });
     if (error) return res.send("Gagal memulihkan admin: " + error.message);
-    res.send("<h1>BERHASIL!</h1><p>Akun admin telah dipulihkan. Silakan kembali ke aplikasi dan login dengan Username: <b>admin</b> dan Password: <b>123</b></p>");
+    res.send("<h1>BERHASIL!</h1><p>Akun admin telah dipulihkan. Silakan login Username: <b>admin</b> dan Password: <b>123</b></p>");
 });
 
 // ==========================================
@@ -33,26 +33,51 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 2. SISTEM MULTI-MAPEL (SENSOR KELAS ANTI-CRASH)
+// 2. SISTEM SENSOR KELAS & CEK BLOKIR
 // ==========================================
 app.post('/api/siswa/cek-pin', async (req, res) => {
     try {
-        const { pin, kelas } = req.body; 
+        const { pin, kelas, student_name } = req.body; 
         const { data, error } = await supabase.from('schedules').select('*').eq('pin', pin).eq('status', 'Aktif');
         if (error || !data || data.length === 0) return res.json({status: "error", message: "PIN Salah atau Ujian telah ditutup!"});
         
         let allMapels = [];
         data.forEach(d => { if(d.mapel) d.mapel.split(',').forEach(m => { if(m.trim()) allMapels.push(m.trim()); }); });
 
+        // CEK APAKAH SISWA SEDANG DIBLOKIR
+        if (student_name) {
+            const { data: actData } = await supabase.from('activity').select('status').eq('student_name', student_name).in('exam_name', allMapels);
+            if (actData && actData.length > 0) {
+                const isBlocked = actData.some(a => a.status && a.status.includes('Curang'));
+                if (isBlocked) {
+                    return res.json({status: "error", message: "Akses Ditolak! Layar Anda terkunci karena pelanggaran 3x. Lapor ke pengawas untuk Buka Akses."});
+                }
+            }
+        }
+
         if (!kelas || String(kelas).trim() === '') {
             const totalDurasi = data.reduce((sum, d) => sum + parseInt(d.durasi || 0), 0);
             return res.json({ status: "success", exam: { mapel: allMapels.join(', '), durasi: totalDurasi } });
         }
 
+        // LOGIKA KETAT SENSOR KELAS SMP
         const cleanKelas = String(kelas).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
         let cocokKelas = allMapels.filter(m => m.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().includes(cleanKelas));
 
-        const mapelGabungan = cocokKelas.length > 0 ? cocokKelas.join(', ') : allMapels.join(', ');
+        let mapelGabungan = "";
+        if (cocokKelas.length > 0) {
+            mapelGabungan = cocokKelas.join(', ');
+        } else {
+            // Jika nama mapel spesifik mengandung tag kelas SMP (7, 8, 9, VII, VIII, IX) maka BLOKIR.
+            // Jika bersih dari tag angka kelas, anggap sebagai Ujian Umum Gabungan.
+            const isUmum = allMapels.every(m => !/(7|8|9|vii|viii|ix)/i.test(m.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()));
+            if (isUmum) {
+                mapelGabungan = allMapels.join(', ');
+            } else {
+                return res.json({status: "error", message: `Akses ditolak! Paket soal untuk kelas ${kelas} tidak tersedia pada PIN ini.`});
+            }
+        }
+
         const totalDurasi = data.reduce((sum, d) => sum + parseInt(d.durasi || 0), 0);
         res.json({ status: "success", exam: { mapel: mapelGabungan, durasi: totalDurasi } });
     } catch (err) { res.json({status: "error", message: "Gagal menyortir soal: " + err.message}); }
@@ -70,39 +95,31 @@ app.post('/api/siswa/get-soal', async (req, res) => {
 });
 
 // ==========================================
-// 3. AKTIVITAS PING (BYPASS DATABASE SUPABASE)
+// 3. AKTIVITAS & REKAP (BYPASS SUPABASE)
 // ==========================================
 app.post('/api/siswa/ping', async (req, res) => { 
     const lstText = new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')'; 
     const payload = { student_name: req.body.student_name, exam_name: req.body.mapel, status: 'Mengerjakan', score: req.body.live_score, last_seen: lstText };
-    
-    // PERBAIKAN: Jika tabel Supabase Bapak tidak punya kolom 'kelas', sistem akan mengabaikannya agar aktivitas tetap jalan.
     const { error } = await supabase.from('activity').upsert({ ...payload, kelas: req.body.kelas || '-' }, {onConflict: 'student_name,exam_name'}); 
-    if (error) {
-        await supabase.from('activity').upsert(payload, {onConflict: 'student_name,exam_name'}); 
-    }
+    if (error) await supabase.from('activity').upsert(payload, {onConflict: 'student_name,exam_name'}); 
     res.json({status: "success"}); 
 });
 
 app.post('/api/siswa/submit', async (req, res) => { 
     const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (req.body.durasi || '-');
-    // Ambil kelas siswa dari users table
-    const { data: userData } = await supabase.from('users').select('kelas').eq('name', req.body.student_name).single();
-    const kelasValue = req.body.kelas || (userData ? userData.kelas : '') || '-';
-    
-    await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB, kelas: kelasValue }]); 
-    
-    const { error } = await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')' }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
+    await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB }]); 
+    await supabase.from('activity').update({ status: 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')' }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
     res.json({status: "success"}); 
 });
 
 app.post('/api/siswa/flag-curang', async (req, res) => { 
-    await supabase.from('activity').update({ status: `Curang (${req.body.count}x)` }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
+    const statusText = req.body.count >= 3 ? `Curang (Terkunci)` : `Curang (${req.body.count}x)`;
+    await supabase.from('activity').update({ status: statusText }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
     res.json({status: "success"}); 
 });
 
 // ==========================================
-// 4. PANEL DASHBOARD (FITUR BUKA BLOKIR KEMBALI)
+// 4. PANEL DASHBOARD 
 // ==========================================
 app.get('/api/admin/stats', async (req, res) => {
     const { count: cSiswa } = await supabase.from('users').select('*', {count: 'exact', head: true}).eq('role', 'siswa');
@@ -110,37 +127,14 @@ app.get('/api/admin/stats', async (req, res) => {
     res.json({total_siswa: cSiswa||0, total_guru: cGuru||0});
 });
 
-app.get('/api/admin/recent-activity', async (req, res) => { 
-    try {
-        const { data: acts } = await supabase.from('activity').select('*').order('last_seen', {ascending: false});
-        const { data: users } = await supabase.from('users').select('name, kelas');
-        const userMap = {};
-        (users || []).forEach(u => { userMap[u.name] = u.kelas || '-'; });
-        const merged = (acts || []).map(a => ({ ...a, kelas: a.kelas && a.kelas !== '-' ? a.kelas : (userMap[a.student_name] || '-') }));
-        res.json(merged);
-    } catch(e) { res.json([]); }
-});
-app.get('/api/admin/results', async (req, res) => { 
-    try {
-        const { data: results } = await supabase.from('results').select('*').order('id', {ascending: false});
-        const { data: users } = await supabase.from('users').select('name, kelas');
-        const userMap = {};
-        (users || []).forEach(u => { userMap[u.name] = u.kelas || '-'; });
-        const merged = (results || []).map(r => ({ ...r, kelas: r.kelas || userMap[r.student_name] || '-' }));
-        res.json(merged);
-    } catch(e) { res.json([]); }
-});
+app.get('/api/admin/recent-activity', async (req, res) => { const { data } = await supabase.from('activity').select('*').order('last_seen', {ascending: false}); res.json(data || []); });
+app.get('/api/admin/results', async (req, res) => { const { data } = await supabase.from('results').select('*').order('id', {ascending: false}); res.json(data || []); });
 
-// INI YANG SEBELUMNYA HILANG:
 app.post('/api/admin/reset-siswa', async (req, res) => {
     await supabase.from('activity').delete().eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel);
     res.json({status: "success"});
 });
-app.delete('/api/admin/remove-activity/:id', async (req, res) => {
-    await supabase.from('activity').delete().eq('id', req.params.id);
-    res.json({status: "success"});
-});
-
+app.delete('/api/admin/remove-activity/:id', async (req, res) => { await supabase.from('activity').delete().eq('id', req.params.id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-monitoring', async (req, res) => { await supabase.from('activity').delete().neq('id', 0); res.json({status:"success"}); });
 app.delete('/api/admin/clear-results', async (req, res) => { await supabase.from('results').delete().neq('id', 0); res.json({status:"success"}); });
 
@@ -172,15 +166,13 @@ app.delete('/api/admin/delete-exam/:exam_id', async (req, res) => { await supaba
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
 
 // ==========================================
-// 7. MANAJEMEN PENGGUNA (PERLINDUNGAN ADMIN)
+// 7. MANAJEMEN PENGGUNA 
 // ==========================================
 app.get('/api/admin/users', async (req, res) => { const { data } = await supabase.from('users').select('*').order('id', {ascending: false}); res.json(data || []); });
 app.post('/api/admin/add-user', async (req, res) => { await supabase.from('users').insert([req.body]); res.json({status: "success"}); });
 app.put('/api/admin/update-user', async (req, res) => { await supabase.from('users').update({ name: req.body.name, username: req.body.username, password: req.body.password, role: req.body.role, kelas: req.body.kelas, mapel: req.body.mapel }).eq('username', req.body.old_username); res.json({status: "success"}); });
 app.delete('/api/admin/delete-user/:username', async (req, res) => { await supabase.from('users').delete().eq('username', req.params.username); res.json({status: "success"}); });
-app.delete('/api/admin/clear-users', async (req, res) => { 
-    try { await supabase.from('users').delete().neq('role', 'admin'); res.json({status: "success"}); } catch(err) { res.json({status: "error"}); }
-});
+app.delete('/api/admin/clear-users', async (req, res) => { try { await supabase.from('users').delete().neq('role', 'admin'); res.json({status: "success"}); } catch(err) { res.json({status: "error"}); } });
 
 // ==========================================
 // 8. IMPORT USER MASAL
@@ -218,55 +210,6 @@ app.post('/api/admin/import-users', async (req, res) => {
         }
         res.json({status: "success", imported: toProcess.length});
     } catch (err) { res.json({status: "error", message: err.message}); }
-});
-
-// Import khusus Siswa
-app.post('/api/admin/import-siswa', async (req, res) => {
-    try {
-        const { data } = req.body;
-        if (!data || !data.length) return res.json({status: "error", message: "Data kosong"});
-        const toInsert = data.filter(r => r.username && r.nama && r.password && r.kelas).map(row => ({
-            username: String(row.username).trim(), name: String(row.nama).trim(),
-            password: String(row.password).trim(), role: 'siswa',
-            kelas: String(row.kelas).trim(), mapel: ''
-        }));
-        if (toInsert.length === 0) return res.json({status: "error", message: "Kolom username/nama/password/kelas wajib diisi"});
-        const { error } = await supabase.from('users').insert(toInsert);
-        if (error) return res.json({status: "error", message: error.message});
-        res.json({status: "success", imported: toInsert.length});
-    } catch(e) { res.json({status: "error", message: e.message}); }
-});
-
-// Import khusus Guru (support format mapel_kelas: MTK-7A,IPA-7B)
-app.post('/api/admin/import-guru', async (req, res) => {
-    try {
-        const { data } = req.body;
-        if (!data || !data.length) return res.json({status: "error", message: "Data kosong"});
-        
-        function parseMapelKelas(mk) {
-            if (!mk) return { mapel: '', kelas: '' };
-            const pairs = String(mk).split(',').map(p => p.trim()).filter(p => p);
-            const mapels = []; const kelass = [];
-            pairs.forEach(p => {
-                const parts = p.split('-');
-                if (parts.length >= 2) { mapels.push(parts[0]); kelass.push(parts.slice(1).join('-')); }
-                else { mapels.push(p); }
-            });
-            return { mapel: [...new Set(mapels)].join(','), kelas: [...new Set(kelass)].join(',') };
-        }
-
-        const toInsert = data.filter(r => r.username && r.nama && r.password).map(row => {
-            const mk = row.mapel_kelas || row.mapel || '';
-            const parsed = mk.includes('-') ? parseMapelKelas(mk) : { mapel: mk, kelas: row.kelas || '' };
-            return { username: String(row.username).trim(), name: String(row.nama).trim(),
-                password: String(row.password).trim(), role: 'guru',
-                kelas: '', mapel: parsed.mapel, kelas_akses: parsed.kelas };
-        });
-        if (toInsert.length === 0) return res.json({status: "error", message: "Tidak ada data valid"});
-        const { error } = await supabase.from('users').insert(toInsert);
-        if (error) return res.json({status: "error", message: error.message});
-        res.json({status: "success", imported: toInsert.length});
-    } catch(e) { res.json({status: "error", message: e.message}); }
 });
 
 module.exports = app;
