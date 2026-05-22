@@ -368,15 +368,37 @@ async function loadNilai() {
 }
 
 function renderNilaiTable() { 
-    const selKelas = document.getElementById('filter-kelas-nilai').value; const selMapel = document.getElementById('filter-mapel-nilai').value; const kkmMap = getKkmStorage();
-    window.filteredResultsData = window.allResultsData.filter(r => { return (selKelas === "" || r.kelas === selKelas) && (selMapel === "" || r.mapel === selMapel); }); 
+    const selKelas = document.getElementById('filter-kelas-nilai').value; 
+    const selMapel = document.getElementById('filter-mapel-nilai').value; 
+    const kkmInput = document.getElementById('input-kkm-nilai');
+    const kkmValue = kkmInput ? parseFloat(kkmInput.value) || 0 : 0;
     
-    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map(n => {
-        let kkmLimit = 0; if(selMapel) { kkmLimit = kkmMap[selMapel] || 0; } else { for(let mKey in kkmMap) { if(n.mapel && n.mapel.includes(mKey)) { kkmLimit = kkmMap[mKey]; break; } } }
-        let statusKetuntasan = '<span class="text-slate-400 font-medium italic">Belum di-set</span>';
-        if (kkmLimit > 0) { statusKetuntasan = n.nilai >= kkmLimit ? '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black">TUNTAS</span>' : '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black">REMEDIAL</span>'; }
-        return `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="p-3 font-semibold whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug text-slate-800">${n.student_name} <br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td><td class="p-3 text-slate-700 font-medium">${n.mapel}</td><td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td><td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} B / ${n.salah || 0} S</td><td class="p-3 text-center font-black text-sm md:text-base text-blue-600">${n.nilai}</td><td class="p-3 text-center">${statusKetuntasan}</td><td class="p-3 text-center"><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm"><i class="fa fa-eye mr-1"></i> Detail</button></td></tr>`;
+    window.filteredResultsData = window.allResultsData.filter(r => { 
+        return (selKelas === "" || (r.kelas||'') === selKelas) && (selMapel === "" || r.mapel === selMapel); 
+    }); 
+    
+    document.getElementById('nilai-body').innerHTML = window.filteredResultsData.map((n, idx) => {
+        let statusKetuntasan = '<span class="text-slate-400 font-medium italic text-[9px]">KKM belum di-set</span>';
+        if (kkmValue > 0) { 
+            statusKetuntasan = n.nilai >= kkmValue 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black">TUNTAS</span>' 
+                : '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black">REMEDIAL</span>'; 
+        }
+        return `<tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-3 font-semibold whitespace-normal min-w-[120px] leading-snug text-slate-800">${n.student_name}<br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td>
+            <td class="p-3 text-slate-700 font-medium text-[10px]">${n.mapel}</td>
+            <td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td>
+            <td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} B / ${n.salah || 0} S</td>
+            <td class="p-3 text-center font-black text-sm text-blue-600">${n.nilai}</td>
+            <td class="p-3 text-center">${statusKetuntasan}</td>
+            <td class="p-3 text-center"><button onclick="lihatDetailByIdx(${idx})" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] font-bold shadow-sm hover:bg-blue-200"><i class="fa fa-eye mr-1"></i> Detail</button></td>
+        </tr>`;
     }).join(''); 
+}
+
+function lihatDetailByIdx(idx) { 
+    const n = window.filteredResultsData[idx]; 
+    if (n) lihatDetail(n.detail_jawaban || '[]'); 
 }
 
 function exportExcelDetail() {
@@ -423,5 +445,102 @@ async function clearResults() { await fetch(API + '/admin/clear-results', {metho
 async function clearSchedules() { await fetch(API + '/admin/clear-schedules', {method:'DELETE'}); loadJadwal(); }
 async function clearQuestions() { await fetch(API + '/admin/clear-questions', {method:'DELETE'}); loadBankSoal(); }
 async function clearUsers() { await fetch(API + '/admin/clear-users', {method:'DELETE'}); loadUsers(); }
+
+// ===== IMPORT EXCEL/CSV FUNCTIONS =====
+function parseCSV(text) {
+    const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+    return lines.slice(1).map(line => {
+        // Handle quoted CSV values
+        const values = []; let cur = ''; let inQ = false;
+        for (let ch of line) {
+            if (ch === '"') { inQ = !inQ; } 
+            else if (ch === ',' && !inQ) { values.push(cur.trim()); cur = ''; } 
+            else { cur += ch; }
+        }
+        values.push(cur.trim());
+        const row = {};
+        headers.forEach((h, i) => { row[h] = (values[i] || '').replace(/"/g, '').trim(); });
+        return row;
+    }).filter(r => Object.values(r).some(v => v));
+}
+
+function downloadTemplate(type) {
+    let csv, filename;
+    if (type === 'siswa') {
+        csv = `username,nama,password,kelas\nsisswa001,Andi Putra,Password123,7A\nsisswa002,Budi Santoso,Password123,7A\nsisswa003,Citra Dewi,Password123,7B`;
+        filename = 'TEMPLATE_SISWA.csv';
+    } else {
+        csv = `username,nama,password,mapel_kelas\nguru001,Pak Budi,Password123,"MTK-7A,MTK-7B"\nguru002,Bu Ani,Password123,"IPA-7A,IPA-8A"\nguru003,Pak Candra,Password123,"MTK-8A,IPA-8B"`;
+        filename = 'TEMPLATE_GURU.csv';
+    }
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+async function prosesImport(type) {
+    const fileInput = document.getElementById('file-' + type);
+    const previewEl = document.getElementById('preview-' + type);
+    const file = fileInput ? fileInput.files[0] : null;
+    if (!file) return Swal.fire('Pilih File Dulu', 'Pilih file CSV atau XLSX terlebih dahulu.', 'warning');
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            let rawData = [];
+            const name = file.name.toLowerCase();
+            const content = event.target.result;
+
+            if (name.endsWith('.csv')) {
+                rawData = parseCSV(content);
+            } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                if (typeof XLSX === 'undefined') return Swal.fire('Error', 'Library XLSX belum siap. Refresh halaman.', 'error');
+                const wb = XLSX.read(new Uint8Array(content), { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                rawData = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                // Normalize keys
+                rawData = rawData.map(row => { const r = {}; for(const [k,v] of Object.entries(row)) r[k.trim().toLowerCase()] = String(v).trim(); return r; });
+            } else {
+                return Swal.fire('Format Salah', 'Hanya .csv, .xlsx, atau .xls.', 'error');
+            }
+
+            const data = rawData.filter(r => (r.username || r.nis) && (r.nama || r.name) && r.password);
+            if (data.length === 0) return Swal.fire('Data Kosong', 'Pastikan kolom username, nama, password ada dan terisi.', 'error');
+
+            if (previewEl) {
+                previewEl.className = 'text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2 mt-1';
+                previewEl.innerHTML = `✓ File terbaca: <strong>${data.length} baris</strong>. Klik GENERATE untuk menyimpan.`;
+            }
+
+            const confirm = await Swal.fire({
+                title: `Simpan ${data.length} ${type}?`,
+                html: `<div style="text-align:left;font-size:12px"><p>File: <b>${file.name}</b></p><p>Data: <b>${data.length} baris</b></p><div style="margin-top:8px;background:#f5f5f5;padding:8px;border-radius:6px;font-family:monospace;font-size:11px">${JSON.stringify(data[0], null, 2)}</div></div>`,
+                icon: 'question', showCancelButton: true,
+                confirmButtonText: '✓ Ya, Simpan Sekarang', cancelButtonText: 'Batal', confirmButtonColor: '#059669'
+            });
+            if (!confirm.isConfirmed) return;
+
+            Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+            const endpoint = type === 'siswa' ? '/api/admin/import-siswa' : '/api/admin/import-guru';
+            const res = await fetch(API + endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({data}) });
+            const result = await res.json();
+            if (result.status === 'success') {
+                fileInput.value = '';
+                if (previewEl) { previewEl.className = 'text-[10px] text-slate-400 hidden'; }
+                loadUsers();
+                Swal.fire('Berhasil!', `${result.imported} ${type} berhasil disimpan.`, 'success');
+            } else {
+                Swal.fire('Gagal', result.message || 'Terjadi kesalahan.', 'error');
+            }
+        } catch(err) { Swal.fire('Error', err.message, 'error'); }
+    };
+    if (file.name.toLowerCase().endsWith('.csv')) reader.readAsText(file, 'UTF-8');
+    else reader.readAsArrayBuffer(file);
+}
 
 setInterval(() => { if(activeUser && activeUser.role !== 'siswa' && !document.getElementById('page-dashboard').classList.contains('hidden')) loadStats(); }, 3000);

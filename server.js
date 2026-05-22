@@ -86,7 +86,11 @@ app.post('/api/siswa/ping', async (req, res) => {
 
 app.post('/api/siswa/submit', async (req, res) => { 
     const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (req.body.durasi || '-');
-    await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB }]); 
+    // Ambil kelas siswa dari users table
+    const { data: userData } = await supabase.from('users').select('kelas').eq('name', req.body.student_name).single();
+    const kelasValue = req.body.kelas || (userData ? userData.kelas : '') || '-';
+    
+    await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB, kelas: kelasValue }]); 
     
     const { error } = await supabase.from('activity').update({ status: req.body.is_curang ? 'Curang (Terkunci)' : 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')' }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
     res.json({status: "success"}); 
@@ -107,12 +111,24 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.get('/api/admin/recent-activity', async (req, res) => { 
-    const { data } = await supabase.from('activity').select('*').order('last_seen', {ascending: false}); 
-    res.json(data || []); // Anti Null array
+    try {
+        const { data: acts } = await supabase.from('activity').select('*').order('last_seen', {ascending: false});
+        const { data: users } = await supabase.from('users').select('name, kelas');
+        const userMap = {};
+        (users || []).forEach(u => { userMap[u.name] = u.kelas || '-'; });
+        const merged = (acts || []).map(a => ({ ...a, kelas: a.kelas && a.kelas !== '-' ? a.kelas : (userMap[a.student_name] || '-') }));
+        res.json(merged);
+    } catch(e) { res.json([]); }
 });
 app.get('/api/admin/results', async (req, res) => { 
-    const { data } = await supabase.from('results').select('*').order('id', {ascending: false}); 
-    res.json(data || []); 
+    try {
+        const { data: results } = await supabase.from('results').select('*').order('id', {ascending: false});
+        const { data: users } = await supabase.from('users').select('name, kelas');
+        const userMap = {};
+        (users || []).forEach(u => { userMap[u.name] = u.kelas || '-'; });
+        const merged = (results || []).map(r => ({ ...r, kelas: r.kelas || userMap[r.student_name] || '-' }));
+        res.json(merged);
+    } catch(e) { res.json([]); }
 });
 
 // INI YANG SEBELUMNYA HILANG:
@@ -185,9 +201,7 @@ app.post('/api/admin/import-users', async (req, res) => {
 
         if(toProcess.length === 0) return res.json({status: "error", message: "Data tidak valid."});
 
-        const { data: existingUsers, error: fetchErr } = await supabase.from('users').select('username');
-        if (fetchErr) throw new Error("Gagal membaca database.");
-        
+        const { data: existingUsers } = await supabase.from('users').select('username');
         const existingUsernames = new Set((existingUsers || []).map(u => u.username));
         const toInsert = []; const toUpdate = [];
 
@@ -204,6 +218,55 @@ app.post('/api/admin/import-users', async (req, res) => {
         }
         res.json({status: "success", imported: toProcess.length});
     } catch (err) { res.json({status: "error", message: err.message}); }
+});
+
+// Import khusus Siswa
+app.post('/api/admin/import-siswa', async (req, res) => {
+    try {
+        const { data } = req.body;
+        if (!data || !data.length) return res.json({status: "error", message: "Data kosong"});
+        const toInsert = data.filter(r => r.username && r.nama && r.password && r.kelas).map(row => ({
+            username: String(row.username).trim(), name: String(row.nama).trim(),
+            password: String(row.password).trim(), role: 'siswa',
+            kelas: String(row.kelas).trim(), mapel: ''
+        }));
+        if (toInsert.length === 0) return res.json({status: "error", message: "Kolom username/nama/password/kelas wajib diisi"});
+        const { error } = await supabase.from('users').insert(toInsert);
+        if (error) return res.json({status: "error", message: error.message});
+        res.json({status: "success", imported: toInsert.length});
+    } catch(e) { res.json({status: "error", message: e.message}); }
+});
+
+// Import khusus Guru (support format mapel_kelas: MTK-7A,IPA-7B)
+app.post('/api/admin/import-guru', async (req, res) => {
+    try {
+        const { data } = req.body;
+        if (!data || !data.length) return res.json({status: "error", message: "Data kosong"});
+        
+        function parseMapelKelas(mk) {
+            if (!mk) return { mapel: '', kelas: '' };
+            const pairs = String(mk).split(',').map(p => p.trim()).filter(p => p);
+            const mapels = []; const kelass = [];
+            pairs.forEach(p => {
+                const parts = p.split('-');
+                if (parts.length >= 2) { mapels.push(parts[0]); kelass.push(parts.slice(1).join('-')); }
+                else { mapels.push(p); }
+            });
+            return { mapel: [...new Set(mapels)].join(','), kelas: [...new Set(kelass)].join(',') };
+        }
+
+        const toInsert = data.filter(r => r.username && r.nama && r.password).map(row => {
+            const mk = row.mapel_kelas || row.mapel || '';
+            const parsed = mk.includes('-') ? parseMapelKelas(mk) : { mapel: mk, kelas: row.kelas || '' };
+            return { username: String(row.username).trim(), name: String(row.nama).trim(),
+                password: String(row.password).trim(), role: 'guru',
+                kelas: '', mapel: parsed.mapel, kelas_akses: parsed.kelas };
+        });
+        if (toInsert.length === 0) return res.json({status: "error", message: "Tidak ada data valid"});
+        const { error } = await supabase.from('users').insert(toInsert);
+        if (error) return res.json({status: "error", message: error.message});
+        res.json({status: "success", imported: toInsert.length});
+    } catch(e) { res.json({status: "error", message: e.message}); }
 });
 
 module.exports = app;
