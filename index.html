@@ -194,10 +194,11 @@
                             <button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-emerald-700 transition">GENERATE DARI EXCEL</button>
                         </div>
                         <div class="bg-blue-50 p-3 md:p-4 rounded-xl border border-blue-200 shadow-sm">
-                            <h3 class="font-bold text-blue-800 text-[10px] md:text-xs mb-2 md:mb-3">Import File Word (.docx)</h3>
-                            <input type="text" id="w_judul" placeholder="Kode Ujian" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold outline-none border-blue-300 hidden">
+                            <h3 class="font-bold text-blue-800 text-[10px] md:text-xs mb-1">Import File Word (.docx)</h3>
+                            <p class="text-[9px] text-blue-500 mb-2">Format: <b>1. Pertanyaan</b> → <b>A. Opsi</b> → <b>Kunci: A</b></p>
+                            <input type="text" id="w_judul" placeholder="Kode Ujian (Misal: IPA-8B)" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold outline-none border-blue-300">
                             <input type="file" id="w_file" accept=".docx" class="w-full p-2 mb-2 border rounded bg-white text-[10px] outline-none">
-                            <button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-blue-700 transition">EKSTRAK TEKS DARI WORD</button>
+                            <button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-blue-700 transition">IMPORT & PARSING OTOMATIS</button>
                         </div>
                     </div>
                     

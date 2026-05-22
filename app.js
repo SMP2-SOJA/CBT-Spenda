@@ -492,34 +492,162 @@ async function importExcelSoal() {
 }
 
 function importWord() {
-    const kodeUjian = document.getElementById('w_judul').value;
+    const kodeUjian = document.getElementById('w_judul').value.trim();
     const fileInput = document.getElementById('w_file');
     const file = fileInput.files[0];
 
+    if (!kodeUjian) return Swal.fire('Oops', 'Isi Kode Ujian terlebih dahulu!', 'warning');
     if (!file) return Swal.fire('Oops', 'Pilih file Word (.docx) terlebih dahulu!', 'warning');
 
-    Swal.fire({ title: 'Mengekstrak Teks...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Mengekstrak & Memproses Soal...', didOpen: () => Swal.showLoading() });
 
     const reader = new FileReader();
     reader.onload = function(event) {
         if (typeof mammoth === 'undefined') {
             return Swal.fire('Error', 'Library ekstrak Word belum termuat. Pastikan koneksi internet stabil lalu refresh halaman.', 'error');
         }
-        
+
         mammoth.extractRawText({ arrayBuffer: event.target.result })
             .then(function(result) {
-                if (kodeUjian) document.getElementById('s_judul_bulk').value = kodeUjian;
+                const rawText = result.value;
+                const questions = parseWordSoal(rawText, kodeUjian);
+
+                if (questions.length === 0) {
+                    return Swal.fire({
+                        title: 'Gagal Parsing Otomatis',
+                        html: `<p class="text-xs text-red-600 font-bold mb-2">Sistem tidak dapat mendeteksi soal secara otomatis.</p>
+                               <p class="text-xs text-slate-600 mb-3">Pastikan format file Word sesuai panduan:<br>
+                               <b>1. Pertanyaan</b><br>A. Opsi A<br>B. Opsi B<br><b>Kunci: A</b></p>
+                               <p class="text-xs text-slate-500 font-bold mb-1">Teks yang diekstrak:</p>
+                               <textarea class="w-full h-40 p-2 border rounded text-[10px] outline-none bg-slate-50" readonly>${rawText.substring(0, 2000)}</textarea>`,
+                        width: '80%', confirmButtonColor: '#3085d6', confirmButtonText: 'Tutup'
+                    });
+                }
+
                 Swal.fire({
-                    title: 'Hasil Ekstraksi Word',
-                    html: `<p class="text-xs text-red-500 mb-2 font-bold">PENTING: Ekstraktor Word hanya untuk format paragraf teks biasa. Jika Anda menggunakan tabel, garis tabel akan dihancurkan menjadi teks berderet ke bawah.<br><br>Silakan COPY teks di bawah ini dan susun ke form Input Manual.</p>
-                           <textarea class="w-full h-64 p-3 border rounded text-xs outline-none bg-slate-50" readonly>${result.value}</textarea>`,
-                    width: '80%', confirmButtonColor: '#3085d6', confirmButtonText: 'Tutup'
+                    title: `Ditemukan ${questions.length} Soal!`,
+                    html: `<p class="text-sm text-slate-600 mb-3">Pratinjau <b>${Math.min(questions.length, 3)}</b> soal pertama:</p>
+                           <div class="text-left bg-slate-50 p-3 rounded-lg max-h-48 overflow-y-auto text-xs space-y-2">
+                           ${questions.slice(0, 3).map((q, i) => `<div class="border-b pb-2"><b>No.${i+1} [${q.tipe}]</b> ${q.tanya.substring(0, 80)}${q.tanya.length > 80 ? '...' : ''}<br><span class="text-emerald-600 font-bold">Kunci: ${q.kunci}</span></div>`).join('')}
+                           </div>
+                           <p class="text-[10px] text-slate-400 mt-2">Total ${questions.length} soal akan disimpan ke kode ujian: <b>${kodeUjian}</b></p>`,
+                    icon: 'question', width: '85%',
+                    showCancelButton: true,
+                    confirmButtonText: `Simpan ${questions.length} Soal`,
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#2563eb'
+                }).then(async (confirm) => {
+                    if (!confirm.isConfirmed) return;
+                    Swal.fire({ title: 'Menyimpan Soal...', didOpen: () => Swal.showLoading() });
+                    try {
+                        const res = await fetch(API + '/admin/add-soal-bulk', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ questions })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            Swal.fire('Sukses!', `${questions.length} soal berhasil disimpan ke Bank Soal!`, 'success');
+                            loadBankSoal();
+                            fileInput.value = '';
+                            document.getElementById('w_judul').value = '';
+                        } else {
+                            Swal.fire('Gagal', data.message || 'Terjadi kesalahan saat menyimpan.', 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Gagal terhubung ke server: ' + err.message, 'error');
+                    }
                 });
-                fileInput.value = '';
             })
-            .catch(function(err) { Swal.fire('Gagal', 'Format file tidak didukung. Pastikan menggunakan .docx', 'error'); });
+            .catch(function(err) {
+                Swal.fire('Gagal', 'Format file tidak didukung. Pastikan menggunakan .docx — ' + err.message, 'error');
+            });
     };
     reader.readAsArrayBuffer(file);
+}
+
+/**
+ * Parser otomatis soal dari teks Word.
+ * Mendukung format umum:
+ *   1. Pertanyaan (nomor diikuti titik/kurung)
+ *   A. Opsi A  /  A) Opsi A
+ *   B. Opsi B
+ *   Kunci: A   (atau Jawaban: A / Kunci Jawaban: A)
+ */
+function parseWordSoal(text, kodeUjian) {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    const questions = [];
+
+    // Pola: nomor soal = baris diawali angka diikuti titik/kurung/spasi
+    const soalRegex = /^(\d+)[.\)]\s+(.+)/;
+    // Pola opsi: A. / A) / a. / a)
+    const opsiRegex = /^([A-Ea-e])[.\)]\s+(.+)/;
+    // Pola kunci jawaban
+    const kunciRegex = /^(?:kunci\s*(?:jawaban)?|jawaban(?:\s*benar)?)\s*[:\-]?\s*([A-Ea-e,\s]+)$/i;
+    // Pola skor/bobot
+    const skorRegex = /^(?:skor|bobot|poin)\s*[:\-]?\s*(\d+(?:\.\d+)?)$/i;
+
+    let currentSoal = null;
+    let currentOpsi = [];
+    let currentKunci = '';
+    let currentSkor = 1;
+
+    function flushSoal() {
+        if (currentSoal && currentSoal.tanya.trim()) {
+            const tipe = detectTipe(currentOpsi, currentKunci);
+            questions.push({
+                exam_id: kodeUjian,
+                tipe: tipe,
+                tanya: currentSoal.tanya.trim(),
+                opsi_json: currentOpsi.map(o => o.text).join('|||'),
+                kunci: currentKunci.trim().toUpperCase(),
+                skor: currentSkor,
+                gform_url: ''
+            });
+        }
+        currentSoal = null;
+        currentOpsi = [];
+        currentKunci = '';
+        currentSkor = 1;
+    }
+
+    function detectTipe(opsi, kunci) {
+        if (opsi.length === 0) return 'ESAI';
+        const kArr = kunci.split(',').map(k => k.trim()).filter(k => k);
+        if (kArr.length > 1) return 'PGK';
+        if (opsi.length === 2) {
+            const texts = opsi.map(o => o.text.toLowerCase());
+            if ((texts.includes('benar') || texts.includes('b')) && (texts.includes('salah') || texts.includes('s'))) return 'BS';
+        }
+        return 'PG';
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const soalMatch = line.match(soalRegex);
+        const opsiMatch = line.match(opsiRegex);
+        const kunciMatch = line.match(kunciRegex);
+        const skorMatch = line.match(skorRegex);
+
+        if (soalMatch) {
+            // Simpan soal sebelumnya
+            flushSoal();
+            currentSoal = { tanya: soalMatch[2] };
+        } else if (opsiMatch && currentSoal) {
+            currentOpsi.push({ label: opsiMatch[1].toUpperCase(), text: opsiMatch[2].trim() });
+        } else if (kunciMatch && currentSoal) {
+            currentKunci = kunciMatch[1].replace(/\s+/g, '').toUpperCase();
+        } else if (skorMatch && currentSoal) {
+            currentSkor = parseFloat(skorMatch[1]) || 1;
+        } else if (currentSoal && !opsiMatch && !kunciMatch && !soalMatch) {
+            // Baris lanjutan pertanyaan (multi-baris)
+            if (currentOpsi.length === 0) {
+                currentSoal.tanya += '\n' + line;
+            }
+        }
+    }
+    flushSoal(); // flush soal terakhir
+
+    return questions;
 }
 
 // ===== IMPORT EXCEL/CSV FUNCTIONS UNTUK MANAJEMEN USER (JANGAN DIHAPUS) =====
