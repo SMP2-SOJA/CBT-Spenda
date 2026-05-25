@@ -6,6 +6,50 @@ const XLSX = require('xlsx');
 const mammoth = require('mammoth');
 const fs = require('fs');
 
+// ================================================================
+// LISENSI & IDENTITAS PEMBELI
+// Kode ini dihasilkan otomatis untuk setiap pembeli.
+// Menghapus bagian ini melanggar ketentuan lisensi.
+// ================================================================
+const _lic = {
+  c: Buffer.from('U1BFTkRBLURJR0ktMjAyNg==','base64').toString(),
+  b: Buffer.from('UEVNIEJFTUJFTEK=','base64').toString(),
+  v: '2026.1',
+  _: () => { const d=new Date(); return [d.getFullYear(),d.getMonth()+1].join('.'); }
+};
+const _chk = () => _lic.c + ' | ' + _lic.b + ' | v' + _lic.v;
+
+// ================================================================
+// DATA DEMO (in-memory, tidak menyentuh database asli)
+// ================================================================
+const DEMO_USER = { id:0, username:'demo', name:'Demo Sekolah', role:'admin', kelas:'', mapel:'', _isDemo:true };
+const DEMO_DATA = {
+  users: [
+    {id:1,username:'siswa01',name:'Andi Pratama',role:'siswa',kelas:'7A',mapel:''},
+    {id:2,username:'siswa02',name:'Budi Santoso',role:'siswa',kelas:'7A',mapel:''},
+    {id:3,username:'siswa03',name:'Citra Dewi',role:'siswa',kelas:'7B',mapel:''},
+    {id:4,username:'guru01',name:'Pak Budi (MTK)',role:'guru',kelas:'',mapel:'MTK'},
+  ],
+  questions: [
+    {id:1,exam_id:'MTK-7A-DEMO',tipe:'PG',tanya:'Berapakah hasil dari 5 × 8?',opsi_json:'30|||35|||40|||45',kunci:'C',skor:2},
+    {id:2,exam_id:'MTK-7A-DEMO',tipe:'PG',tanya:'Ibukota Indonesia adalah...',opsi_json:'Bandung|||Jakarta|||Surabaya|||Medan',kunci:'B',skor:1},
+    {id:3,exam_id:'MTK-7A-DEMO',tipe:'ISIAN',tanya:'Hasil dari 12 + 8 = ...',opsi_json:'',kunci:'20',skor:2},
+  ],
+  schedules: [
+    {id:1,mapel:'MTK-7A-DEMO',pin:'1234',tanggal:'2026-05-26|08:00',durasi:60,status:'Aktif',kelas:'7A'},
+  ],
+  activity: [
+    {id:1,student_name:'Andi Pratama',exam_name:'MTK-7A-DEMO',kelas:'7A',status:'Mengerjakan',score:40,last_seen:'08:15:22 (35 mnt)'},
+    {id:2,student_name:'Budi Santoso',exam_name:'MTK-7A-DEMO',kelas:'7A',status:'Selesai',score:80,last_seen:'08:55:10 (55 mnt)'},
+    {id:3,student_name:'Citra Dewi',exam_name:'MTK-7A-DEMO',kelas:'7B',status:'Curang (1x)',score:30,last_seen:'08:20:05 (20 mnt)'},
+  ],
+  results: [
+    {id:1,student_name:'Budi Santoso',mapel:'MTK-7A-DEMO',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'26/5/2026|55 mnt'},
+    {id:2,student_name:'Citra Dewi',mapel:'MTK-7A-DEMO',kelas:'7B',nilai:40,benar:2,salah:3,detail_jawaban:'[]',tanggal:'26/5/2026|20 mnt'},
+  ],
+  exams: ['MTK-7A-DEMO'],
+};
+
 const upload = multer({ dest: '/tmp' }); // Folder penyimpanan sementara Vercel
 const supabaseUrl = 'https://uftiednbhdmexxlabhad.supabase.co';
 const supabaseKey = 'sb_publishable_TAEkdHBM3n5nY-I4bm-zaA_C5y9sEwH';
@@ -15,6 +59,19 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Middleware: copyright header di setiap response
+app.use((req, res, next) => {
+    res.setHeader('X-App-License', _chk());
+    res.setHeader('X-Powered-By', 'SPENDA-DIGI-CBT');
+    next();
+});
+
+// =======================================
+// DEMO MODE ENDPOINTS (memisah dari DB asli)
+// =======================================
+app.get('/api/demo/data', (req, res) => res.json(DEMO_DATA));
+app.get('/api/demo/ping', (req, res) => res.json({status:'ok', mode:'DEMO', license: _chk()}));
 
 // ==========================================
 // 0. JALUR DARURAT (PEMULIHAN ADMIN)
@@ -30,7 +87,11 @@ app.get('/api/admin/darurat', async (req, res) => {
 // ==========================================
 app.post('/api/login', async (req, res) => { 
     try {
-        const { username, password } = req.body; 
+        const { username, password } = req.body;
+        // DEMO MODE: kredensial khusus, tidak menyentuh DB asli
+        if (username === 'demo' && password === 'demo123') {
+            return res.json({status: "success", user: DEMO_USER});
+        }
         const { data, error } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single(); 
         if (error || !data) return res.status(401).json({status: "error", message: "Username atau Password salah!"}); 
         res.json({status: "success", user: data}); 

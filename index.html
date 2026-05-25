@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBT Online - @spenda-digi</title>
+    <title>CBT Online - SPENDA-DIGI-2026</title>
+    <!-- SPENDA-DIGI-CBT v2026.1 | Licensed Software | Buyer-Code: PEMILIK_ASLI -->
+    <meta name="application-name" content="SPENDA-DIGI-CBT">
+    <meta name="generator" content="SPENDA-DIGI-2026-v1">
+    <meta name="copyright" content="SPENDA-DIGI-CBT 2026. Hak Cipta Dilindungi. Dilarang menjual ulang tanpa izin.">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -26,6 +30,10 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
 
+    <div id="demo-banner" class="hidden fixed top-0 left-0 right-0 z-[200] bg-amber-400 text-amber-900 text-center py-2 text-xs font-bold shadow-md">
+        <i class="fa fa-flask mr-1"></i> MODE DEMO AKTIF — Data contoh, tidak tersimpan ke database asli. 
+        <button onclick="keluarDemo()" class="ml-3 bg-amber-700 text-white px-2 py-0.5 rounded text-[10px] hover:bg-amber-800">Keluar Demo</button>
+    </div>
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
@@ -44,6 +52,12 @@
                     </div>
                 </div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 mt-2 text-sm md:text-base">MASUK APLIKASI</button>
+                <div class="relative my-3"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div><div class="relative flex justify-center"><span class="bg-white px-3 text-xs text-slate-400">atau</span></div></div>
+                <button onclick="masukDemo()" class="w-full bg-amber-50 text-amber-700 border-2 border-amber-300 font-bold py-2.5 rounded-xl hover:bg-amber-100 transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa fa-eye mr-1"></i> COBA DEMO GRATIS
+                    <span class="bg-amber-200 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-normal">Tanpa daftar</span>
+                </button>
+                <p class="text-center text-[10px] text-slate-400 mt-1">Demo: semua fitur aktif dengan data contoh — tidak menyentuh data asli</p>
             </div>
             
             <div class="mt-6 pt-4 border-t border-slate-200">
