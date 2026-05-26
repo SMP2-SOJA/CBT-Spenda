@@ -237,6 +237,33 @@ function renderCbtGrid() {
     } document.getElementById('cbt-grid').innerHTML = html;
 }
 
+
+// ── Helper: render konten opsi — teks biasa ATAU gambar jika URL ──
+function renderOpsiContent(val) {
+    if (!val) return '';
+    // Deteksi URL gambar di opsi (Google Drive / direct image URL)
+    const isUrl = val.startsWith('http') && (
+        val.includes('drive.google.com') || val.includes('googleusercontent') ||
+        /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(val)
+    );
+    if (!isUrl) return `<span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${formatMath(val)}</span>`;
+    
+    // Konversi Google Drive URL ke URL yang bisa ditampilkan
+    let imgSrc = val;
+    let imgFallback = '';
+    if (val.includes('drive.google.com')) {
+        const idMatch = val.match(/[?&]id=([^&]+)/) || val.match(/\/d\/([^\/]+)/);
+        if (idMatch && idMatch[1]) {
+            imgSrc = `https://lh3.googleusercontent.com/d/${idMatch[1]}=s600`;
+            imgFallback = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+        }
+    }
+    return `<img src="${imgSrc}" 
+        ${imgFallback ? `onerror="if(this.src!=='${imgFallback}')this.src='${imgFallback}';"` : ''}
+        class="max-h-28 md:max-h-36 w-auto object-contain rounded-lg border" 
+        alt="Gambar pilihan jawaban">`;
+}
+
 function showCbtQuestion(index) {
     cbtCurrentIndex = index; const q = cbtQuestions[index]; const savedAns = cbtAnswers[index].ans || "";
     document.getElementById('cbt-no-soal').innerText = index + 1; document.getElementById('cbt-tipe-soal').innerText = q.tipe;
@@ -256,8 +283,60 @@ function showCbtQuestion(index) {
             for(let i=0; i<totalPairs; i++) { let currentSaved = savedArr[i] ? savedArr[i].replace(/[0-9]/g, '') : ''; let labelText = premises[i] ? premises[i] : `Pertanyaan/Pasangan Nomor ${i+1}`; htmlOpsi += `<div class="flex flex-col md:flex-row items-start md:items-center justify-between p-2 md:p-3 bg-white border border-blue-100 rounded-lg shadow-sm gap-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm md:w-1/2 leading-snug">${formatMath(labelText)}</span><select class="jodoh-select p-2 md:p-3 border-2 border-emerald-300 rounded-lg text-[10px] md:text-sm font-bold text-emerald-800 bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-1/2 cursor-pointer" onchange="cbtSaveJodoh(${totalPairs})"><option value="">- Silakan Pilih Jawaban -</option>`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx]; let isSel = (currentSaved === huruf) ? "selected" : ""; htmlOpsi += `<option value="${huruf}" ${isSel}>${formatMath(val)}</option>`; }); htmlOpsi += `</select></div>`; } htmlOpsi += `</div></div>`;
         } else {
             divTanya.innerHTML = formatMath(q.tanya || "");
-            if (q.tipe === 'PG') { htmlOpsi += `<div class="space-y-2 md:space-y-3">`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx] || ''; let isChecked = (savedAns === huruf) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-2 md:p-3 border-2 rounded-xl cursor-pointer bg-white transition hover:border-blue-300"><input type="radio" name="cbt_ans" value="${huruf}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 mr-2 md:mr-3 accent-blue-600"><span class="font-black text-[10px] md:text-sm mr-2 md:mr-3 bg-slate-100 border border-slate-200 w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full text-slate-600 shadow-sm">${huruf}</span><span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${formatMath(val)}</span></label>`; }); htmlOpsi += `</div>`; }
-            else if (q.tipe === 'PGK') { let savedArr = savedAns ? savedAns.split(',') : []; htmlOpsi += `<div class="space-y-2 md:space-y-3">`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx] || ''; let isChecked = savedArr.includes(huruf) ? "checked" : ""; htmlOpsi += `<label class="flex items-center p-2 md:p-3 border-2 rounded-xl cursor-pointer bg-white transition hover:border-purple-300"><input type="checkbox" value="${huruf}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb w-5 h-5 md:w-6 md:h-6 text-purple-600 mr-3 md:mr-4 rounded accent-purple-600 shadow-sm"><span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${formatMath(val)}</span></label>`; }); htmlOpsi += `</div>`; }
+            if (q.tipe === 'PG') {
+                const isImgOpsi = opsiArray.some(v => v.startsWith('http') && v.includes('drive.google'));
+                htmlOpsi += `<div class="${isImgOpsi ? 'grid grid-cols-2 gap-2' : 'space-y-2 md:space-y-3'}">`;
+                opsiArray.forEach((val, idx) => {
+                    let huruf = abjad[idx] || '';
+                    let isChecked = (savedAns === huruf) ? "checked" : "";
+                    let isSelected = isChecked === "checked";
+                    let opsiContent = renderOpsiContent(val);
+                    if (isImgOpsi) {
+                        // Grid layout untuk opsi bergambar
+                        htmlOpsi += `<label class="flex flex-col items-center p-2 border-2 rounded-xl cursor-pointer transition ${isSelected ? 'border-blue-500 bg-blue-50' : 'bg-white border-slate-200 hover:border-blue-300'}">
+                            <input type="radio" name="cbt_ans" value="${huruf}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="hidden">
+                            <span class="font-black text-xs mb-1 ${isSelected ? 'bg-blue-600' : 'bg-slate-500'} text-white w-7 h-7 flex items-center justify-center rounded-md">${huruf}</span>
+                            ${opsiContent}
+                        </label>`;
+                    } else {
+                        htmlOpsi += `<label class="flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSelected ? 'border-blue-500 bg-blue-50' : 'bg-white border-slate-200 hover:border-blue-300'}">
+                            <input type="radio" name="cbt_ans" value="${huruf}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="hidden">
+                            <span class="font-black text-xs md:text-sm mr-3 ${isSelected ? 'bg-blue-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 flex items-center justify-center rounded-md flex-shrink-0">${huruf}</span>
+                            ${opsiContent}
+                        </label>`;
+                    }
+                });
+                htmlOpsi += `</div>`;
+            }
+            else if (q.tipe === 'PGK') {
+                let savedArr = savedAns ? savedAns.split(',') : [];
+                const isImgOpsi = opsiArray.some(v => v.startsWith('http') && v.includes('drive.google'));
+                htmlOpsi += `<p class="text-[10px] text-purple-600 font-bold mb-2"><i class="fa fa-check-square mr-1"></i>Pilih satu atau lebih jawaban yang benar</p>`;
+                htmlOpsi += `<div class="${isImgOpsi ? 'grid grid-cols-2 gap-2' : 'space-y-2 md:space-y-3'}">`;
+                opsiArray.forEach((val, idx) => {
+                    let huruf = abjad[idx] || '';
+                    let isSel = savedArr.includes(huruf);
+                    let opsiContent = renderOpsiContent(val);
+                    if (isImgOpsi) {
+                        htmlOpsi += `<label class="pgk-lbl flex flex-col items-center p-2 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'bg-white border-slate-200'}">
+                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
+                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
+                                class="cbt-pgk-cb sr-only">
+                            <span class="pgk-b font-black text-xs mb-1 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white w-7 h-7 flex items-center justify-center rounded-md">${huruf}</span>
+                            ${opsiContent}
+                        </label>`;
+                    } else {
+                        htmlOpsi += `<label class="pgk-lbl flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}">
+                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
+                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
+                                class="cbt-pgk-cb sr-only">
+                            <span class="pgk-b font-black text-xs md:text-sm mr-3 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 flex items-center justify-center rounded-md flex-shrink-0">${huruf}</span>
+                            ${opsiContent}
+                        </label>`;
+                    }
+                });
+                htmlOpsi += `</div>`;
+            }
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') {
                 let savedArr = savedAns ? savedAns.split(',') : []; let headers = []; if (q.tipe === 'BS') headers = ['Benar', 'Salah']; else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai']; else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
                 let statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
