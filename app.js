@@ -1,15 +1,45 @@
-// CBT APP ENGINE - Copyright (c) | @spenda-digi
 // ================================================================
-// SPENDA-DIGI-CBT v2026.1 | Copyright 2026 | All Rights Reserved
-// Hak Cipta Dilindungi — Dilarang menjual ulang tanpa izin tertulis
-// ID: U1BFTkRBLURJR0k=
+// SPENDA-DIGI-CBT v2026.1 | Hak Cipta Dilindungi
+// Dilarang menjual ulang tanpa izin. ID: U1BFTkRBLURJR0k=
+// Copyright (c) 2026 @spenda-digi | ALL RIGHTS RESERVED
 // ================================================================
+const _SIG = atob('U1BFTkRBLURJR0ktQ0JULTIwMjY='); // JANGAN DIHAPUS
 const API = "/api";
-const _SIG = atob('U1BFTkRBLURJR0ktQ0JULTIwMjY='); // DO NOT REMOVE
 let activeUser = null; 
-let _isDemoMode = false;
 let currentExam = null; 
 let examTimerInterval = null;
+let _isDemoMode = false;
+
+// Data dummy untuk Demo Mode (admin & siswa)
+const _DEMO = {
+    admin : { id:0, username:'demo',       name:'Demo Sekolah', role:'admin',  kelas:'',   mapel:'', _isDemo:true },
+    siswa : { id:0, username:'demo_siswa', name:'Siswa Demo',   role:'siswa',  kelas:'7A', mapel:'', _isDemo:true },
+    pin   : '0000',
+    examId: 'DEMO-CBT-2026',
+    exam  : { mapel:'DEMO-CBT-2026', durasi: 30 },
+    questions: [
+        { id:1, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Ibukota negara Indonesia adalah...', opsi_json:'Bandung|||Jakarta|||Surabaya|||Yogyakarta', kunci:'B', skor:1, media_path:'' },
+        { id:2, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Berapakah hasil dari 7 × 8?', opsi_json:'48|||54|||56|||64', kunci:'C', skor:1, media_path:'' },
+        { id:3, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Planet terbesar dalam tata surya adalah...', opsi_json:'Mars|||Saturnus|||Jupiter|||Uranus', kunci:'C', skor:1, media_path:'' },
+        { id:4, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Siapa pengarang novel "Laskar Pelangi"?', opsi_json:'Pramoedya Ananta Toer|||Andrea Hirata|||Habiburrahman|||Dee Lestari', kunci:'B', skor:1, media_path:'' },
+        { id:5, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Rumus luas lingkaran dengan jari-jari r adalah...', opsi_json:'2πr|||πr²|||πd|||2πr²', kunci:'B', skor:1, media_path:'' },
+    ],
+    activity: [
+        {id:1,student_name:'Andi Pratama', exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Mengerjakan',score:40, last_seen:'08:15:22 (15 mnt)'},
+        {id:2,student_name:'Budi Santoso', exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Selesai',    score:80, last_seen:'08:45:10 (30 mnt)'},
+        {id:3,student_name:'Citra Dewi',   exam_name:'DEMO-CBT-2026',kelas:'7B',status:'Curang (1x)',score:20, last_seen:'08:20:05 (10 mnt)'},
+    ],
+    results: [
+        {id:1,student_name:'Budi Santoso',mapel:'DEMO-CBT-2026',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'26/5/2026|30 mnt'},
+        {id:2,student_name:'Citra Dewi',  mapel:'DEMO-CBT-2026',kelas:'7B',nilai:40,benar:2,salah:3,detail_jawaban:'[]',tanggal:'26/5/2026|10 mnt'},
+    ],
+    schedules: [{id:1,mapel:'DEMO-CBT-2026',pin:'0000',tanggal:'2026-05-26|08:00',durasi:30,status:'Aktif',kelas:''}],
+    users: [
+        {id:1,username:'siswa01',name:'Andi Pratama', role:'siswa',kelas:'7A',mapel:''},
+        {id:2,username:'siswa02',name:'Budi Santoso', role:'siswa',kelas:'7A',mapel:''},
+        {id:3,username:'guru01', name:'Pak Budi',     role:'guru', kelas:'',  mapel:'MTK'},
+    ]
+};
 let cbtQuestions = []; 
 let cbtAnswers = []; 
 let cbtCurrentIndex = 0; 
@@ -69,79 +99,101 @@ async function prosesLogin() {
     } catch (e) { Swal.fire('Error', 'Server mati.', 'error'); }
 }
 
-
 // ================================================================
-// DEMO MODE FUNCTIONS
+// DEMO MODE — ADMIN
 // ================================================================
 function masukDemo() {
     _isDemoMode = true;
-    activeUser = { id: 0, username: 'demo', name: 'Demo Sekolah', role: 'admin', kelas: '', mapel: '', _isDemo: true };
+    activeUser = _DEMO.admin;
+    window.allActivityData    = _DEMO.activity;
+    window.allResultsData     = _DEMO.results;
+    window.filteredResultsData= _DEMO.results;
+    window.allSchedulesData   = _DEMO.schedules;
     document.getElementById('demo-banner').classList.remove('hidden');
     document.getElementById('view-login').classList.add('hidden');
     document.getElementById('view-admin').classList.remove('hidden');
-    document.getElementById('role-badge').innerText = 'DEMO MODE';
-    document.getElementById('user-name-display').innerText = 'Demo Sekolah';
-    // Inject demo data
-    window.allActivityData = [
-        {id:1,student_name:'Andi Pratama',exam_name:'MTK-7A-DEMO',kelas:'7A',status:'Mengerjakan',score:40,last_seen:'08:15:22 (35 mnt)'},
-        {id:2,student_name:'Budi Santoso',exam_name:'MTK-7A-DEMO',kelas:'7A',status:'Selesai',score:80,last_seen:'08:55:10 (55 mnt)'},
-        {id:3,student_name:'Citra Dewi',exam_name:'MTK-7A-DEMO',kelas:'7B',status:'Curang (1x)',score:30,last_seen:'08:20:05 (20 mnt)'},
-    ];
-    window.allResultsData = [
-        {id:1,student_name:'Budi Santoso',mapel:'MTK-7A-DEMO',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'26/5/2026|55 mnt'},
-        {id:2,student_name:'Citra Dewi',mapel:'MTK-7A-DEMO',kelas:'7B',nilai:40,benar:2,salah:3,detail_jawaban:'[]',tanggal:'26/5/2026|20 mnt'},
-    ];
-    window.filteredResultsData = window.allResultsData;
-    window.allSchedulesData = [
-        {id:1,mapel:'MTK-7A-DEMO',pin:'1234',tanggal:'2026-05-26|08:00',durasi:60,status:'Aktif',kelas:'7A'},
-    ];
-    showPage('dashboard');
-    renderActivityTable();
-    Swal.fire({ icon:'info', title:'Mode Demo Aktif', 
-        html:'<p class="text-sm">Anda sedang menggunakan <b>data contoh</b>.<br>Semua fitur bisa dicoba. Perubahan <b>tidak tersimpan</b> ke database asli.</p>',
-        confirmButtonColor:'#D97706', confirmButtonText:'Mengerti, Lanjutkan!' });
+    const rb = document.getElementById('role-badge');
+    if (rb) { rb.classList.remove('hidden'); rb.innerText = '⚡ DEMO'; }
+    const un = document.getElementById('user-name-display');
+    if (un) un.innerText = 'Demo Sekolah';
+    loadMaster(); showPage('dashboard');
+    Swal.fire({ icon:'info', title:'Mode Demo Admin', 
+        html:`<p class="text-sm">Semua fitur aktif dengan <b>data contoh</b>.<br>Perubahan <b>tidak</b> tersimpan ke database asli.<br><br>
+        📌 PIN ujian demo: <b class="text-blue-600">0000</b></p>`,
+        confirmButtonColor:'#D97706', confirmButtonText:'Mengerti!' });
+}
+
+// ================================================================
+// DEMO MODE — SISWA (langsung coba ujian)
+// ================================================================
+async function masukDemoSiswa() {
+    _isDemoMode = true;
+    activeUser = _DEMO.siswa;
+    document.getElementById('demo-banner').classList.remove('hidden');
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('view-siswa-token').classList.remove('hidden');
+    const nw = document.getElementById('nama-siswa-welcome');
+    if (nw) nw.innerText = _DEMO.siswa.name;
+    await Swal.fire({ icon:'info', title:'Mode Demo Siswa',
+        html:`<p class="text-sm">Anda akan mencoba ujian dengan <b>5 soal contoh</b>.<br>Hasil tidak tersimpan ke database asli.<br><br>
+        ➡️ Masukkan PIN: <b class="text-blue-600 text-lg">0000</b></p>`,
+        confirmButtonColor:'#059669', confirmButtonText:'Lanjut, Coba Ujian!' });
+    // Auto-fill PIN
+    const pinEl = document.getElementById('pin-input');
+    if (pinEl) { pinEl.value = '0000'; }
 }
 
 function keluarDemo() {
     _isDemoMode = false;
-    activeUser = null;
+    activeUser  = null;
+    currentExam = null;
     document.getElementById('demo-banner').classList.add('hidden');
-    document.getElementById('view-admin').classList.add('hidden');
+    ['view-admin','view-siswa-token','view-siswa-ujian'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
     document.getElementById('view-login').classList.remove('hidden');
     window.allActivityData = [];
-    window.allResultsData = [];
+    window.allResultsData  = [];
     window.filteredResultsData = [];
 }
 
-// Override fetch untuk demo mode — semua write operation jadi no-op
-const _origFetch = window.fetch;
+// ================================================================
+// INTERCEPT FETCH — semua request di demo mode tidak ke DB asli
+// ================================================================
+const _origFetch = window.fetch.bind(window);
 window.fetch = async function(url, opts) {
     if (!_isDemoMode) return _origFetch(url, opts);
-    const method = (opts && opts.method || 'GET').toUpperCase();
-    // Read endpoints: return demo data
-    if (method === 'GET') {
-        if (url.includes('/admin/users')) return new Response(JSON.stringify([
-            {id:1,username:'siswa01',name:'Andi Pratama',role:'siswa',kelas:'7A',mapel:''},
-            {id:2,username:'guru01',name:'Pak Budi',role:'guru',kelas:'',mapel:'MTK'},
-        ]), {status:200,headers:{'Content-Type':'application/json'}});
-        if (url.includes('/admin/questions')) return new Response(JSON.stringify([
-            {id:1,exam_id:'MTK-7A-DEMO',tipe:'PG',tanya:'Berapakah 5 × 8?',opsi_json:'30|||35|||40|||45',kunci:'C',skor:2},
-            {id:2,exam_id:'MTK-7A-DEMO',tipe:'ISIAN',tanya:'Hasil 12 + 8 = ...',opsi_json:'',kunci:'20',skor:2},
-        ]), {status:200,headers:{'Content-Type':'application/json'}});
-        if (url.includes('/admin/available-exams')) return new Response(JSON.stringify(['MTK-7A-DEMO']), {status:200,headers:{'Content-Type':'application/json'}});
-        if (url.includes('/admin/schedules')) return new Response(JSON.stringify([
-            {id:1,mapel:'MTK-7A-DEMO',pin:'1234',tanggal:'2026-05-26|08:00',durasi:60,status:'Aktif',kelas:'7A'},
-        ]), {status:200,headers:{'Content-Type':'application/json'}});
-        if (url.includes('/admin/results')) return new Response(JSON.stringify(window.allResultsData||[]), {status:200,headers:{'Content-Type':'application/json'}});
-        if (url.includes('/admin/recent-activity')) return new Response(JSON.stringify(window.allActivityData||[]), {status:200,headers:{'Content-Type':'application/json'}});
-        if (url.includes('/admin/stats')) return new Response(JSON.stringify({total_siswa:30,total_guru:5}), {status:200,headers:{'Content-Type':'application/json'}});
+    const method = ((opts && opts.method) || 'GET').toUpperCase();
+    const ok = (data) => new Response(JSON.stringify(data), { status:200, headers:{'Content-Type':'application/json'} });
+
+    // Login demo: bypass normal auth
+    if (url.includes('/api/login')) return ok({status:'success', user: _DEMO.admin});
+
+    // CEK PIN demo
+    if (url.includes('/siswa/cek-pin')) {
+        const body = opts && opts.body ? JSON.parse(opts.body) : {};
+        if (body.pin === '0000') return ok({status:'success', exam: _DEMO.exam});
+        return ok({status:'error', message:'PIN demo yang benar adalah 0000'});
     }
-    // All write operations: return success without hitting DB
-    return new Response(JSON.stringify({status:'success', _demo:true}), {status:200,headers:{'Content-Type':'application/json'}});
+    // SOAL demo
+    if (url.includes('/siswa/get-soal')) return ok({questions: _DEMO.questions});
+
+    // READ endpoints
+    if (method === 'GET') {
+        if (url.includes('/admin/users'))           return ok(_DEMO.users);
+        if (url.includes('/admin/questions'))        return ok(_DEMO.questions);
+        if (url.includes('/admin/available-exams'))  return ok([_DEMO.examId]);
+        if (url.includes('/admin/schedules'))        return ok(_DEMO.schedules);
+        if (url.includes('/admin/results'))          return ok(_DEMO.results);
+        if (url.includes('/admin/recent-activity'))  return ok(_DEMO.activity);
+        if (url.includes('/admin/stats'))            return ok({total_siswa:30, total_guru:5});
+    }
+    // Semua WRITE → success tapi tidak ke DB
+    return ok({status:'success', _demo:true, imported:1});
 };
 
 
-function logout() { location.reload(); }
 function saveToLocal() { if(currentExam && activeUser) localStorage.setItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`, JSON.stringify(cbtAnswers)); }
 
 function loadFromLocal() { 
