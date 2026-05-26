@@ -193,6 +193,17 @@ app.get('/api/admin/available-exams', async (req, res) => {
 app.get('/api/admin/questions', async (req, res) => { const { data } = await supabase.from('questions').select('*').order('id', {ascending: true}); res.json(data || []); });
 app.post('/api/admin/add-soal-bulk', async (req, res) => { await supabase.from('questions').insert(req.body.questions); res.json({status: "success"}); });
 app.delete('/api/admin/delete-question/:id', async (req, res) => { await supabase.from('questions').delete().eq('id', req.params.id); res.json({status: "success"}); });
+app.put('/api/admin/update-soal', async (req, res) => {
+    // Guru/Admin koreksi kunci atau konten soal
+    const { id, kunci, tanya, opsi_json } = req.body;
+    const update = {};
+    if (kunci !== undefined) update.kunci = kunci;
+    if (tanya !== undefined) update.tanya = tanya;
+    if (opsi_json !== undefined) update.opsi_json = opsi_json;
+    const { error } = await supabase.from('questions').update(update).eq('id', id);
+    if (error) return res.json({status:"error", message: error.message});
+    res.json({status:"success"});
+});
 app.delete('/api/admin/delete-exam/:exam_id', async (req, res) => { await supabase.from('questions').delete().eq('exam_id', req.params.exam_id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.from('questions').delete().neq('id', 0); res.json({status: "success"}); });
 

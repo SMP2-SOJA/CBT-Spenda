@@ -134,7 +134,14 @@ async function prosesLogin() {
         if (data.status === "success") {
             activeUser = data.user; Swal.close(); document.getElementById('view-login').classList.add('hidden');
             if (activeUser.role.toLowerCase() === 'siswa') { document.getElementById('view-siswa-token').classList.remove('hidden'); document.getElementById('nama-siswa-welcome').innerText = activeUser.name; checkPendingSubmit(false); } 
-            else { document.getElementById('view-admin').classList.remove('hidden'); if (activeUser.role.toLowerCase() === 'guru') { document.getElementById('menu-users').classList.add('hidden'); document.getElementById('menu-jadwal').classList.add('hidden'); document.getElementById('menu-banksoal').classList.add('hidden'); document.getElementById('role-badge').classList.remove('hidden'); document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`; } loadMaster(); showPage('dashboard'); }
+            else { document.getElementById('view-admin').classList.remove('hidden'); if (activeUser.role.toLowerCase() === 'guru') {
+    document.getElementById('menu-users').classList.add('hidden');
+    document.getElementById('menu-jadwal').classList.add('hidden');
+    // Guru bisa akses banksoal untuk koreksi soal mapelnya
+    document.getElementById('menu-banksoal').classList.remove('hidden');
+    document.getElementById('role-badge').classList.remove('hidden');
+    document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`;
+} loadMaster(); showPage('dashboard'); }
         } else Swal.fire('Gagal', data.message, 'error');
     } catch (e) { Swal.fire('Error', 'Server mati.', 'error'); }
 }
@@ -315,111 +322,19 @@ function getLiveScore() {
         let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1; 
         if (q.kunci && q.kunci.trim() === '') {} 
         else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { totalSkorDiperoleh += bobot; } } 
-        else if (q.tipe === 'PGK') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); if(kArr.length > 0) { let betul = 0; aArr.forEach(a => { if(kArr.includes(a)) betul++; }); if(betul === kArr.length && aArr.length === kArr.length) { totalSkorDiperoleh += bobot; } else if(betul > 0) { totalSkorDiperoleh += (betul / kArr.length) * bobot; } } } 
-        else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let correct = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correct++; } } if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
-        else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let correct = 0; kArr.forEach(k => { if(aArr.includes(k)) correct++; }); if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
-        else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let match = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) match++; }); if(match === kWords.length) { totalSkorDiperoleh += bobot; } else if(match > 0) { totalSkorDiperoleh += (match / kWords.length) * bobot; } } }
-    });
-    return totalSkorMaksimal > 0 ? Math.round((totalSkorDiperoleh / totalSkorMaksimal) * 100) : 0;
-}
-
-setInterval(() => {
-    if (isExamActive && navigator.onLine) {
-        let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey);
-        let dMins = 0, dSecs = 0; if (start) { let diffMs = Date.now() - parseInt(start); dMins = Math.floor(diffMs / 60000); dSecs = Math.floor((diffMs % 60000) / 1000); }
-        let terjawab = 0; let totalSoal = cbtQuestions.length;
-        for(let i=0; i<totalSoal; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
-        let durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; let lScore = getLiveScore(); 
-        
-        fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore, kelas: activeUser.kelas || '-'}) }).catch(e=>console.log(e)); 
-    }
-}, 15000);
-
-function renderCbtGrid() {
-    let html = "";
-    for(let i = 0; i < cbtQuestions.length; i++) {
-        let statusClass = "bg-white text-slate-600 border-slate-300"; let isAnswered = false;
-        if (cbtAnswers[i].ans !== "") { if (cbtQuestions[i].tipe === 'BS' || cbtQuestions[i].tipe === 'TS' || cbtQuestions[i].tipe === 'SIFAT') { isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; } else if(cbtQuestions[i].tipe === 'JODOH') { let h = (cbtQuestions[i].kunci||"").split(',').length; isAnswered = cbtAnswers[i].ans.split(',').length >= h; } else { isAnswered = true; } }
-        if(isAnswered) statusClass = "bg-blue-600 text-white border-blue-700 shadow-md"; 
-        let activeRing = (i === cbtCurrentIndex) ? "ring-4 ring-blue-300 scale-105" : "";
-        html += `<button onclick="showCbtQuestion(${i}); if(window.innerWidth < 768) toggleCbtNav();" class="w-full aspect-square flex items-center justify-center rounded-lg font-black text-xs md:text-sm border-2 transition transform active:scale-95 ${statusClass} ${activeRing}">${i+1}</button>`;
-    } document.getElementById('cbt-grid').innerHTML = html;
-}
-
-function showCbtQuestion(index) {
-    cbtCurrentIndex = index; const q = cbtQuestions[index]; const savedAns = cbtAnswers[index].ans || "";
-    document.getElementById('cbt-no-soal').innerText = index + 1; document.getElementById('cbt-tipe-soal').innerText = q.tipe;
-    const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
-    divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
-
-    // ── FIX: Gunakan media_path ATAU gform_url untuk gambar ──
-    let imgUrl = (q.media_path && q.media_path.startsWith('http')) ? q.media_path
-               : (q.gform_url  && q.gform_url.startsWith('http') && q.tipe !== 'GFORM') ? q.gform_url
-               : '';
-    let fallbackUrl = '';
-    if (imgUrl && imgUrl.includes('drive.google.com')) {
-        const idMatch = imgUrl.match(/[?&]id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/);
-        if (idMatch && idMatch[1]) {
-            imgUrl = `https://lh3.googleusercontent.com/d/${idMatch[1]}=s1200`;
-            fallbackUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
-        }
-    }
-    if (imgUrl) {
-        divMedia.innerHTML = `<div class="mb-3 md:mb-4 text-center">
-            <img src="${imgUrl}" ${fallbackUrl ? `onerror="if(this.src!=='${fallbackUrl}')this.src='${fallbackUrl}';"` : ''}
-            class="w-auto max-w-full h-auto max-h-[55vh] rounded-xl border shadow-sm mx-auto object-contain"
-            alt="Gambar soal">
-        </div>`;
-    }
-
-    if(q.tipe === 'GFORM') { divOpsi.innerHTML = `<div class="gform-container"><iframe src="${q.tanya || q.gform_url}"></iframe></div>`; cbtSaveAnswer("COMPLETED");
-    } else {
-        let htmlOpsi = "";
-        let opsiArray = q.opsi_json ? q.opsi_json.split(/\|\|\|/).map(o=>o.trim()).filter(o=>o) : [];
-        const abjad = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-        if (q.tipe === 'JODOH') {
-            let lines = (q.tanya||"").split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(l => l); let premises = []; let mainTanya = []; lines.forEach(l => { if (/^\d+[\.\)]\s?/.test(l)) { premises.push(l); } else { mainTanya.push(l); } }); divTanya.innerHTML = formatMath(mainTanya.join('<br>'));
-            let totalPairs = q.kunci ? q.kunci.split(',').length : (premises.length || 4); let savedArr = savedAns ? savedAns.split(',') : [];
-            htmlOpsi += `<div class="bg-blue-50 p-3 md:p-4 rounded-xl border border-blue-200 mt-2 mb-3 md:mb-4"><p class="text-[10px] md:text-xs font-bold text-blue-800 mb-2 md:mb-3"><i class="fa fa-mouse-pointer"></i> PILIH PASANGAN JAWABAN YANG TEPAT:</p><div class="space-y-2 md:space-y-3">`;
-            for(let i=0; i<totalPairs; i++) { let currentSaved = savedArr[i] ? savedArr[i].replace(/[0-9]/g, '') : ''; let labelText = premises[i] ? premises[i] : `Pertanyaan/Pasangan Nomor ${i+1}`; htmlOpsi += `<div class="flex flex-col md:flex-row items-start md:items-center justify-between p-2 md:p-3 bg-white border border-blue-100 rounded-lg shadow-sm gap-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm md:w-1/2 leading-snug">${formatMath(labelText)}</span><select class="jodoh-select p-2 md:p-3 border-2 border-emerald-300 rounded-lg text-[10px] md:text-sm font-bold text-emerald-800 bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-1/2 cursor-pointer" onchange="cbtSaveJodoh(${totalPairs})"><option value="">- Silakan Pilih Jawaban -</option>`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx]; let isSel = (currentSaved === huruf) ? "selected" : ""; htmlOpsi += `<option value="${huruf}" ${isSel}>${formatMath(val)}</option>`; }); htmlOpsi += `</select></div>`; } htmlOpsi += `</div></div>`;
-        } else {
-            // ── FIX layout: tanya dalam container rapi ──
-            divTanya.innerHTML = `<div class="text-sm md:text-base leading-relaxed text-slate-800">${formatMath(q.tanya || "")}</div>`;
-
-            // ── FIX: Jika PG/PGK tanpa opsi teks → tampilkan tombol A B C D E ──
-            // (baik karena ada gambar MAUPUN karena opsi berupa rumus yang tidak terbaca)
-            if ((q.tipe === 'PG' || q.tipe === 'PGK') && opsiArray.length === 0) {
-                opsiArray = ['A', 'B', 'C', 'D'];
-                if (imgUrl) {
-                    htmlOpsi += `<p class="text-[10px] text-slate-400 italic mb-2"><i class="fa fa-info-circle mr-1"></i>Pilihan jawaban ada pada gambar soal di atas</p>`;
-                }
-            }
-
-            if (q.tipe === 'PG') {
-                htmlOpsi += `<div class="space-y-2 md:space-y-3">`;
-                opsiArray.forEach((val, idx) => {
-                    let huruf = abjad[idx] || ''; let isChecked = (savedAns === huruf) ? "checked" : "";
-                    let teksOpsi = (val === huruf) ? '' : formatMath(val);
-                    let isSelected = isChecked === "checked";
-                    htmlOpsi += `<label class="flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-300'}">
-                        <input type="radio" name="cbt_ans" value="${huruf}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="hidden">
-                        <span class="font-black text-xs md:text-sm mr-3 bg-blue-600 text-white min-w-[28px] h-7 md:min-w-[32px] md:h-8 flex items-center justify-center rounded-md shadow-sm flex-shrink-0 px-1">${huruf}</span>
-                        ${teksOpsi ? `<span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${teksOpsi}</span>` : `<span class="text-xs text-slate-400 italic">—</span>`}
-                    </label>`;
-                });
-                htmlOpsi += `</div>`;
-            }
+            else if (q.tipe === 'PGK') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0) { let betul=0; aArr.forEach(a=>{if(kArr.includes(a))betul++;}); if(betul===kArr.length&&aArr.length===kArr.length){totalSkorDiperoleh+=bobot;}else if(betul>0){totalSkorDiperoleh+=(betul/kArr.length)*bobot;} } } 
             else if (q.tipe === 'PGK') {
                 let savedArr = savedAns ? savedAns.split(',') : [];
-                htmlOpsi += `<p class="text-[10px] text-purple-600 font-bold mb-2"><i class="fa fa-check-square mr-1"></i>Boleh pilih lebih dari satu jawaban</p><div class="space-y-2 md:space-y-3">`;
+                htmlOpsi += `<p class="text-[10px] text-purple-600 font-bold mb-2 flex items-center gap-1"><i class="fa fa-check-square"></i> Pilih satu atau lebih jawaban yang benar</p><div class="space-y-2 md:space-y-3">`;
                 opsiArray.forEach((val, idx) => {
-                    let huruf = abjad[idx] || ''; let isChecked = savedArr.includes(huruf) ? "checked" : "";
+                    let huruf  = abjad[idx] || '';
+                    let isSel  = savedArr.includes(huruf);
                     let teksOpsi = (val === huruf) ? '' : formatMath(val);
-                    let isSelected = isChecked === "checked";
-                    htmlOpsi += `<label class="flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white hover:border-purple-300'}">
-                        <input type="checkbox" value="${huruf}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb hidden">
-                        <span class="font-black text-xs md:text-sm mr-3 ${isSelected ? 'bg-purple-600' : 'bg-slate-600'} text-white min-w-[28px] h-7 md:min-w-[32px] md:h-8 flex items-center justify-center rounded-md shadow-sm flex-shrink-0 px-1">${huruf}</span>
+                    htmlOpsi += `<label class="pgk-lbl flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}">
+                        <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
+                            onchange="cbtSaveCheckbox(); var l=this.closest('label'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
+                            class="cbt-pgk-cb sr-only">
+                        <span class="pgk-b font-black text-xs md:text-sm mr-3 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 md:min-w-[32px] md:h-8 flex items-center justify-center rounded-md shadow-sm flex-shrink-0 px-1">${huruf}</span>
                         ${teksOpsi ? `<span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${teksOpsi}</span>` : `<span class="text-xs text-slate-400 italic">—</span>`}
                     </label>`;
                 });
@@ -427,7 +342,6 @@ function showCbtQuestion(index) {
             }
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') {
                 let savedArr = savedAns ? savedAns.split(',') : []; let headers = []; if (q.tipe === 'BS') headers = ['Benar', 'Salah']; else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai']; else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
-                let statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
                 htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-[10px] md:text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-3 md:p-4 border-b">Pernyataan</th>`;
                 headers.forEach(h => htmlOpsi += `<th class="p-3 md:p-4 border-b text-center font-bold min-w-[60px] md:min-w-[80px] leading-tight text-[9px] md:text-xs">${formatMath(h)}</th>`); htmlOpsi += `</tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
                 statements.forEach((val, idx) => { htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-3 md:p-4 text-slate-700 font-medium whitespace-normal min-w-[150px] md:min-w-[200px] leading-snug">${formatMath(val)}</td>`; headers.forEach((h, hIdx) => { let huruf = abjad[hIdx]; let isChecked = savedArr[idx] === huruf ? 'checked' : ''; htmlOpsi += `<td class="p-3 md:p-4 text-center border-l"><input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked} onchange="cbtSaveMatrix(${statements.length})" class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer"></td>`; }); htmlOpsi += `</tr>`; }); htmlOpsi += `</tbody></table></div>`;
@@ -653,8 +567,42 @@ async function loadJadwal() {
 async function saveJadwal() { const checkedBoxes = Array.from(document.querySelectorAll('input[name="j_mapel_cb"]:checked')).map(cb => cb.value); if (checkedBoxes.length === 0) return Swal.fire('Oops', 'Centang minimal 1 Mata Pelajaran!', 'warning'); const mapel = checkedBoxes.join(', '); const tgl = document.getElementById('j_tgl').value; const jam = document.getElementById('j_jam').value; const durasi = document.getElementById('j_durasi').value; if(!tgl || !jam || !durasi) return Swal.fire('Oops', 'Lengkapi seluruh field!', 'warning'); await fetch(API + '/admin/add-schedule', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mapel, tanggal: `${tgl}|${jam}`, durasi }) }); loadJadwal(); }
 function editJadwal(id) { const j = window.allSchedulesData.find(x => x.id === id); if(!j) return; let tglJamArr = j.tanggal ? j.tanggal.split('|') : []; let tgl = tglJamArr[0] || ''; let jam = tglJamArr[1] || ''; Swal.fire({ title: 'Edit Jadwal', html: `<div class="space-y-3 text-left"><div><label class="text-[10px] md:text-xs font-bold text-slate-500">Mapel / Kode Soal</label><input id=\"e_j_mapel\" class=\"w-full p-2 border rounded bg-slate-100 font-bold\" value=\"${j.mapel}\" readonly></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Tanggal Mulai</label><input type=\"date\" id=\"e_j_tgl\" class=\"w-full p-2 border rounded\" value=\"${tgl}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Jam Mulai</label><input type=\"time\" id=\"e_j_jam\" class=\"w-full p-2 border rounded\" value=\"${jam}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Durasi</label><input type=\"number\" id=\"e_j_durasi\" class=\"w-full p-2 border rounded font-bold\" value=\"${j.durasi}\"></div><div><label class=\"text-[10px] md:text-xs font-bold text-slate-500\">Status</label><select id=\"e_j_status\" class=\"w-full p-2 border rounded font-bold text-blue-700\"><option value=\"Aktif\" ${j.status==='Aktif'?'selected':''}>Aktif</option><option value=\"Ditutup\" ${j.status!=='Aktif'?'selected':''}>Ditutup</option></select></div></div>`, showCancelButton: true, preConfirm: () => { return { id: j.id, mapel: document.getElementById('e_j_mapel').value, tanggal: document.getElementById('e_j_tgl').value + '|' + document.getElementById('e_j_jam').value, durasi: document.getElementById('e_j_durasi').value, status: document.getElementById('e_j_status').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/update-schedule', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadJadwal(); } }); }
 
-async function loadBankSoal() { const res = await fetch(API + '/admin/questions' + getAuthParams()); const data = await res.json(); if (!data || data.length === 0) { document.getElementById('banksoal-container').innerHTML = '<div class="text-center p-8 bg-white border rounded-xl">Belum ada soal.</div>'; return; } const groups = {}; data.forEach(q => { if(!groups[q.exam_id]) groups[q.exam_id] = []; groups[q.exam_id].push(q); }); let html = ''; for (const [examId, questions] of Object.entries(groups)) { let tableRows = questions.map(q => { let det = q.tipe === 'GFORM' ? `Link G-Form: ${q.tanya || q.gform_url}` : (q.tanya ? formatMath(q.tanya).substring(0,80)+'...' : '-'); det += `<br><span class="text-[10px] text-emerald-600 font-bold p-1 bg-emerald-50 rounded">KUNCI: ${formatMath(q.kunci) || '-'}</span>`; return `<tr class="hover:bg-slate-50 border-b"><td class="p-2 w-20"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] font-black">${q.tipe}</span></td><td class="p-2 text-xs">${det}</td><td class="p-2 text-right w-24"><button onclick="hapusSoal(${q.id})" class="text-red-500 border p-2 rounded-lg"><i class="fa fa-trash"></i></button></td></tr>`; }).join(''); html += `<div class="mb-3 bg-white border rounded-xl overflow-hidden"><div class="p-3 bg-slate-50 font-bold text-slate-700 flex justify-between items-center"><button onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')" class="flex-1 text-left"><i class="fa fa-folder-open text-blue-500 mr-2"></i> ${examId} (${questions.length} Soal)</button><button onclick="hapusPaketSoal('${examId.replace(/'/g, "\\'")}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">Hapus</button></div><div id="soal-${examId}" class="hidden overflow-x-auto"><table class="w-full text-left text-xs"><tbody class="divide-y">${tableRows}</tbody></table></div></div>`; } document.getElementById('banksoal-container').innerHTML = html; }
+async function loadBankSoal() {
+    const res = await fetch(API + '/admin/questions' + getAuthParams());
+    let data = await res.json();
+    const isGuru = activeUser && activeUser.role.toLowerCase() === 'guru';
+    if (isGuru && activeUser.mapel) {
+        const gm = activeUser.mapel.split(',').map(m => m.trim().toLowerCase());
+        data = (data||[]).filter(q => { const e=(q.exam_id||'').toLowerCase(); return gm.some(m=>e.includes(m.replace(/[^a-z]/gi,''))); });
+    }
+    const empty_msg = isGuru ? 'Belum ada soal untuk mapel Anda.' : 'Belum ada soal.'; if (!data || data.length === 0) { document.getElementById('banksoal-container').innerHTML = `<div class="text-center p-8 bg-white border rounded-xl text-slate-400"><i class="fa fa-inbox text-3xl mb-2 block"></i>${empty_msg}</div>`; return; } const groups = {}; data.forEach(q => { if(!groups[q.exam_id]) groups[q.exam_id] = []; groups[q.exam_id].push(q); }); let html = ''; for (const [examId, questions] of Object.entries(groups)) { let tableRows = questions.map(q => { let det = q.tipe === 'GFORM' ? `Link G-Form: ${q.tanya || q.gform_url}` : (q.tanya ? formatMath(q.tanya).substring(0,80)+'...' : '-'); det += `<br><span class="text-[10px] text-emerald-600 font-bold p-1 bg-emerald-50 rounded">KUNCI: ${formatMath(q.kunci) || '-'}</span>`; let kBtn = `<button onclick='koreksiSoal(${JSON.stringify(q)})' class="bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded text-[9px] font-bold hover:bg-amber-200 mr-1"><i class="fa fa-edit mr-1"></i>Koreksi</button>`;
+            let hBtn = !isGuru ? `<button onclick="hapusSoal(${q.id})" class="text-red-400 border p-1.5 rounded-lg text-[10px]"><i class="fa fa-trash"></i></button>` : '';
+            return `<tr class="hover:bg-slate-50 border-b"><td class="p-2 w-16"><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-black">${q.tipe}</span></td><td class="p-2 text-xs">${det}</td><td class="p-2 text-right w-28">${kBtn}${hBtn}</td></tr>`; }).join(''); html += `<div class="mb-3 bg-white border rounded-xl overflow-hidden"><div class="p-3 bg-slate-50 font-bold text-slate-700 flex justify-between items-center"><button onclick="document.getElementById('soal-${examId}').classList.toggle('hidden')" class="flex-1 text-left"><i class="fa fa-folder-open text-blue-500 mr-2"></i> ${examId} (${questions.length} Soal)</button><button onclick="hapusPaketSoal('${examId.replace(/'/g, "\\'")}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">Hapus</button></div><div id="soal-${examId}" class="hidden overflow-x-auto"><table class="w-full text-left text-xs"><tbody class="divide-y">${tableRows}</tbody></table></div></div>`; } document.getElementById('banksoal-container').innerHTML = html; }
 let questionCount = 1;
+
+async function koreksiSoal(q) {
+    const opsiArr = q.opsi_json ? q.opsi_json.split('|||') : [];
+    const opsiHtml = opsiArr.map((o,i) => `<p class="text-[11px] text-slate-600 py-1 border-b"><span class="font-bold text-blue-600 mr-2">${['A','B','C','D','E'][i]}.</span>${o}</p>`).join('');
+    const {value:kunciBaru} = await Swal.fire({
+        title:'✏️ Koreksi Soal', width:'90%',
+        html:`<div class="text-left text-sm">
+            <p class="font-bold text-slate-600 mb-1 text-xs">Pertanyaan:</p>
+            <div class="bg-slate-50 p-2 rounded text-xs text-slate-700 leading-relaxed mb-2">${(q.tanya||'').substring(0,200)}</div>
+            ${opsiHtml ? `<p class="font-bold text-slate-600 mb-1 text-xs">Pilihan:</p>${opsiHtml}` : ''}
+            <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <label class="text-xs font-bold text-amber-800 block mb-1">Kunci Jawaban (PG=A, PGK=A,C, BS=B,S):</label>
+                <input id="kunci-baru" class="w-full p-2 border-2 border-amber-400 rounded-lg text-sm font-bold text-center uppercase focus:outline-none" value="${q.kunci||''}" placeholder="Ketik kunci jawaban...">
+            </div>
+        </div>`,
+        showCancelButton:true, confirmButtonText:'💾 Simpan Kunci', cancelButtonText:'Batal', confirmButtonColor:'#D97706',
+        preConfirm:() => document.getElementById('kunci-baru').value.trim().toUpperCase()
+    });
+    if (kunciBaru === undefined) return;
+    const r = await fetch(API+'/admin/update-soal', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:q.id, kunci:kunciBaru})});
+    const d = await r.json();
+    if (d.status === 'success') { loadBankSoal(); Swal.fire('Tersimpan!', `Kunci soal diperbarui: ${kunciBaru}`, 'success'); }
+    else Swal.fire('Gagal', d.message||'Error server', 'error');
+}
 function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border relative mt-4" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-7 h-7 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah</option><option value="TS">9 - TS (Tabel Sesuai)</option><option value="SIFAT">10 - SIFAT</option><option value="GFORM">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500">LINK DRIVE GAMBAR</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI (Pemisah |||)</label><input type="text" class="q-opsi w-full p-2 border rounded-lg text-xs"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); }
 async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return; const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); location.reload(); }
 
@@ -662,7 +610,10 @@ async function loadUsers() { const res = await fetch(API + '/admin/users'); cons
 function tambahUserManual() { Swal.fire({ title: 'Tambah User', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama</label><input id="a_name" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="a_user" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="a_pass" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Role</label><select id="a_role" class="w-full p-2 border rounded"><option value="siswa">Siswa</option><option value="guru">Guru</option><option value="admin">Admin</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas</label><input id="a_kelas" class="w-full p-2 border rounded"></div><div><label class="text-xs font-bold text-slate-500">Mapel</label><input id="a_mapel" class="w-full p-2 border rounded"></div></div>`, showCancelButton: true, preConfirm: () => { return { name: document.getElementById('a_name').value, username: document.getElementById('a_user').value, password: document.getElementById('a_pass').value, role: document.getElementById('a_role').value, kelas: document.getElementById('a_kelas').value, mapel: document.getElementById('a_mapel').value } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/add-user', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); } }); }
 function editUser(u) { Swal.fire({ title: 'Edit User', html: `<div class="space-y-3 text-left"><div><label class="text-xs font-bold text-slate-500">Nama</label><input id="e_name" class="w-full p-2 border rounded" value="${u.name}"></div><div><label class="text-xs font-bold text-slate-500">Username</label><input id="e_user" class="w-full p-2 border rounded" value="${u.username}"></div><div><label class="text-xs font-bold text-slate-500">Password</label><input id="e_pass" class="w-full p-2 border rounded" value="${u.password}"></div><div><label class="text-xs font-bold text-slate-500">Role</label><select id="e_role" class="w-full p-2 border rounded"><option value="siswa" ${u.role==='siswa'?'selected':''}>Siswa</option><option value="guru" ${u.role==='guru'?'selected':''}>Guru</option></select></div><div><label class="text-xs font-bold text-slate-500">Kelas</label><input id="e_kelas" class="w-full p-2 border rounded" value="${u.kelas||''}"></div><div><label class="text-xs font-bold text-slate-500">Mapel</label><input id="e_mapel" class="w-full p-2 border rounded" value="${u.mapel||''}"></div></div>`, showCancelButton: true, preConfirm: () => { return { old_username: u.username, name: document.getElementById('e_name').value, username: document.getElementById('e_user').value, password: document.getElementById('e_pass').value, role: u.role, kelas: u.role === 'siswa' ? document.getElementById('e_kelas').value : '', mapel: u.role === 'guru' ? document.getElementById('e_kelas').value : '' } } }).then(async (res) => { if(res.isConfirmed) { await fetch(API+'/admin/update-user', {method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(res.value)}); loadUsers(); } }); }
 
-async function hapusUser(usr) { await fetch(API+'/admin/delete-user/'+usr, {method:'DELETE'}); loadUsers(); }
+async function hapusUser(usr) {
+    const c = await Swal.fire({title:'Hapus Peserta?', html:`Hapus user <b>${usr}</b>?<br><small class="text-slate-400">Data ujian yang sudah disubmit tidak ikut terhapus.</small>`, icon:'warning', showCancelButton:true, confirmButtonText:'Ya, Hapus', confirmButtonColor:'#dc2626'});
+    if (c.isConfirmed) { await fetch(API+'/admin/delete-user/'+encodeURIComponent(usr), {method:'DELETE'}); loadUsers(); Swal.fire('Dihapus','User '+usr+' berhasil dihapus.','success'); }
+}
 async function hapusJadwal(id) { await fetch(API+'/admin/delete-schedule/'+id, {method:'DELETE'}); loadJadwal(); }
 async function hapusPaketSoal(examId) { await fetch(API + '/admin/delete-exam/' + encodeURIComponent(examId), {method: 'DELETE'}); loadBankSoal(); loadJadwal(); }
 async function hapusSoal(id) { await fetch(API + '/admin/delete-question/' + id, {method: 'DELETE'}); loadBankSoal(); }
