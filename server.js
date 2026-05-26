@@ -119,7 +119,11 @@ app.post('/api/siswa/get-soal', async (req, res) => {
         const { exam_id } = req.body; 
         if (!exam_id) return res.json({ questions: [] });
         const mapelArray = exam_id.split(',').map(m => m.trim());
-        const { data, error } = await supabase.from('questions').select('*').in('exam_id', mapelArray); 
+        const { data, error } = await supabase
+            .from('questions')
+            .select('*')
+            .in('exam_id', mapelArray)
+            .order('id', { ascending: true }); // ← Urutan sesuai import
         if (error) throw error;
         res.json({ questions: data || [] }); 
     } catch (err) { res.status(500).json({ error: err.message }); }
