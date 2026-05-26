@@ -187,82 +187,101 @@ app.post('/api/admin/upload-excel', upload.single('file'), async (req, res) => {
 app.post('/api/admin/upload-word', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.json({status: "error", message: "File kosong!"});
-        const examId = (req.body.exam_id || '').trim();
+        const examId   = (req.body.exam_id || '').trim();
+        const filePath = req.file.path;
 
-        // Gunakan convertToHtml agar struktur tabel terbaca di server
-        const result = await mammoth.convertToHtml({path: req.file.path});
-        const html   = result.value;
-        fs.unlinkSync(req.file.path);
-
-        // ── Parser tabel dari HTML (server-side, lebih reliable) ──
-        function getCellText(cellHtml) {
-            // Hapus semua tag HTML, decode entitas dasar
-            let txt = cellHtml
-                .replace(/<img[^>]*>/gi, '[Rumus]')
-                .replace(/<[^>]+>/g, '')
-                .replace(/&nbsp;/g,' ').replace(/&amp;/g,'&')
-                .replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
-            return txt;
+        // ── Helper: ekstrak teks dari XML satu sel ──
+        function parseCellXml(cellXml) {
+            const wTexts = (cellXml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || [])
+                .map(t => t.replace(/<[^>]+>/g, '')).join('').trim();
+            const mTexts = (cellXml.match(/<m:t[^>]*>([^<]*)<\/m:t>/g) || [])
+                .map(t => t.replace(/<[^>]+>/g, '')).join('').trim();
+            if (mTexts && wTexts) return mTexts + ' ' + wTexts;
+            return (mTexts || wTexts).trim();
         }
 
-        // Ekstrak semua baris dari tabel pertama
-        const tableMatch = html.match(/<table[\s\S]*?>([\s\S]*?)<\/table>/i);
-        if (!tableMatch) {
-            // Tidak ada tabel → kembalikan teks mentah untuk fallback di client
-            const rawResult = await mammoth.extractRawText({path: req.file.path});
-            return res.json({status: "no_table", text_mentah: rawResult.value});
+        // ── Coba baca XML dari docx menggunakan JSZip (dependensi mammoth) ──
+        let xmlRows = null;
+        try {
+            const JSZip = require('jszip');
+            const buf   = fs.readFileSync(filePath);
+            const zip   = await JSZip.loadAsync(buf);
+            const xmlFile = zip.file('word/document.xml');
+            if (xmlFile) {
+                const xml = await xmlFile.async('string');
+
+                // Pisah per baris tabel <w:tr>
+                const trRaw = xml.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) || [];
+                xmlRows = trRaw.map(tr => {
+                    // Pisah per sel <w:tc>
+                    const tcRaw = tr.match(/<w:tc[ >][\s\S]*?<\/w:tc>/g) || [];
+                    return tcRaw.map(tc => parseCellXml(tc));
+                }).filter(r => r.length > 0);
+            }
+        } catch(e) {
+            // JSZip tidak tersedia — fallback ke mammoth
         }
 
-        const tableHtml = tableMatch[1];
-        const rowMatches = tableHtml.match(/<tr[\s\S]*?>([\s\S]*?)<\/tr>/gi) || [];
-
-        if (rowMatches.length < 2) {
-            return res.json({status: "error", message: "Tabel kosong atau hanya ada header."});
+        // ── Fallback: gunakan mammoth convertToHtml ──
+        if (!xmlRows) {
+            const mResult = await mammoth.convertToHtml({path: filePath});
+            const html    = mResult.value;
+            const tableM  = html.match(/<table[\s\S]*?>([\s\S]*?)<\/table>/i);
+            if (!tableM) {
+                const rawResult = await mammoth.extractRawText({path: filePath});
+                fs.existsSync(filePath) && fs.unlinkSync(filePath);
+                return res.json({status: "no_table", text_mentah: rawResult.value});
+            }
+            const trRaw2 = tableM[1].match(/<tr[\s\S]*?>([\s\S]*?)<\/tr>/gi) || [];
+            xmlRows = trRaw2.map(tr => {
+                const tcRaw2 = tr.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
+                return tcRaw2.map(tc => {
+                    let txt = tc.replace(/<img[^>]*>/gi, '[Rumus]').replace(/<[^>]+>/g, '')
+                        .replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').trim();
+                    return txt;
+                });
+            }).filter(r => r.some(c => c));
         }
 
-        // Baris pertama = header kolom
-        const headerCells = rowMatches[0].match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
-        const headers = headerCells.map(c => {
-            const inner = c.replace(/<t[dh][^>]*>/i, '').replace(/<\/t[dh]>/i, '');
-            return getCellText(inner).toLowerCase().replace(/\s+/g, '_');
-        });
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
-        const col = (name) => headers.indexOf(name);
+        if (!xmlRows || xmlRows.length < 2) {
+            return res.json({status: "error", message: "Tabel tidak ditemukan atau kosong."});
+        }
+
+        // ── Peta kolom dari header baris pertama ──
+        const headers = xmlRows[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
+        const col = name => headers.indexOf(name);
+
         const idxMap = {
             tipe  : col('tipe'),
             tanya : col('pertanyaan'),
             gambar: col('link_gambar'),
-            a     : col('opsi_a'), b: col('opsi_b'), c: col('opsi_c'),
-            d     : col('opsi_d'), e: col('opsi_e'),
+            a: col('opsi_a'), b: col('opsi_b'), c: col('opsi_c'),
+            d: col('opsi_d'), e: col('opsi_e'),
             kunci : col('kunci'), skor: col('skor'),
         };
 
         if (idxMap.tanya < 0) {
-            return res.json({status: "error", message: "Kolom 'Pertanyaan' tidak ditemukan. Pastikan baris header tabel memiliki kolom: No, Tipe, Pertanyaan, dll."});
+            return res.json({status: "error", message: "Kolom 'Pertanyaan' tidak ditemukan di header tabel."});
         }
 
+        const getC = (row, idx) => idx >= 0 && idx < row.length ? (row[idx] || '').trim() : '';
         const questions = [];
-        const abjad = ['A','B','C','D','E'];
+        const abjad     = ['A','B','C','D','E'];
 
-        for (let r = 1; r < rowMatches.length; r++) {
-            const cellMatches = rowMatches[r].match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
-            const getCell = (idx) => {
-                if (idx < 0 || idx >= cellMatches.length) return '';
-                const inner = cellMatches[idx].replace(/<t[dh][^>]*>/i,'').replace(/<\/t[dh]>/i,'');
-                return getCellText(inner);
-            };
+        for (let r = 1; r < xmlRows.length; r++) {
+            const row   = xmlRows[r];
+            const tipe  = (getC(row, idxMap.tipe) || 'PG').toUpperCase();
+            const tanya = getC(row, idxMap.tanya).replace(/\s+/g,' ').trim();
+            if (!tanya || tanya.toLowerCase() === 'pertanyaan') continue;
 
-            const tanya  = getCell(idxMap.tanya).replace(/\n+/g, ' ').trim();
-            const allTxt = cellMatches.map(c => getCellText(c.replace(/<t[dh][^>]*>/i,'').replace(/<\/t[dh]>/i,''))).join('').trim();
-            if (!allTxt || tanya.toLowerCase() === 'pertanyaan') continue;
-
-            const tipe   = (getCell(idxMap.tipe) || 'PG').toUpperCase().trim();
-            const gambar = getCell(idxMap.gambar).trim();
-            const opsiA  = getCell(idxMap.a); const opsiB = getCell(idxMap.b);
-            const opsiC  = getCell(idxMap.c); const opsiD = getCell(idxMap.d);
-            const opsiE  = getCell(idxMap.e);
-            const kunci  = getCell(idxMap.kunci).toUpperCase().trim();
-            const skor   = parseFloat((getCell(idxMap.skor) || '1').replace(',', '.')) || 1;
+            const opsiA  = getC(row, idxMap.a); const opsiB = getC(row, idxMap.b);
+            const opsiC  = getC(row, idxMap.c); const opsiD = getC(row, idxMap.d);
+            const opsiE  = getC(row, idxMap.e);
+            const kunci  = getC(row, idxMap.kunci).toUpperCase();
+            const skor   = parseFloat((getC(row, idxMap.skor) || '1').replace(',','.')) || 1;
+            const gambar = getC(row, idxMap.gambar);
 
             let opsi_json = '', kunciFinal = kunci;
 
@@ -272,14 +291,12 @@ app.post('/api/admin/upload-word', upload.single('file'), async (req, res) => {
                 const opts = [opsiA,opsiB,opsiC].filter(o=>o);
                 opsi_json  = opts.length ? opts.join('|||') : 'B|||S';
                 const bsMap = {B:'A',S:'B',BENAR:'A',SALAH:'B'};
-                kunciFinal  = kunci.split(',').map(k=>bsMap[k.trim()]||k).join('-');
+                kunciFinal  = kunci.split(',').map(k => bsMap[k.trim()]||k).join('-');
             }
 
             questions.push({
-                exam_id   : examId,
-                tipe, tanya: tanya || `[Soal ${r}]`,
-                opsi_json, kunci: kunciFinal,
-                media_path: gambar, skor, gform_url: ''
+                exam_id: examId, tipe, tanya, opsi_json,
+                kunci: kunciFinal, media_path: gambar, skor, gform_url: ''
             });
         }
 
@@ -290,6 +307,7 @@ app.post('/api/admin/upload-word', upload.single('file'), async (req, res) => {
         res.json({status: "error", message: "Gagal memproses Word: " + err.message});
     }
 });
+
 
 // ==========================================
 // 7. MANAJEMEN PENGGUNA 

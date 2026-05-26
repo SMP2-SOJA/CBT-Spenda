@@ -387,10 +387,19 @@ function showCbtQuestion(index) {
             // ── FIX layout: tanya dalam container rapi ──
             divTanya.innerHTML = `<div class="text-sm md:text-base leading-relaxed text-slate-800">${formatMath(q.tanya || "")}</div>`;
 
-            // ── FIX: Jika PG/PGK tanpa opsi teks (opsi ada di gambar) → tampilkan tombol A B C D ──
-            if ((q.tipe === 'PG' || q.tipe === 'PGK') && opsiArray.length === 0 && imgUrl) {
+            // ── FIX: Jika PG/PGK tanpa opsi teks → tampilkan tombol A B C D E ──
+            // (baik karena ada gambar MAUPUN karena opsi berupa rumus yang tidak terbaca)
+            if ((q.tipe === 'PG' || q.tipe === 'PGK') && opsiArray.length === 0) {
                 opsiArray = ['A', 'B', 'C', 'D'];
-                htmlOpsi += `<p class="text-[10px] text-slate-400 italic mb-2"><i class="fa fa-info-circle mr-1"></i>Pilihan jawaban ada pada gambar soal di atas</p>`;
+                if (!imgUrl) {
+                    htmlOpsi += `<div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3 text-[10px] text-amber-700">
+                        <i class="fa fa-exclamation-circle mr-1"></i>
+                        <b>Pilihan jawaban berupa rumus matematika</b> yang tidak terbaca teks-nya.<br>
+                        Lihat soal di buku/lembar ujian Anda dan pilih A/B/C/D yang sesuai.
+                    </div>`;
+                } else {
+                    htmlOpsi += `<p class="text-[10px] text-slate-400 italic mb-2"><i class="fa fa-info-circle mr-1"></i>Pilihan jawaban ada pada gambar soal di atas</p>`;
+                }
             }
 
             if (q.tipe === 'PG') {
