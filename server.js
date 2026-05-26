@@ -6,50 +6,6 @@ const XLSX = require('xlsx');
 const mammoth = require('mammoth');
 const fs = require('fs');
 
-// ================================================================
-// LISENSI & IDENTITAS PEMBELI
-// Kode ini dihasilkan otomatis untuk setiap pembeli.
-// Menghapus bagian ini melanggar ketentuan lisensi.
-// ================================================================
-const _lic = {
-  c: Buffer.from('U1BFTkRBLURJR0ktMjAyNg==','base64').toString(),
-  b: Buffer.from('UEVNIEJFTUJFTEK=','base64').toString(),
-  v: '2026.1',
-  _: () => { const d=new Date(); return [d.getFullYear(),d.getMonth()+1].join('.'); }
-};
-const _chk = () => _lic.c + ' | ' + _lic.b + ' | v' + _lic.v;
-
-// ================================================================
-// DATA DEMO (in-memory, tidak menyentuh database asli)
-// ================================================================
-const DEMO_USER = { id:0, username:'demo', name:'Demo Sekolah', role:'admin', kelas:'', mapel:'', _isDemo:true };
-const DEMO_DATA = {
-  users: [
-    {id:1,username:'siswa01',name:'Andi Pratama',role:'siswa',kelas:'7A',mapel:''},
-    {id:2,username:'siswa02',name:'Budi Santoso',role:'siswa',kelas:'7A',mapel:''},
-    {id:3,username:'siswa03',name:'Citra Dewi',role:'siswa',kelas:'7B',mapel:''},
-    {id:4,username:'guru01',name:'Pak Budi (MTK)',role:'guru',kelas:'',mapel:'MTK'},
-  ],
-  questions: [
-    {id:1,exam_id:'MTK-7A-DEMO',tipe:'PG',tanya:'Berapakah hasil dari 5 × 8?',opsi_json:'30|||35|||40|||45',kunci:'C',skor:2},
-    {id:2,exam_id:'MTK-7A-DEMO',tipe:'PG',tanya:'Ibukota Indonesia adalah...',opsi_json:'Bandung|||Jakarta|||Surabaya|||Medan',kunci:'B',skor:1},
-    {id:3,exam_id:'MTK-7A-DEMO',tipe:'ISIAN',tanya:'Hasil dari 12 + 8 = ...',opsi_json:'',kunci:'20',skor:2},
-  ],
-  schedules: [
-    {id:1,mapel:'MTK-7A-DEMO',pin:'1234',tanggal:'2026-05-26|08:00',durasi:60,status:'Aktif',kelas:'7A'},
-  ],
-  activity: [
-    {id:1,student_name:'Andi Pratama',exam_name:'MTK-7A-DEMO',kelas:'7A',status:'Mengerjakan',score:40,last_seen:'08:15:22 (35 mnt)'},
-    {id:2,student_name:'Budi Santoso',exam_name:'MTK-7A-DEMO',kelas:'7A',status:'Selesai',score:80,last_seen:'08:55:10 (55 mnt)'},
-    {id:3,student_name:'Citra Dewi',exam_name:'MTK-7A-DEMO',kelas:'7B',status:'Curang (1x)',score:30,last_seen:'08:20:05 (20 mnt)'},
-  ],
-  results: [
-    {id:1,student_name:'Budi Santoso',mapel:'MTK-7A-DEMO',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'26/5/2026|55 mnt'},
-    {id:2,student_name:'Citra Dewi',mapel:'MTK-7A-DEMO',kelas:'7B',nilai:40,benar:2,salah:3,detail_jawaban:'[]',tanggal:'26/5/2026|20 mnt'},
-  ],
-  exams: ['MTK-7A-DEMO'],
-};
-
 const upload = multer({ dest: '/tmp' }); // Folder penyimpanan sementara Vercel
 const supabaseUrl = 'https://uftiednbhdmexxlabhad.supabase.co';
 const supabaseKey = 'sb_publishable_TAEkdHBM3n5nY-I4bm-zaA_C5y9sEwH';
@@ -59,19 +15,6 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// Middleware: copyright header di setiap response
-app.use((req, res, next) => {
-    res.setHeader('X-App-License', _chk());
-    res.setHeader('X-Powered-By', 'SPENDA-DIGI-CBT');
-    next();
-});
-
-// =======================================
-// DEMO MODE ENDPOINTS (memisah dari DB asli)
-// =======================================
-app.get('/api/demo/data', (req, res) => res.json(DEMO_DATA));
-app.get('/api/demo/ping', (req, res) => res.json({status:'ok', mode:'DEMO', license: _chk()}));
 
 // ==========================================
 // 0. JALUR DARURAT (PEMULIHAN ADMIN)
@@ -87,11 +30,7 @@ app.get('/api/admin/darurat', async (req, res) => {
 // ==========================================
 app.post('/api/login', async (req, res) => { 
     try {
-        const { username, password } = req.body;
-        // DEMO MODE: kredensial khusus, tidak menyentuh DB asli
-        if (username === 'demo' && password === 'demo123') {
-            return res.json({status: "success", user: DEMO_USER});
-        }
+        const { username, password } = req.body; 
         const { data, error } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single(); 
         if (error || !data) return res.status(401).json({status: "error", message: "Username atau Password salah!"}); 
         res.json({status: "success", user: data}); 
@@ -248,10 +187,104 @@ app.post('/api/admin/upload-excel', upload.single('file'), async (req, res) => {
 app.post('/api/admin/upload-word', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.json({status: "error", message: "File kosong!"});
-        const result = await mammoth.extractRawText({path: req.file.path});
-        const text = result.value;
+        const examId = (req.body.exam_id || '').trim();
+
+        // Gunakan convertToHtml agar struktur tabel terbaca di server
+        const result = await mammoth.convertToHtml({path: req.file.path});
+        const html   = result.value;
         fs.unlinkSync(req.file.path);
-        res.json({status: "success", text_mentah: text});
+
+        // ── Parser tabel dari HTML (server-side, lebih reliable) ──
+        function getCellText(cellHtml) {
+            // Hapus semua tag HTML, decode entitas dasar
+            let txt = cellHtml
+                .replace(/<img[^>]*>/gi, '[Rumus]')
+                .replace(/<[^>]+>/g, '')
+                .replace(/&nbsp;/g,' ').replace(/&amp;/g,'&')
+                .replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
+            return txt;
+        }
+
+        // Ekstrak semua baris dari tabel pertama
+        const tableMatch = html.match(/<table[\s\S]*?>([\s\S]*?)<\/table>/i);
+        if (!tableMatch) {
+            // Tidak ada tabel → kembalikan teks mentah untuk fallback di client
+            const rawResult = await mammoth.extractRawText({path: req.file.path});
+            return res.json({status: "no_table", text_mentah: rawResult.value});
+        }
+
+        const tableHtml = tableMatch[1];
+        const rowMatches = tableHtml.match(/<tr[\s\S]*?>([\s\S]*?)<\/tr>/gi) || [];
+
+        if (rowMatches.length < 2) {
+            return res.json({status: "error", message: "Tabel kosong atau hanya ada header."});
+        }
+
+        // Baris pertama = header kolom
+        const headerCells = rowMatches[0].match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
+        const headers = headerCells.map(c => {
+            const inner = c.replace(/<t[dh][^>]*>/i, '').replace(/<\/t[dh]>/i, '');
+            return getCellText(inner).toLowerCase().replace(/\s+/g, '_');
+        });
+
+        const col = (name) => headers.indexOf(name);
+        const idxMap = {
+            tipe  : col('tipe'),
+            tanya : col('pertanyaan'),
+            gambar: col('link_gambar'),
+            a     : col('opsi_a'), b: col('opsi_b'), c: col('opsi_c'),
+            d     : col('opsi_d'), e: col('opsi_e'),
+            kunci : col('kunci'), skor: col('skor'),
+        };
+
+        if (idxMap.tanya < 0) {
+            return res.json({status: "error", message: "Kolom 'Pertanyaan' tidak ditemukan. Pastikan baris header tabel memiliki kolom: No, Tipe, Pertanyaan, dll."});
+        }
+
+        const questions = [];
+        const abjad = ['A','B','C','D','E'];
+
+        for (let r = 1; r < rowMatches.length; r++) {
+            const cellMatches = rowMatches[r].match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
+            const getCell = (idx) => {
+                if (idx < 0 || idx >= cellMatches.length) return '';
+                const inner = cellMatches[idx].replace(/<t[dh][^>]*>/i,'').replace(/<\/t[dh]>/i,'');
+                return getCellText(inner);
+            };
+
+            const tanya  = getCell(idxMap.tanya).replace(/\n+/g, ' ').trim();
+            const allTxt = cellMatches.map(c => getCellText(c.replace(/<t[dh][^>]*>/i,'').replace(/<\/t[dh]>/i,''))).join('').trim();
+            if (!allTxt || tanya.toLowerCase() === 'pertanyaan') continue;
+
+            const tipe   = (getCell(idxMap.tipe) || 'PG').toUpperCase().trim();
+            const gambar = getCell(idxMap.gambar).trim();
+            const opsiA  = getCell(idxMap.a); const opsiB = getCell(idxMap.b);
+            const opsiC  = getCell(idxMap.c); const opsiD = getCell(idxMap.d);
+            const opsiE  = getCell(idxMap.e);
+            const kunci  = getCell(idxMap.kunci).toUpperCase().trim();
+            const skor   = parseFloat((getCell(idxMap.skor) || '1').replace(',', '.')) || 1;
+
+            let opsi_json = '', kunciFinal = kunci;
+
+            if (tipe === 'PG' || tipe === 'PGK') {
+                opsi_json = [opsiA,opsiB,opsiC,opsiD,opsiE].filter(o=>o).join('|||');
+            } else if (tipe === 'BS') {
+                const opts = [opsiA,opsiB,opsiC].filter(o=>o);
+                opsi_json  = opts.length ? opts.join('|||') : 'B|||S';
+                const bsMap = {B:'A',S:'B',BENAR:'A',SALAH:'B'};
+                kunciFinal  = kunci.split(',').map(k=>bsMap[k.trim()]||k).join('-');
+            }
+
+            questions.push({
+                exam_id   : examId,
+                tipe, tanya: tanya || `[Soal ${r}]`,
+                opsi_json, kunci: kunciFinal,
+                media_path: gambar, skor, gform_url: ''
+            });
+        }
+
+        res.json({status: "success", questions, total: questions.length});
+
     } catch (err) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         res.json({status: "error", message: "Gagal memproses Word: " + err.message});
