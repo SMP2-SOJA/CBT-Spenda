@@ -37,6 +37,12 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
 
+    <!-- DEMO BANNER — tampil saat mode demo aktif -->
+    <div id="demo-banner" class="hidden fixed top-0 left-0 right-0 z-[300] bg-amber-400 text-amber-900 text-center py-2 text-xs font-bold shadow-lg flex items-center justify-center gap-3">
+        <i class="fa fa-flask"></i> MODE DEMO AKTIF — Data contoh, tidak tersimpan ke database asli
+        <button onclick="keluarDemo()" class="bg-amber-800 text-white px-3 py-1 rounded-lg text-[10px] hover:bg-amber-900 transition">✕ Keluar Demo</button>
+    </div>
+
     <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         <div class="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 border-t-8 border-blue-600 flex flex-col">
@@ -55,6 +61,25 @@
                     </div>
                 </div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 md:py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 mt-2 text-sm md:text-base">MASUK APLIKASI</button>
+
+                <!-- DEMO BUTTONS -->
+                <div class="relative my-3">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-600"></div></div>
+                    <div class="relative flex justify-center"><span class="bg-slate-800 px-3 text-xs text-slate-400">atau coba dulu</span></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="masukDemo()" class="bg-amber-500 text-white py-2.5 rounded-xl font-bold text-xs hover:bg-amber-600 active:scale-95 transition-all flex flex-col items-center gap-1">
+                        <i class="fa fa-user-shield text-base"></i>
+                        <span>Demo Admin/Guru</span>
+                        <span class="text-[9px] font-normal opacity-80">Kelola soal & nilai</span>
+                    </button>
+                    <button onclick="masukDemoSiswa()" class="bg-emerald-500 text-white py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-600 active:scale-95 transition-all flex flex-col items-center gap-1">
+                        <i class="fa fa-pencil-alt text-base"></i>
+                        <span>Demo Siswa</span>
+                        <span class="text-[9px] font-normal opacity-80">Coba ikut ujian</span>
+                    </button>
+                </div>
+                <p class="text-center text-[10px] text-slate-500 mt-2">Demo gratis — semua fitur aktif, data tidak tersimpan</p>
             </div>
             
             <div class="mt-6 pt-4 border-t border-slate-200">

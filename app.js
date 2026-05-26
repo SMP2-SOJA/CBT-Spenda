@@ -56,6 +56,38 @@ function togglePass(inputId, iconId) { const passInput = document.getElementById
 document.addEventListener('keyup', (e) => { if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) { navigator.clipboard.writeText(''); Swal.fire('Akses Dilarang!', 'Screenshot terdeteksi!', 'warning'); } });
 document.addEventListener('keydown', function(e) { if(isExamActive && (e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); } });
 let _lastDeteksi = 0;
+let _isDemoMode = false;
+
+// Data dummy untuk Mode Demo (admin & siswa) — tidak menyentuh database asli
+const _DEMO = {
+    admin : { id:0, username:'demo',       name:'Demo Sekolah', role:'admin',  kelas:'',   mapel:'', _isDemo:true },
+    siswa : { id:0, username:'demo_siswa', name:'Siswa Demo',   role:'siswa',  kelas:'7A', mapel:'', _isDemo:true },
+    pin   : '0000',
+    examId: 'DEMO-CBT-2026',
+    exam  : { mapel:'DEMO-CBT-2026', durasi: 30 },
+    questions: [
+        { id:1, exam_id:'DEMO-CBT-2026', tipe:'PG',    tanya:'Ibukota negara Indonesia adalah...', opsi_json:'Bandung|||Jakarta|||Surabaya|||Yogyakarta', kunci:'B', skor:1, media_path:'', gform_url:'' },
+        { id:2, exam_id:'DEMO-CBT-2026', tipe:'PG',    tanya:'Berapakah hasil dari 7 × 8?',        opsi_json:'48|||54|||56|||64',                          kunci:'C', skor:1, media_path:'', gform_url:'' },
+        { id:3, exam_id:'DEMO-CBT-2026', tipe:'PG',    tanya:'Planet terbesar dalam tata surya?',  opsi_json:'Mars|||Saturnus|||Jupiter|||Uranus',          kunci:'C', skor:1, media_path:'', gform_url:'' },
+        { id:4, exam_id:'DEMO-CBT-2026', tipe:'ISIAN', tanya:'Hasil dari 12 + 8 = ...',            opsi_json:'', kunci:'20', skor:2, media_path:'', gform_url:'' },
+        { id:5, exam_id:'DEMO-CBT-2026', tipe:'PGK',   tanya:'Yang merupakan bilangan prima adalah... (boleh lebih dari 1)', opsi_json:'4|||7|||11|||9', kunci:'B,C', skor:2, media_path:'', gform_url:'' },
+    ],
+    activity: [
+        {id:1,student_name:'Andi Pratama', exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Mengerjakan',score:40, last_seen:'08:15:22 (15 mnt)'},
+        {id:2,student_name:'Budi Santoso', exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Selesai',    score:80, last_seen:'08:45:10 (30 mnt)'},
+        {id:3,student_name:'Citra Dewi',   exam_name:'DEMO-CBT-2026',kelas:'7B',status:'Curang (1x)',score:20, last_seen:'08:20:05 (10 mnt)'},
+    ],
+    results: [
+        {id:1,student_name:'Budi Santoso',mapel:'DEMO-CBT-2026',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'26/5/2026|30 mnt'},
+        {id:2,student_name:'Citra Dewi',  mapel:'DEMO-CBT-2026',kelas:'7B',nilai:40,benar:2,salah:3,detail_jawaban:'[]',tanggal:'26/5/2026|10 mnt'},
+    ],
+    schedules: [{id:1,mapel:'DEMO-CBT-2026',pin:'0000',tanggal:'2026-05-26|08:00',durasi:30,status:'Aktif',kelas:''}],
+    users: [
+        {id:1,username:'siswa01',name:'Andi Pratama',role:'siswa',kelas:'7A',mapel:''},
+        {id:2,username:'siswa02',name:'Budi Santoso',role:'siswa',kelas:'7A',mapel:''},
+        {id:3,username:'guru01', name:'Pak Budi',    role:'guru', kelas:'',  mapel:'MTK'},
+    ]
+};
 
 document.addEventListener('fullscreenchange', () => { if (isExamActive && !document.fullscreenElement) { deteksiKecurangan('fullscreen'); setTimeout(() => { if (isExamActive) document.documentElement.requestFullscreen().catch(()=>{}); }, 1800); } });
 
@@ -108,6 +140,101 @@ async function prosesLogin() {
 }
 
 function logout() { location.reload(); }
+
+// ================================================================
+// DEMO MODE — Admin/Guru
+// ================================================================
+function masukDemo() {
+    _isDemoMode = true;
+    activeUser = _DEMO.admin;
+    window.allActivityData     = _DEMO.activity;
+    window.allResultsData      = _DEMO.results;
+    window.filteredResultsData = _DEMO.results;
+    window.allSchedulesData    = _DEMO.schedules;
+    const banner = document.getElementById('demo-banner');
+    if (banner) banner.classList.remove('hidden');
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('view-admin').classList.remove('hidden');
+    const rb = document.getElementById('role-badge');
+    if (rb) { rb.classList.remove('hidden'); rb.innerText = '⚡ DEMO'; }
+    const un = document.getElementById('user-name-display');
+    if (un) un.innerText = 'Demo Sekolah';
+    loadMaster(); showPage('dashboard');
+    Swal.fire({ icon:'info', title:'Mode Demo Admin Aktif',
+        html:`<p class="text-sm">Semua fitur aktif dengan <b>data contoh</b>.<br>Perubahan <b>tidak</b> tersimpan ke database asli.<br><br>📌 PIN ujian demo siswa: <b class="text-blue-600 text-lg">0000</b></p>`,
+        confirmButtonColor:'#D97706', confirmButtonText:'Mengerti!' });
+}
+
+// ================================================================
+// DEMO MODE — Siswa (coba ujian)
+// ================================================================
+async function masukDemoSiswa() {
+    _isDemoMode = true;
+    activeUser  = _DEMO.siswa;
+    const banner = document.getElementById('demo-banner');
+    if (banner) banner.classList.remove('hidden');
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('view-siswa-token').classList.remove('hidden');
+    const nw = document.getElementById('nama-siswa-welcome');
+    if (nw) nw.innerText = _DEMO.siswa.name;
+    await Swal.fire({ icon:'info', title:'Mode Demo Siswa',
+        html:`<p class="text-sm">Anda akan mencoba ujian dengan <b>5 soal contoh</b>.<br>Hasil tidak tersimpan ke database.<br><br>➡️ Masukkan PIN: <b class="text-blue-600 text-xl">0000</b></p>`,
+        confirmButtonColor:'#059669', confirmButtonText:'Lanjut, Coba Ujian!' });
+    const pinEl = document.getElementById('pin-input');
+    if (pinEl) pinEl.value = '0000';
+}
+
+// ================================================================
+// KELUAR DEMO
+// ================================================================
+function keluarDemo() {
+    _isDemoMode = false;
+    activeUser  = null;
+    currentExam = null;
+    const banner = document.getElementById('demo-banner');
+    if (banner) banner.classList.add('hidden');
+    ['view-admin','view-siswa-token','view-siswa-ujian'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+    document.getElementById('view-login').classList.remove('hidden');
+    window.allActivityData = [];
+    window.allResultsData  = [];
+    window.filteredResultsData = [];
+}
+
+// ================================================================
+// INTERCEPT FETCH — semua request demo tidak ke DB asli
+// ================================================================
+const _origFetch = window.fetch.bind(window);
+window.fetch = async function(url, opts) {
+    if (!_isDemoMode) return _origFetch(url, opts);
+    const method = ((opts && opts.method) || 'GET').toUpperCase();
+    const ok = (data) => new Response(JSON.stringify(data), {status:200, headers:{'Content-Type':'application/json'}});
+
+    if (url.includes('/api/login'))        return ok({status:'success', user: _DEMO.admin});
+    if (url.includes('/siswa/cek-pin')) {
+        const body = opts && opts.body ? JSON.parse(opts.body) : {};
+        if (String(body.pin) === '0000') return ok({status:'success', exam: _DEMO.exam});
+        return ok({status:'error', message:'PIN demo yang benar adalah 0000'});
+    }
+    if (url.includes('/siswa/get-soal'))         return ok({questions: _DEMO.questions});
+    if (url.includes('/siswa/ping'))             return ok({status:'success'});
+    if (url.includes('/siswa/submit'))           return ok({status:'success'});
+    if (url.includes('/siswa/flag-curang'))      return ok({status:'success'});
+
+    if (method === 'GET') {
+        if (url.includes('/admin/users'))          return ok(_DEMO.users);
+        if (url.includes('/admin/questions'))      return ok(_DEMO.questions);
+        if (url.includes('/admin/available-exams'))return ok([_DEMO.examId]);
+        if (url.includes('/admin/schedules'))      return ok(_DEMO.schedules);
+        if (url.includes('/admin/results'))        return ok(_DEMO.results);
+        if (url.includes('/admin/recent-activity'))return ok(_DEMO.activity);
+        if (url.includes('/admin/stats'))          return ok({total_siswa:30, total_guru:5});
+    }
+    // Semua WRITE → sukses tapi tidak ke DB
+    return ok({status:'success', _demo:true, imported:1});
+};
 function saveToLocal() { if(currentExam && activeUser) localStorage.setItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`, JSON.stringify(cbtAnswers)); }
 
 function loadFromLocal() { 
