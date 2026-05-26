@@ -65,19 +65,47 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
             return res.json({ status: "success", exam: { mapel: allMapels.join(', '), durasi: totalDurasi } });
         }
 
-        // LOGIKA KETAT SENSOR KELAS SMP
-        const cleanKelas = String(kelas).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-        let cocokKelas = allMapels.filter(m => m.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().includes(cleanKelas));
+        // ── LOGIKA SENSOR KELAS (diperbaiki) ──
+        // MTK-7A  → hanya kelas 7A
+        // MTK-7B  → hanya kelas 7B
+        // MTK-7   → semua kelas 7 (7A, 7B, 7C, ...)
+        // IPA / UMUM → semua kelas (tidak ada angka tingkat)
 
-        let mapelGabungan = "";
+        function kelasCocokan(examCode, studentKelas) {
+            const e = examCode.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            const s = studentKelas.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+            // Ambil tingkat (grade) dan huruf kelas dari siswa
+            // Contoh: "7A" → grade="7", letter="a"
+            const sMatch = s.match(/(\d+)([a-z]?)/);
+            if (!sMatch) return e.includes(s);
+            const sGrade = sMatch[1];  // "7"
+            const sLetter = sMatch[2]; // "a" atau ""
+
+            // 1. Cocok persis: exam punya kode kelas lengkap (mis. "mtk7a" vs siswa "7a")
+            if (sLetter && e.includes(sGrade + sLetter)) return true;
+
+            // 2. Exam hanya punya tingkat tanpa huruf kelas (mis. "mtk7" = semua kelas 7)
+            //    → grade ada di exam, tapi TIDAK diikuti huruf kelas
+            const gradeOnlyRe = new RegExp(sGrade + '(?![a-z])');
+            const hasClassLetter = new RegExp(sGrade + '[a-z]').test(e);
+            if (gradeOnlyRe.test(e) && !hasClassLetter) return true;
+
+            return false;
+        }
+
+        const cocokKelas = allMapels.filter(m => kelasCocokan(m, kelas));
+        let mapelGabungan = '';
+
         if (cocokKelas.length > 0) {
             mapelGabungan = cocokKelas.join(', ');
         } else {
-            const isUmum = allMapels.every(m => !/(7|8|9|vii|viii|ix)/i.test(m.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()));
+            // Jika tidak cocok, cek apakah soal bersifat umum (tidak ada angka tingkat)
+            const isUmum = allMapels.every(m => !/\d/.test(m.replace(/[^a-zA-Z0-9]/g, '')));
             if (isUmum) {
                 mapelGabungan = allMapels.join(', ');
             } else {
-                return res.json({status: "error", message: `Akses ditolak! Paket soal untuk kelas ${kelas} tidak tersedia pada PIN ini.`});
+                return res.json({status: "error", message: `Akses ditolak! Paket soal ini tidak tersedia untuk kelas ${kelas}.`});
             }
         }
 

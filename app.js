@@ -391,13 +391,7 @@ function showCbtQuestion(index) {
             // (baik karena ada gambar MAUPUN karena opsi berupa rumus yang tidak terbaca)
             if ((q.tipe === 'PG' || q.tipe === 'PGK') && opsiArray.length === 0) {
                 opsiArray = ['A', 'B', 'C', 'D'];
-                if (!imgUrl) {
-                    htmlOpsi += `<div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3 text-[10px] text-amber-700">
-                        <i class="fa fa-exclamation-circle mr-1"></i>
-                        <b>Pilihan jawaban berupa rumus matematika</b> yang tidak terbaca teks-nya.<br>
-                        Lihat soal di buku/lembar ujian Anda dan pilih A/B/C/D yang sesuai.
-                    </div>`;
-                } else {
+                if (imgUrl) {
                     htmlOpsi += `<p class="text-[10px] text-slate-400 italic mb-2"><i class="fa fa-info-circle mr-1"></i>Pilihan jawaban ada pada gambar soal di atas</p>`;
                 }
             }
@@ -406,11 +400,12 @@ function showCbtQuestion(index) {
                 htmlOpsi += `<div class="space-y-2 md:space-y-3">`;
                 opsiArray.forEach((val, idx) => {
                     let huruf = abjad[idx] || ''; let isChecked = (savedAns === huruf) ? "checked" : "";
-                    let teksOpsi = (val === huruf) ? '' : formatMath(val); // jika opsi = "A" berarti gambar mode
-                    htmlOpsi += `<label class="flex items-center p-2 md:p-3 border-2 rounded-xl cursor-pointer bg-white transition hover:border-blue-300 active:bg-blue-50">
-                        <input type="radio" name="cbt_ans" value="${huruf}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 mr-2 md:mr-3 accent-blue-600">
-                        <span class="font-black text-[10px] md:text-sm mr-2 md:mr-3 bg-slate-100 border border-slate-200 w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full text-slate-600 shadow-sm flex-shrink-0">${huruf}</span>
-                        ${teksOpsi ? `<span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${teksOpsi}</span>` : ''}
+                    let teksOpsi = (val === huruf) ? '' : formatMath(val);
+                    let isSelected = isChecked === "checked";
+                    htmlOpsi += `<label class="flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-300'}">
+                        <input type="radio" name="cbt_ans" value="${huruf}" ${isChecked} onchange="cbtSaveAnswer(this.value)" class="hidden">
+                        <span class="font-black text-xs md:text-sm mr-3 bg-blue-600 text-white min-w-[28px] h-7 md:min-w-[32px] md:h-8 flex items-center justify-center rounded-md shadow-sm flex-shrink-0 px-1">${huruf}</span>
+                        ${teksOpsi ? `<span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${teksOpsi}</span>` : `<span class="text-xs text-slate-400 italic">—</span>`}
                     </label>`;
                 });
                 htmlOpsi += `</div>`;
@@ -421,10 +416,11 @@ function showCbtQuestion(index) {
                 opsiArray.forEach((val, idx) => {
                     let huruf = abjad[idx] || ''; let isChecked = savedArr.includes(huruf) ? "checked" : "";
                     let teksOpsi = (val === huruf) ? '' : formatMath(val);
-                    htmlOpsi += `<label class="flex items-center p-2 md:p-3 border-2 rounded-xl cursor-pointer bg-white transition hover:border-purple-300">
-                        <input type="checkbox" value="${huruf}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb w-5 h-5 md:w-6 md:h-6 text-purple-600 mr-3 md:mr-4 rounded accent-purple-600 shadow-sm flex-shrink-0">
-                        <span class="font-black text-[10px] md:text-sm mr-2 bg-slate-100 border border-slate-200 w-6 h-6 flex items-center justify-center rounded-full text-slate-600">${huruf}</span>
-                        ${teksOpsi ? `<span class="text-xs md:text-sm font-medium text-slate-700 ml-2 leading-snug">${teksOpsi}</span>` : ''}
+                    let isSelected = isChecked === "checked";
+                    htmlOpsi += `<label class="flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white hover:border-purple-300'}">
+                        <input type="checkbox" value="${huruf}" ${isChecked} onchange="cbtSaveCheckbox()" class="cbt-pgk-cb hidden">
+                        <span class="font-black text-xs md:text-sm mr-3 ${isSelected ? 'bg-purple-600' : 'bg-slate-600'} text-white min-w-[28px] h-7 md:min-w-[32px] md:h-8 flex items-center justify-center rounded-md shadow-sm flex-shrink-0 px-1">${huruf}</span>
+                        ${teksOpsi ? `<span class="text-xs md:text-sm font-medium text-slate-700 leading-snug">${teksOpsi}</span>` : `<span class="text-xs text-slate-400 italic">—</span>`}
                     </label>`;
                 });
                 htmlOpsi += `</div>`;
