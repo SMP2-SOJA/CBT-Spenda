@@ -1,45 +1,8 @@
-// ================================================================
-// SPENDA-DIGI-CBT v2026.1 | Hak Cipta Dilindungi
-// Dilarang menjual ulang tanpa izin. ID: U1BFTkRBLURJR0k=
-// Copyright (c) 2026 @spenda-digi | ALL RIGHTS RESERVED
-// ================================================================
-const _SIG = atob('U1BFTkRBLURJR0ktQ0JULTIwMjY='); // JANGAN DIHAPUS
+// CBT APP ENGINE - Copyright (c) | @spenda-digi
 const API = "/api";
 let activeUser = null; 
 let currentExam = null; 
 let examTimerInterval = null;
-let _isDemoMode = false;
-
-// Data dummy untuk Demo Mode (admin & siswa)
-const _DEMO = {
-    admin : { id:0, username:'demo',       name:'Demo Sekolah', role:'admin',  kelas:'',   mapel:'', _isDemo:true },
-    siswa : { id:0, username:'demo_siswa', name:'Siswa Demo',   role:'siswa',  kelas:'7A', mapel:'', _isDemo:true },
-    pin   : '0000',
-    examId: 'DEMO-CBT-2026',
-    exam  : { mapel:'DEMO-CBT-2026', durasi: 30 },
-    questions: [
-        { id:1, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Ibukota negara Indonesia adalah...', opsi_json:'Bandung|||Jakarta|||Surabaya|||Yogyakarta', kunci:'B', skor:1, media_path:'' },
-        { id:2, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Berapakah hasil dari 7 × 8?', opsi_json:'48|||54|||56|||64', kunci:'C', skor:1, media_path:'' },
-        { id:3, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Planet terbesar dalam tata surya adalah...', opsi_json:'Mars|||Saturnus|||Jupiter|||Uranus', kunci:'C', skor:1, media_path:'' },
-        { id:4, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Siapa pengarang novel "Laskar Pelangi"?', opsi_json:'Pramoedya Ananta Toer|||Andrea Hirata|||Habiburrahman|||Dee Lestari', kunci:'B', skor:1, media_path:'' },
-        { id:5, exam_id:'DEMO-CBT-2026', tipe:'PG', tanya:'Rumus luas lingkaran dengan jari-jari r adalah...', opsi_json:'2πr|||πr²|||πd|||2πr²', kunci:'B', skor:1, media_path:'' },
-    ],
-    activity: [
-        {id:1,student_name:'Andi Pratama', exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Mengerjakan',score:40, last_seen:'08:15:22 (15 mnt)'},
-        {id:2,student_name:'Budi Santoso', exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Selesai',    score:80, last_seen:'08:45:10 (30 mnt)'},
-        {id:3,student_name:'Citra Dewi',   exam_name:'DEMO-CBT-2026',kelas:'7B',status:'Curang (1x)',score:20, last_seen:'08:20:05 (10 mnt)'},
-    ],
-    results: [
-        {id:1,student_name:'Budi Santoso',mapel:'DEMO-CBT-2026',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'26/5/2026|30 mnt'},
-        {id:2,student_name:'Citra Dewi',  mapel:'DEMO-CBT-2026',kelas:'7B',nilai:40,benar:2,salah:3,detail_jawaban:'[]',tanggal:'26/5/2026|10 mnt'},
-    ],
-    schedules: [{id:1,mapel:'DEMO-CBT-2026',pin:'0000',tanggal:'2026-05-26|08:00',durasi:30,status:'Aktif',kelas:''}],
-    users: [
-        {id:1,username:'siswa01',name:'Andi Pratama', role:'siswa',kelas:'7A',mapel:''},
-        {id:2,username:'siswa02',name:'Budi Santoso', role:'siswa',kelas:'7A',mapel:''},
-        {id:3,username:'guru01', name:'Pak Budi',     role:'guru', kelas:'',  mapel:'MTK'},
-    ]
-};
 let cbtQuestions = []; 
 let cbtAnswers = []; 
 let cbtCurrentIndex = 0; 
@@ -99,101 +62,7 @@ async function prosesLogin() {
     } catch (e) { Swal.fire('Error', 'Server mati.', 'error'); }
 }
 
-// ================================================================
-// DEMO MODE — ADMIN
-// ================================================================
-function masukDemo() {
-    _isDemoMode = true;
-    activeUser = _DEMO.admin;
-    window.allActivityData    = _DEMO.activity;
-    window.allResultsData     = _DEMO.results;
-    window.filteredResultsData= _DEMO.results;
-    window.allSchedulesData   = _DEMO.schedules;
-    document.getElementById('demo-banner').classList.remove('hidden');
-    document.getElementById('view-login').classList.add('hidden');
-    document.getElementById('view-admin').classList.remove('hidden');
-    const rb = document.getElementById('role-badge');
-    if (rb) { rb.classList.remove('hidden'); rb.innerText = '⚡ DEMO'; }
-    const un = document.getElementById('user-name-display');
-    if (un) un.innerText = 'Demo Sekolah';
-    loadMaster(); showPage('dashboard');
-    Swal.fire({ icon:'info', title:'Mode Demo Admin', 
-        html:`<p class="text-sm">Semua fitur aktif dengan <b>data contoh</b>.<br>Perubahan <b>tidak</b> tersimpan ke database asli.<br><br>
-        📌 PIN ujian demo: <b class="text-blue-600">0000</b></p>`,
-        confirmButtonColor:'#D97706', confirmButtonText:'Mengerti!' });
-}
-
-// ================================================================
-// DEMO MODE — SISWA (langsung coba ujian)
-// ================================================================
-async function masukDemoSiswa() {
-    _isDemoMode = true;
-    activeUser = _DEMO.siswa;
-    document.getElementById('demo-banner').classList.remove('hidden');
-    document.getElementById('view-login').classList.add('hidden');
-    document.getElementById('view-siswa-token').classList.remove('hidden');
-    const nw = document.getElementById('nama-siswa-welcome');
-    if (nw) nw.innerText = _DEMO.siswa.name;
-    await Swal.fire({ icon:'info', title:'Mode Demo Siswa',
-        html:`<p class="text-sm">Anda akan mencoba ujian dengan <b>5 soal contoh</b>.<br>Hasil tidak tersimpan ke database asli.<br><br>
-        ➡️ Masukkan PIN: <b class="text-blue-600 text-lg">0000</b></p>`,
-        confirmButtonColor:'#059669', confirmButtonText:'Lanjut, Coba Ujian!' });
-    // Auto-fill PIN
-    const pinEl = document.getElementById('pin-input');
-    if (pinEl) { pinEl.value = '0000'; }
-}
-
-function keluarDemo() {
-    _isDemoMode = false;
-    activeUser  = null;
-    currentExam = null;
-    document.getElementById('demo-banner').classList.add('hidden');
-    ['view-admin','view-siswa-token','view-siswa-ujian'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
-    document.getElementById('view-login').classList.remove('hidden');
-    window.allActivityData = [];
-    window.allResultsData  = [];
-    window.filteredResultsData = [];
-}
-
-// ================================================================
-// INTERCEPT FETCH — semua request di demo mode tidak ke DB asli
-// ================================================================
-const _origFetch = window.fetch.bind(window);
-window.fetch = async function(url, opts) {
-    if (!_isDemoMode) return _origFetch(url, opts);
-    const method = ((opts && opts.method) || 'GET').toUpperCase();
-    const ok = (data) => new Response(JSON.stringify(data), { status:200, headers:{'Content-Type':'application/json'} });
-
-    // Login demo: bypass normal auth
-    if (url.includes('/api/login')) return ok({status:'success', user: _DEMO.admin});
-
-    // CEK PIN demo
-    if (url.includes('/siswa/cek-pin')) {
-        const body = opts && opts.body ? JSON.parse(opts.body) : {};
-        if (body.pin === '0000') return ok({status:'success', exam: _DEMO.exam});
-        return ok({status:'error', message:'PIN demo yang benar adalah 0000'});
-    }
-    // SOAL demo
-    if (url.includes('/siswa/get-soal')) return ok({questions: _DEMO.questions});
-
-    // READ endpoints
-    if (method === 'GET') {
-        if (url.includes('/admin/users'))           return ok(_DEMO.users);
-        if (url.includes('/admin/questions'))        return ok(_DEMO.questions);
-        if (url.includes('/admin/available-exams'))  return ok([_DEMO.examId]);
-        if (url.includes('/admin/schedules'))        return ok(_DEMO.schedules);
-        if (url.includes('/admin/results'))          return ok(_DEMO.results);
-        if (url.includes('/admin/recent-activity'))  return ok(_DEMO.activity);
-        if (url.includes('/admin/stats'))            return ok({total_siswa:30, total_guru:5});
-    }
-    // Semua WRITE → success tapi tidak ke DB
-    return ok({status:'success', _demo:true, imported:1});
-};
-
-
+function logout() { location.reload(); }
 function saveToLocal() { if(currentExam && activeUser) localStorage.setItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`, JSON.stringify(cbtAnswers)); }
 
 function loadFromLocal() { 
@@ -637,179 +506,255 @@ function importWord() {
     if (!kodeUjian) return Swal.fire('Oops', 'Isi Kode Ujian terlebih dahulu!', 'warning');
     if (!file)      return Swal.fire('Oops', 'Pilih file Word (.docx) terlebih dahulu!', 'warning');
 
-    Swal.fire({ title: 'Mengekstrak & Memproses Soal...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Membaca File Word...', html: 'Menganalisa struktur tabel soal...', didOpen: () => Swal.showLoading() });
 
     const reader = new FileReader();
     reader.onload = function(event) {
         if (typeof mammoth === 'undefined') {
-            return Swal.fire('Error', 'Library ekstrak Word belum termuat. Pastikan koneksi internet stabil lalu refresh halaman.', 'error');
+            return Swal.fire('Error', 'Library mammoth belum termuat. Refresh halaman.', 'error');
         }
-        mammoth.extractRawText({ arrayBuffer: event.target.result })
-            .then(function(result) {
-                const rawText   = result.value;
-                const questions = parseWordSoal(rawText, kodeUjian);
 
-                if (questions.length === 0) {
-                    return Swal.fire({
-                        title: 'Gagal Parsing Otomatis',
-                        html: `<p class="text-xs text-red-600 font-bold mb-3">
-                                 Sistem tidak dapat mendeteksi soal secara otomatis.<br>
-                                 Pastikan format file Word sesuai panduan di bawah ini:
-                               </p>
-                               <div class="text-left bg-slate-100 p-3 rounded text-[11px] font-mono mb-3 leading-loose">
-                                 <b>1. Pertanyaan soal nomor 1?</b><br>
-                                 A. Pilihan A<br>B. Pilihan B<br>C. Pilihan C<br>D. Pilihan D<br>
-                                 <b class="text-emerald-700">Kunci: A</b><br><br>
-                                 <b>2. Pertanyaan soal nomor 2?</b><br>
-                                 A. ...<br><b class="text-emerald-700">Kunci: B</b>
-                               </div>
-                               <p class="text-[10px] text-slate-500 font-bold mb-1">Cuplikan teks yang diekstrak:</p>
-                               <textarea class="w-full h-28 p-2 border rounded text-[10px] outline-none bg-white font-mono" readonly>${rawText.substring(0, 600)}</textarea>`,
-                        width: '85%', confirmButtonColor: '#3085d6', confirmButtonText: 'Tutup'
-                    });
+        // ✅ Gunakan convertToHtml (bukan extractRawText) agar tabel terbaca
+        mammoth.convertToHtml({ arrayBuffer: event.target.result })
+            .then(function(result) {
+                const html      = result.value;
+                const questions = _parseTabelWordHtml(html, kodeUjian);
+
+                // Jika tidak ada tabel → coba fallback parser paragraf
+                if (questions === null) {
+                    mammoth.extractRawText({ arrayBuffer: event.target.result })
+                        .then(r => {
+                            const q2 = _parseParagrafWord(r.value, kodeUjian);
+                            if (q2.length === 0) {
+                                return Swal.fire({
+                                    title: 'Format Tidak Dikenali',
+                                    html : `<p class="text-sm text-red-600 font-bold mb-2">File Word tidak menggunakan format tabel atau paragraf standar.</p>
+                                            <p class="text-xs text-slate-600 mb-2">Pastikan soal dibuat dalam TABEL dengan kolom: <b>No | Tipe | Pertanyaan | Link_Gambar | Opsi_A | Opsi_B | Opsi_C | Opsi_D | Opsi_E | Kunci | Skor</b></p>`,
+                                    width:'90%', confirmButtonText:'Tutup'
+                                });
+                            }
+                            _tampilkanPreviewDanSimpan(q2, kodeUjian, fileInput);
+                        });
+                    return;
                 }
 
-                Swal.fire({
-                    title: `<span class="text-emerald-600">${questions.length} Soal Terdeteksi!</span>`,
-                    html:  `<p class="text-xs text-slate-500 mb-3">
-                              Pratinjau <b>${Math.min(questions.length, 3)}</b> soal pertama &mdash;
-                              kode ujian: <b>${kodeUjian}</b>
-                            </p>
-                            <div class="text-left bg-slate-50 p-3 rounded-lg max-h-52 overflow-y-auto text-xs space-y-3 border">
-                              ${questions.slice(0, 3).map((q, i) =>
-                                  `<div class="border-b border-slate-200 pb-2">
-                                     <span class="bg-blue-100 text-blue-700 font-bold text-[9px] px-2 py-0.5 rounded mr-1">${q.tipe}</span>
-                                     <b>No.${i + 1}</b> ${q.tanya.substring(0, 100)}${q.tanya.length > 100 ? '&hellip;' : ''}<br>
-                                     <span class="text-slate-400 text-[10px]">Opsi: ${q.opsi_json ? q.opsi_json.replace(/\|\|\|/g, ' | ').substring(0, 60) : '-'}</span><br>
-                                     <span class="text-emerald-600 font-bold text-[10px]">Kunci: ${q.kunci || '-'}</span>
-                                   </div>`
-                              ).join('')}
-                            </div>
-                            <p class="text-[10px] text-slate-400 mt-2">Total <b>${questions.length}</b> soal akan disimpan ke bank soal.</p>`,
-                    icon: 'question', width: '88%',
-                    showCancelButton: true,
-                    confirmButtonText : `Simpan ${questions.length} Soal Sekarang`,
-                    cancelButtonText  : 'Batal',
-                    confirmButtonColor: '#2563eb'
-                }).then(async (confirm) => {
-                    if (!confirm.isConfirmed) return;
-                    Swal.fire({ title: 'Menyimpan ke Bank Soal...', didOpen: () => Swal.showLoading() });
-                    try {
-                        const res = await fetch(API + '/admin/add-soal-bulk', {
-                            method : 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body   : JSON.stringify({ questions })
-                        });
-                        const data = await res.json();
-                        if (data.status === 'success') {
-                            Swal.fire('Sukses!', `${questions.length} soal berhasil disimpan ke Bank Soal dengan kode ujian "${kodeUjian}"!`, 'success');
-                            loadBankSoal();
-                            fileInput.value = '';
-                            document.getElementById('w_judul').value = '';
-                        } else {
-                            Swal.fire('Gagal Menyimpan', data.message || 'Terjadi kesalahan pada server.', 'error');
-                        }
-                    } catch (err) {
-                        Swal.fire('Error Koneksi', 'Gagal terhubung ke server: ' + err.message, 'error');
-                    }
-                });
+                _tampilkanPreviewDanSimpan(questions, kodeUjian, fileInput);
             })
-            .catch(function(err) {
-                Swal.fire('Gagal Membaca File',
-                    'Format tidak didukung. Pastikan berekstensi .docx (bukan .doc). Detail: ' + err.message, 'error');
+            .catch(err => {
+                Swal.fire('Gagal Membaca File', 'Pastikan file berekstensi .docx. Detail: ' + err.message, 'error');
             });
     };
     reader.readAsArrayBuffer(file);
 }
 
-// ============================================================
-// PARSER SOAL DARI TEKS WORD
-// ============================================================
-// Format yang didukung (umum digunakan guru Indonesia):
-//
-//   1. Pertanyaan?        <- nomor + titik/kurung
-//   1) Pertanyaan?
-//   A. Pilihan A          <- opsi A–E dengan titik/kurung
-//   A) Pilihan A
-//   Kunci: A              <- berbagai variasi penulisan kunci
-//   Jawaban: A
-//   Skor: 2               <- opsional, default 1
-// ============================================================
-function parseWordSoal(rawText, kodeUjian) {
-    const lines = rawText
-        .replace(/\uFEFF/g, '')
-        .replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-        .split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
+// ================================================================
+// PARSER 1: FORMAT TABEL WORD (format resmi SPENDA-DIGI)
+// Kolom: No | Tipe | Pertanyaan | Link_Gambar | Opsi_A..E | Kunci | Skor
+// ================================================================
+function _parseTabelWordHtml(htmlStr, kodeUjian) {
+    const dom   = new DOMParser().parseFromString(htmlStr, 'text/html');
+    const table = dom.querySelector('table');
+    if (!table) return null; // tidak ada tabel
 
+    const rows = Array.from(table.querySelectorAll('tr'));
+    if (rows.length < 2) return null;
+
+    // ── Helper: ambil teks sel, tangani img (rumus matematika) ──
+    function getCellText(row, colIdx) {
+        if (colIdx < 0) return '';
+        const cells = row.querySelectorAll('td,th');
+        const cell  = cells[colIdx];
+        if (!cell) return '';
+        const txt = cell.textContent.replace(/\u00A0/g, ' ').trim();
+        // Jika sel hanya berisi gambar (rumus OMML) → beri placeholder
+        if (!txt && cell.querySelector('img')) return '[Rumus]';
+        return txt;
+    }
+
+    // ── Peta kolom dari baris header ──
+    const headerCells = Array.from(rows[0].querySelectorAll('td,th'));
+    const hMap = {};
+    headerCells.forEach((c, i) => {
+        const key = c.textContent.trim().toLowerCase().replace(/[\s_]+/g, '_');
+        hMap[key] = i;
+    });
+
+    const idx = {
+        tipe  : hMap['tipe']        ?? -1,
+        tanya : hMap['pertanyaan']  ?? -1,
+        gambar: hMap['link_gambar'] ?? -1,
+        a     : hMap['opsi_a']      ?? -1,
+        b     : hMap['opsi_b']      ?? -1,
+        c     : hMap['opsi_c']      ?? -1,
+        d     : hMap['opsi_d']      ?? -1,
+        e     : hMap['opsi_e']      ?? -1,
+        kunci : hMap['kunci']       ?? -1,
+        skor  : hMap['skor']        ?? -1,
+    };
+
+    // Cek header wajib ada
+    if (idx.tanya < 0) return null;
+
+    const abjad    = ['A','B','C','D','E'];
     const questions = [];
 
-    // Nomor soal: "1." / "1)" / "1 ." — minimal 3 karakter teks sesudahnya
-    const rSoal  = /^(\d{1,3})\s*[.)]\s+(.{3,})/;
-    // Opsi jawaban: "A." / "A)" / "a." — huruf A–E
-    const rOpsi  = /^([A-Ea-e])\s*[.)]\s+(.+)/;
-    // Kunci jawaban — berbagai variasi guru
-    const rKunci = /^(?:kunci\s*(?:jawaban)?|jawaban(?:\s*benar)?|jwb|ans(?:wer)?)\s*[:\-=]?\s*([A-Ea-e,\s]+)\s*$/i;
-    // Skor opsional
-    const rSkor  = /^(?:skor|bobot|nilai|poin|point)\s*[:\-=]\s*(\d+(?:[.,]\d+)?)\s*$/i;
+    for (let r = 1; r < rows.length; r++) {
+        const row   = rows[r];
+        const tipe  = getCellText(row, idx.tipe).toUpperCase().trim() || 'PG';
+        const tanya = getCellText(row, idx.tanya).replace(/\n{2,}/g, '\n').trim();
 
-    let soal  = null;
-    let opsi  = [];
-    let kunci = '';
-    let skor  = 1;
+        // Lewati baris kosong total (misal baris separator)
+        const allTxt = Array.from(row.querySelectorAll('td,th')).map(c => c.textContent.trim()).join('');
+        if (!allTxt) continue;
+        // Lewati baris yang isinya seperti header lagi
+        if (tanya.toLowerCase() === 'pertanyaan') continue;
 
-    function flush() {
-        if (!soal || !soal.tanya.trim()) return;
-        const tipe = _detectTipe(opsi, kunci);
+        const opsiA  = getCellText(row, idx.a);
+        const opsiB  = getCellText(row, idx.b);
+        const opsiC  = getCellText(row, idx.c);
+        const opsiD  = getCellText(row, idx.d);
+        const opsiE  = getCellText(row, idx.e);
+        const gambar = getCellText(row, idx.gambar);
+        const kunci  = getCellText(row, idx.kunci).toUpperCase().trim();
+        const skor   = parseFloat(getCellText(row, idx.skor).replace(',','.')) || 1;
+
+        let opsi_json = '';
+        let kunciFinal = kunci;
+
+        if (tipe === 'PG' || tipe === 'PGK') {
+            const opts = [opsiA, opsiB, opsiC, opsiD, opsiE].filter(o => o);
+            opsi_json  = opts.join('|||');
+        } else if (tipe === 'BS') {
+            const opts = [opsiA, opsiB, opsiC].filter(o => o);
+            opsi_json  = opts.length ? opts.join('|||') : 'B|||S';
+            // Konversi kunci "B,S" → abjad index
+            if (kunci) {
+                const bsMap = { B:'A', S:'B', BENAR:'A', SALAH:'B' };
+                kunciFinal  = kunci.split(',').map(k => bsMap[k.trim()] || k).join('-');
+            }
+        } else if (tipe === 'ISIAN' || tipe === 'ESAI') {
+            opsi_json  = '';
+        }
+
         questions.push({
-            exam_id  : kodeUjian,
-            tipe     : tipe,
-            tanya    : soal.tanya.trim(),
-            opsi_json: opsi.map(o => o.text).join('|||'),
-            kunci    : kunci.trim().toUpperCase().replace(/\s+/g, ''),
-            skor     : skor,
-            gform_url: ''
+            exam_id   : kodeUjian,
+            tipe,
+            tanya     : tanya || `[Soal No.${r}]`,
+            opsi_json,
+            kunci     : kunciFinal,
+            media_path: gambar,
+            skor,
+            gform_url : ''
         });
-        soal = null; opsi = []; kunci = ''; skor = 1;
     }
 
-    function _detectTipe(opsiArr, kunciStr) {
-        if (opsiArr.length === 0) return 'ESAI';
-        const kArr = kunciStr.replace(/\s/g, '').split(',').filter(k => k);
-        if (kArr.length > 1) return 'PGK';
-        if (opsiArr.length === 2) {
-            const t = opsiArr.map(o => o.text.toLowerCase().trim());
-            const bs = (t.some(x => x === 'benar' || x === 'b' || x === 'true')) &&
-                       (t.some(x => x === 'salah' || x === 's' || x === 'false'));
-            if (bs) return 'BS';
-        }
-        return 'PG';
-    }
+    return questions;
+}
 
-    for (let i = 0; i < lines.length; i++) {
-        const line  = lines[i];
-        const mSoal = line.match(rSoal);
-        const mOpsi = line.match(rOpsi);
-        const mKunci= line.match(rKunci);
-        const mSkor = line.match(rSkor);
-
-        if (mSoal) {
-            flush();
-            soal = { tanya: mSoal[2] };
-        } else if (mKunci && soal) {
-            kunci = mKunci[1];
-        } else if (mOpsi && soal && !kunci) {
-            opsi.push({ label: mOpsi[1].toUpperCase(), text: mOpsi[2].trim() });
-        } else if (mSkor && soal) {
-            skor = parseFloat(mSkor[1].replace(',', '.')) || 1;
-        } else if (soal && opsi.length === 0 && !kunci && !mOpsi) {
-            // Baris sambungan pertanyaan multi-baris
-            soal.tanya += ' ' + line;
-        }
-    }
+// ================================================================
+// PARSER 2: FORMAT PARAGRAF (fallback jika tidak ada tabel)
+// ================================================================
+function _parseParagrafWord(rawText, kodeUjian) {
+    const lines = rawText.replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(l=>l);
+    const questions = [];
+    const rSoal  = /^(\d{1,3})\s*[.)]\s+(.{3,})/;
+    const rOpsi  = /^([A-Ea-e])\s*[.)]\s+(.+)/;
+    const rKunci = /^(?:kunci|jawaban|jwb|ans)\s*[:\-=]?\s*([A-Ea-e,\s]+)$/i;
+    const rSkor  = /^(?:skor|bobot|poin)\s*[:\-=]\s*(\d+)/i;
+    let soal = null, opsi = [], kunci = '', skor = 1;
+    const flush = () => {
+        if (!soal) return;
+        questions.push({ exam_id:kodeUjian, tipe:opsi.length>1?'PG':'ESAI',
+            tanya:soal.trim(), opsi_json:opsi.map(o=>o.text).join('|||'),
+            kunci:kunci.trim().toUpperCase(), skor, media_path:'', gform_url:'' });
+        soal=null; opsi=[]; kunci=''; skor=1;
+    };
+    lines.forEach(line => {
+        const mS=line.match(rSoal), mO=line.match(rOpsi),
+              mK=line.match(rKunci), mSk=line.match(rSkor);
+        if (mS) { flush(); soal=mS[2]; }
+        else if (mK && soal) kunci=mK[1];
+        else if (mO && soal) opsi.push({label:mO[1].toUpperCase(),text:mO[2].trim()});
+        else if (mSk && soal) skor=parseFloat(mSk[1])||1;
+        else if (soal && !opsi.length) soal+=' '+line;
+    });
     flush();
     return questions;
+}
+
+// ================================================================
+// TAMPILKAN PREVIEW DAN SIMPAN
+// ================================================================
+async function _tampilkanPreviewDanSimpan(questions, kodeUjian, fileInput) {
+    if (!questions || questions.length === 0) {
+        return Swal.fire('Tidak Ada Soal', 'Tidak ada soal yang bisa diekstrak dari file ini.', 'warning');
+    }
+
+    // Statistik
+    const tipeCount  = {};
+    const tanpaKunci = questions.filter(q => !q.kunci).length;
+    const tanpaOpsi  = questions.filter(q => !q.opsi_json && q.tipe === 'PG').length;
+    questions.forEach(q => { tipeCount[q.tipe] = (tipeCount[q.tipe]||0)+1; });
+
+    const badgeTipe = Object.entries(tipeCount)
+        .map(([t,c]) => `<span class="bg-blue-100 text-blue-700 text-[9px] font-bold px-2 py-0.5 rounded-full">${t}: ${c}</span>`).join(' ');
+
+    const warningHtml = (tanpaKunci > 0 || tanpaOpsi > 0) ? `
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[10px] text-amber-800 mt-2 text-left">
+            <b>⚠ Perhatian:</b><br>
+            ${tanpaKunci > 0 ? `• <b>${tanpaKunci} soal</b> belum ada kunci jawaban — isi manual di Bank Soal setelah import.<br>` : ''}
+            ${tanpaOpsi  > 0 ? `• <b>${tanpaOpsi} soal PG</b> opsi kosong (kemungkinan rumus matematika sebagai gambar — isi manual).<br>` : ''}
+        </div>` : '';
+
+    const preview3 = questions.slice(0, 3).map((q, i) => `
+        <div class="border-b border-slate-200 pb-2 mb-2 text-left">
+            <div class="flex gap-1 mb-1">
+                <span class="bg-blue-100 text-blue-700 text-[9px] font-bold px-1.5 rounded">${q.tipe}</span>
+                <b class="text-xs">No.${i+1}</b>
+                ${q.media_path ? `<span class="bg-orange-100 text-orange-600 text-[9px] px-1 rounded">🖼</span>` : ''}
+                ${!q.kunci ? `<span class="bg-red-100 text-red-600 text-[9px] px-1 rounded">⚠ Kunci kosong</span>` : ''}
+            </div>
+            <p class="text-xs text-slate-700">${(q.tanya||'').replace(/\n/g,' ').substring(0,100)}${(q.tanya||'').length>100?'...':''}</p>
+            ${q.opsi_json ? `<p class="text-[10px] text-slate-400 mt-0.5">Opsi: ${q.opsi_json.replace(/\|\|\|/g,' | ').substring(0,70)}</p>`:''}
+            <p class="text-[10px] font-bold ${q.kunci?'text-emerald-600':'text-red-400'}">Kunci: ${q.kunci||'(belum diisi)'} — Skor: ${q.skor}</p>
+        </div>`).join('');
+
+    const konfirmasi = await Swal.fire({
+        title: `✅ ${questions.length} Soal Berhasil Dibaca`,
+        html : `<div class="flex gap-2 justify-center flex-wrap mb-3">${badgeTipe}</div>
+                <div class="bg-slate-50 border rounded-xl p-3 max-h-52 overflow-y-auto">${preview3}
+                    ${questions.length>3?`<p class="text-[10px] text-center text-slate-400">...dan ${questions.length-3} soal lainnya</p>`:''}
+                </div>
+                ${warningHtml}
+                <p class="text-[10px] text-slate-500 mt-2">Kode Ujian: <b class="text-blue-600">${kodeUjian}</b></p>`,
+        icon: 'success', width: '92%', showCancelButton: true,
+        confirmButtonText: `💾 Simpan ${questions.length} Soal`,
+        cancelButtonText : 'Batal',
+        confirmButtonColor: '#059669'
+    });
+
+    if (!konfirmasi.isConfirmed) return;
+
+    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+    try {
+        const res  = await fetch(API + '/admin/add-soal-bulk', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body  : JSON.stringify({ questions })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            fileInput.value = '';
+            document.getElementById('w_judul').value = '';
+            loadBankSoal();
+            Swal.fire('Berhasil!',
+                `${questions.length} soal berhasil disimpan!${tanpaKunci>0?' Lengkapi kunci jawaban di menu Bank Soal.':''}`,
+                'success');
+        } else {
+            Swal.fire('Gagal Menyimpan', data.message || 'Error server.', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error Koneksi', err.message, 'error');
+    }
 }
 
 // ===== IMPORT EXCEL/CSV FUNCTIONS UNTUK MANAJEMEN USER (JANGAN DIHAPUS) =====
