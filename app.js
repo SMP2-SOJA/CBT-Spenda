@@ -33,14 +33,31 @@ let publicActivityData = [];
 
 function formatMath(text) {
     if (typeof text !== 'string') return text;
-    // ^(...) eksplisit — bebas isi dalam kurung
-    // ^x / ^2 / ^ab   — maks 2 karakter, harus diikuti non-alfanumerik atau akhir string
-    // Pembatasan ini mencegah "3x^2 -5x + 7 dengan" menelan sisa kalimat jadi superscript
-    return text
+
+    // ── 1. Notasi eksplisit dengan ^ dan _ (dari input manual / Excel) ──
+    text = text
         .replace(/\^\(([^)]*)\)/g, '<sup>$1</sup>')
         .replace(/\^([a-zA-Z0-9]{1,2})(?=[^a-zA-Z0-9]|$)/g, '<sup>$1</sup>')
         .replace(/_\(([^)]*)\)/g, '<sub>$1</sub>')
         .replace(/_([a-zA-Z0-9]{1,2})(?=[^a-zA-Z0-9]|$)/g, '<sub>$1</sub>');
+
+    // ── 2. Superscript implisit dari Word export (plain text tanpa ^) ──
+    // Word menyimpan x² sebagai "x2", 4x²y sebagai "4x2y", y² sebagai "y2"
+    // Pola: huruf variabel + satu/dua digit, diikuti huruf atau non-digit/akhir
+    // Tidak menyentuh: angka murni (50000, 2026), angka diikuti digit lagi
+    // Pola: huruf variabel + digit pangkat, diikuti huruf/spasi/tanda baca/akhir string
+    // Tidak menyentuh: angka murni (50000, 2026), x200 (digit diikuti digit lagi)
+    text = text.replace(
+        /([a-zA-Z])(\d{1,2})(?=[a-zA-Z\s\+\-\*\/\=\.\,\;\:\!\?\)\(\[\]\{\}]|$)/g,
+        function(match, varChar, exp, offset, str) {
+            // Jangan angkat jika digit diikuti digit lagi (mis. x200 → biarkan)
+            const nextChar = str[offset + varChar.length + exp.length];
+            if (nextChar && /\d/.test(nextChar)) return match;
+            return varChar + '<sup>' + exp + '</sup>';
+        }
+    );
+
+    return text;
 }
 
 function getAuthParams() { return !activeUser ? "" : `?role=${encodeURIComponent(activeUser.role)}&mapel=${encodeURIComponent(activeUser.mapel || '')}`; }
