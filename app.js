@@ -629,7 +629,30 @@ function renderNilaiTable() {
         let kkmLimit = 0; if(selMapel) { kkmLimit = kkmMap[selMapel] || 0; } else { for(let mKey in kkmMap) { if(n.mapel && n.mapel.includes(mKey)) { kkmLimit = kkmMap[mKey]; break; } } }
         let statusKetuntasan = '<span class="text-slate-400 font-medium italic">Belum di-set</span>';
         if (kkmLimit > 0) { statusKetuntasan = n.nilai >= kkmLimit ? '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black">TUNTAS</span>' : '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black">REMEDIAL</span>'; }
-        return `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="p-3 font-semibold whitespace-normal min-w-[120px] md:min-w-[150px] leading-snug text-slate-800">${n.student_name} <br><span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span></td><td class="p-3 text-slate-700 font-medium">${n.mapel}</td><td class="p-3 text-xs text-slate-500 font-medium">${(n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-'}</td><td class="p-3 text-center text-blue-600 font-bold">${n.benar || 0} B / ${n.salah || 0} S</td><td class="p-3 text-center font-black text-sm md:text-base text-blue-600">${n.nilai}</td><td class="p-3 text-center">${statusKetuntasan}</td><td class="p-3 text-center"><button onclick='lihatDetail(${JSON.stringify(n.detail_jawaban || "[]").replace(/'/g, "'")})' class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm"><i class="fa fa-eye mr-1"></i> Detail</button></td></tr>`;
+        const rowIdx = window.filteredResultsData.indexOf(n);
+        // Badge nilai dengan warna sesuai ketuntasan
+        const nilaiColor = (kkmLimit > 0 && n.nilai >= kkmLimit) ? 'text-emerald-600' : (kkmLimit > 0 ? 'text-red-500' : 'text-blue-600');
+        return `<tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-3 font-semibold whitespace-normal min-w-[130px] leading-snug text-slate-800">
+            ${n.student_name}<br>
+            <span class="text-[9px] text-slate-400 font-medium">Kelas: ${n.kelas||'-'}</span>
+          </td>
+          <td class="p-3 text-slate-700 font-medium">${n.mapel}</td>
+          <td class="p-3 text-xs text-slate-500 font-medium whitespace-nowrap">
+            ${(n.tanggal||'').includes('|') ? n.tanggal.split('|')[1] : '-'}
+          </td>
+          <td class="p-3 text-center text-blue-600 font-bold whitespace-nowrap">
+            ${n.benar||0} B / ${n.salah||0} S
+          </td>
+          <td class="p-3 text-center font-black text-sm md:text-base ${nilaiColor}">${n.nilai}</td>
+          <td class="p-3 text-center">${statusKetuntasan}</td>
+          <td class="p-3 text-center">
+            <button onclick="lihatDetail(${rowIdx})"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm transition">
+              <i class="fa fa-eye mr-1"></i> Detail
+            </button>
+          </td>
+        </tr>`;
     }).join(''); 
 }
 
@@ -644,7 +667,33 @@ function exportExcelDetail() {
     const ws = XLSX.utils.json_to_sheet(dataToExport); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Hasil_Nilai"); XLSX.writeFile(wb, `Hasil_Ujian_CBT_Spenda.xlsx`);
 }
 
-function lihatDetail(detailJson) { let details = []; try { details = JSON.parse(detailJson); } catch(e) { details = []; } if(details.length === 0) return Swal.fire('Info', 'Bentuk GForm', 'info'); let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \\ /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); applyMathRendering(); }
+function lihatDetail(rowIdx) {
+    const n = window.filteredResultsData[rowIdx];
+    if (!n) return;
+    let details = [];
+    try { details = typeof n.detail_jawaban === 'string' ? JSON.parse(n.detail_jawaban) : (n.detail_jawaban || []); } catch(e) { details = []; }
+
+    // Header modal: nama siswa + ringkasan nilai
+    const kkmMap = getKkmStorage();
+    const selMapel = document.getElementById('filter-mapel-nilai').value;
+    let kkmLimit = selMapel ? (kkmMap[selMapel]||0) : 0;
+    const statusColor = kkmLimit > 0 ? (n.nilai >= kkmLimit ? 'text-emerald-600' : 'text-red-500') : 'text-blue-600';
+    document.querySelector('#modal-detail h3').innerHTML =
+        `<span class="font-black">${n.student_name}</span>
+         <span class="text-[9px] text-slate-400 font-normal ml-1">Kelas: ${n.kelas||'-'}</span><br>
+         <span class="text-[9px] font-medium text-slate-500">${n.mapel} &bull;
+           <span class="font-bold text-blue-600">${n.benar||0}B/${n.salah||0}S</span> &bull;
+           Nilai: <span class="font-black ${statusColor}">${n.nilai}</span>
+         </span>`;
+
+    if (details.length === 0) {
+        document.getElementById('detail-content').innerHTML =
+            `<div class="text-center py-8 text-slate-400"><i class="fa fa-link text-3xl mb-2 block text-violet-400"></i>
+             <p class="font-bold">Soal berbentuk Google Form</p>
+             <p class="text-xs mt-1">Detail jawaban per butir tidak tersedia.</p></div>`;
+        document.getElementById('modal-detail').classList.remove('hidden');
+        return;
+    } let html = details.map(d => { let coloredJawab = colorizeAnswer(d.jawab, d.kunci, d.tipe); let statusColor = d.status.includes('Benar') ? 'bg-emerald-100 text-emerald-700' : (d.status==='Salah' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'); return `<div class="bg-white p-3 md:p-4 rounded-xl border shadow-sm"><div class="flex justify-between items-start mb-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm">Soal No. ${d.no}</span><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-full ${statusColor}">${d.status} (Skor: ${d.poin})</span></div><div class="text-[10px] md:text-sm text-slate-600 mb-3 whitespace-pre-line leading-relaxed">${formatMath(d.tanya)}</div><div class="flex gap-2 md:gap-4 text-[9px] md:text-xs bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-100"><div class="flex-1"><span class="text-slate-400 block mb-1">Jawaban Siswa:</span><span class="leading-relaxed">${coloredJawab}</span></div><div class="flex-1 border-l pl-2 md:pl-4"><span class="text-slate-400 block mb-1">Kunci Jawaban:</span><strong class="text-emerald-600 leading-relaxed">${formatMath((d.kunci||'-').replace(/, | \\ /g, '<br>'))}</strong></div></div></div>` }).join(''); document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-detail').classList.remove('hidden'); applyMathRendering(); }
 
 async function loadMaster() { document.getElementById('app-name-display').innerText = 'SMP Negeri 2 Soyo Jaya'; }
 
