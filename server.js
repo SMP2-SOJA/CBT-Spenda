@@ -214,16 +214,54 @@ app.delete('/api/admin/clear-questions', async (req, res) => { await supabase.fr
 app.post('/api/admin/upload-excel', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.json({status: "error", message: "File kosong!"});
-        const workbook = XLSX.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-        const { error } = await supabase.from('questions').insert(data);
-        if (error) throw error;
+        const examId = (req.body.exam_id || '').trim();
+        if (!examId) return res.json({status: "error", message: "Kode Ujian wajib diisi!"});
+
+        const wb = XLSX.readFile(req.file.path);
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
         fs.unlinkSync(req.file.path);
-        res.json({status: "success", message: "Soal Excel berhasil digenerate!"});
+
+        if (!rows.length) return res.json({status:"error", message:"File kosong atau format tidak dikenal."});
+
+        // ── BS/TS kunci: "B,B,S" → "A,A,B" (B=Benar→A, S=Salah→B) ──
+        const bsMap = {'B':'A','S':'B','BENAR':'A','SALAH':'B','T':'A','TS':'B','SESUAI':'A','TIDAK':'B'};
+
+        const questions = rows.map(row => {
+            const tipe  = String(row['Tipe']||row['tipe']||'PG').toUpperCase().trim();
+            const tanya = String(row['Pertanyaan']||row['pertanyaan']||row['tanya']||'').trim();
+            if (!tanya) return null;
+
+            // Kumpulkan semua opsi non-kosong (A-G)
+            const optCols = ['Opsi_A','Opsi_B','Opsi_C','Opsi_D','Opsi_E','Opsi_F','Opsi_G'];
+            const opts = optCols.map(c => String(row[c]||'').trim()).filter(o=>o);
+            const opsi_json = opts.join('|||');
+
+            const kunciRaw = String(row['Kunci']||row['kunci']||'').trim();
+            const skor     = parseFloat(row['Skor']||row['skor']||1) || 1;
+            const gambar   = String(row['Link_Gambar']||row['link_gambar']||row['media_path']||'').trim();
+
+            let kunci = kunciRaw;
+            if (tipe === 'BS' || tipe === 'TS') {
+                // "B,B,S" → "A,A,B"
+                kunci = kunciRaw.split(',').map(k => bsMap[k.trim().toUpperCase()] || k.trim()).join(',');
+            } else if (tipe === 'PG') {
+                kunci = kunciRaw.toUpperCase().charAt(0);
+            } else if (tipe === 'PGK' || tipe === 'SIFAT') {
+                kunci = kunciRaw.toUpperCase().replace(/\s/g,'');
+            }
+
+            return { exam_id:examId, tipe, tanya, opsi_json, kunci, media_path:gambar, skor, gform_url:'' };
+        }).filter(q => q !== null);
+
+        if (!questions.length) return res.json({status:"error", message:"Tidak ada data soal valid di file."});
+
+        const { error } = await supabase.from('questions').insert(questions);
+        if (error) throw error;
+        res.json({status:"success", message:`${questions.length} soal berhasil diimport dari Excel!`, total: questions.length});
     } catch (err) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.json({status: "error", message: "Gagal memproses Excel: " + err.message});
+        res.json({status:"error", message:"Gagal memproses Excel: " + err.message});
     }
 });
 

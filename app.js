@@ -71,7 +71,11 @@ async function prosesLogin() {
     try {
         const res = await fetch(API + '/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: user, password: pass}) }); const data = await res.json();
         if (data.status === "success") {
-            activeUser = data.user; Swal.close(); document.getElementById('view-login').classList.add('hidden');
+            activeUser = data.user; Swal.close();
+        // Guard: pastikan role sesuai sebelum show panel
+        document.getElementById('view-login').classList.add('hidden');
+        document.getElementById('view-admin').classList.add('hidden');
+        document.getElementById('view-siswa-token').classList.add('hidden');
             if (activeUser.role.toLowerCase() === 'siswa') { document.getElementById('view-siswa-token').classList.remove('hidden'); document.getElementById('nama-siswa-welcome').innerText = activeUser.name; checkPendingSubmit(false); } 
             else { document.getElementById('view-admin').classList.remove('hidden'); if (activeUser.role.toLowerCase() === 'guru') { document.getElementById('menu-users').classList.add('hidden'); document.getElementById('menu-jadwal').classList.add('hidden'); // Guru bisa akses banksoal untuk koreksi
     document.getElementById('menu-banksoal').classList.remove('hidden'); document.getElementById('role-badge').classList.remove('hidden'); document.getElementById('role-badge').innerText = `GURU: ${activeUser.mapel || 'Semua Mapel'}`; } loadMaster(); showPage('dashboard'); }
@@ -258,9 +262,10 @@ function renderOpsiContent(val) {
             imgFallback = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
         }
     }
+    const errMsg = `<span class='text-[10px] text-slate-400 italic'>Gambar tidak dapat dimuat</span>`;
     return `<img src="${imgSrc}" 
-        ${imgFallback ? `onerror="if(this.src!=='${imgFallback}')this.src='${imgFallback}';"` : ''}
-        class="max-h-28 md:max-h-36 w-auto object-contain rounded-lg border" 
+        onerror="if(this.dataset.tried){this.outerHTML='${errMsg}'}else{this.dataset.tried=1;this.src='${imgFallback||imgSrc}'}"
+        class="max-h-32 md:max-h-40 w-auto object-contain rounded-lg border block mx-auto" 
         alt="Gambar pilihan jawaban">`;
 }
 
@@ -269,20 +274,39 @@ function showCbtQuestion(index) {
     document.getElementById('cbt-no-soal').innerText = index + 1; document.getElementById('cbt-tipe-soal').innerText = q.tipe;
     const divMedia = document.getElementById('cbt-media-area'); const divTanya = document.getElementById('cbt-tanya'); const divOpsi = document.getElementById('cbt-opsi-area');
     divMedia.innerHTML = ""; divTanya.innerHTML = ""; divOpsi.innerHTML = "";
-    let imgUrl = q.gform_url; let fallbackUrl = '';
-    if(imgUrl && imgUrl.includes('drive.google.com')) { let idMatch = imgUrl.match(/[?&]id=([^&]+)/) || imgUrl.match(/\/d\/([^\/]+)/); if(idMatch && idMatch[1]) { imgUrl = `https://lh3.googleusercontent.com/d/${idMatch[1]}=s1200`; fallbackUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`; } }
-    if (imgUrl && q.tipe !== 'GFORM' && imgUrl.startsWith('http')) { divMedia.innerHTML = `<img src="${imgUrl}" ${fallbackUrl ? `onerror="if(this.src !== '${fallbackUrl}') this.src='${fallbackUrl}';"` : ''} class="w-auto max-w-full h-auto max-h-[60vh] rounded-xl border shadow-sm mx-auto mb-3 md:mb-4 object-contain">`; }
+
+    // ── Ambil URL gambar dari media_path (Word import) ATAU gform_url (lama) ──
+    let rawImgUrl = '';
+    if (q.media_path && String(q.media_path).trim().startsWith('http')) rawImgUrl = String(q.media_path).trim();
+    else if (q.gform_url && String(q.gform_url).trim().startsWith('http') && q.tipe !== 'GFORM') rawImgUrl = String(q.gform_url).trim();
+
+    let imgUrl = rawImgUrl, fallbackUrl = '';
+    if (rawImgUrl.includes('drive.google.com')) {
+        const idMatch = rawImgUrl.match(/[?&]id=([^&\s]+)/) || rawImgUrl.match(/\/d\/([^\/\s]+)/);
+        if (idMatch && idMatch[1]) {
+            imgUrl     = `https://lh3.googleusercontent.com/d/${idMatch[1]}=s1200`;
+            fallbackUrl = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+        }
+    }
+    if (imgUrl && q.tipe !== 'GFORM') {
+        divMedia.innerHTML = `<div class="mb-3 text-center">
+            <img id="soal-img" src="${imgUrl}"
+                onerror="var img=this; if(!img.dataset.tried){img.dataset.tried=1;img.src='${fallbackUrl||imgUrl}';}else{img.parentElement.innerHTML='<div class=\\'py-4 text-center text-slate-400 text-xs\\'>⚠️ Gambar tidak dapat dimuat. Pastikan koneksi internet stabil.</div>';}"
+                class="w-auto max-w-full h-auto max-h-[50vh] rounded-xl border shadow-sm mx-auto object-contain block">
+        </div>`;
+    }
     
     if(q.tipe === 'GFORM') { divOpsi.innerHTML = `<div class="gform-container"><iframe src="${q.tanya || q.gform_url}"></iframe></div>`; cbtSaveAnswer("COMPLETED"); 
     } else {
         let htmlOpsi = ""; let opsiArray = q.opsi_json ? q.opsi_json.split(/\|\|\|/).map(o=>o.trim()).filter(o=>o) : []; const abjad = ['A', 'B', 'C', 'D', 'E', 'F'];
         if (q.tipe === 'JODOH') {
-            let lines = (q.tanya||"").split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(l => l); let premises = []; let mainTanya = []; lines.forEach(l => { if (/^\d+[\.\)]\s?/.test(l)) { premises.push(l); } else { mainTanya.push(l); } }); divTanya.innerHTML = formatMath(mainTanya.join('<br>')); 
+            let lines = (q.tanya||"").split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(l => l); let premises = []; let mainTanya = []; lines.forEach(l => { if (/^\d+[\.\)]\s?/.test(l)) { premises.push(l); } else { mainTanya.push(l); } }); divTanya.innerHTML = `<div class="text-sm md:text-[15px] leading-relaxed font-medium text-slate-800">${formatMath(mainTanya.join('<br>'))}</div>`; 
             let totalPairs = q.kunci ? q.kunci.split(',').length : (premises.length || 4); let savedArr = savedAns ? savedAns.split(',') : [];
             htmlOpsi += `<div class="bg-blue-50 p-3 md:p-4 rounded-xl border border-blue-200 mt-2 mb-3 md:mb-4"><p class="text-[10px] md:text-xs font-bold text-blue-800 mb-2 md:mb-3"><i class="fa fa-mouse-pointer"></i> PILIH PASANGAN JAWABAN YANG TEPAT:</p><div class="space-y-2 md:space-y-3">`;
             for(let i=0; i<totalPairs; i++) { let currentSaved = savedArr[i] ? savedArr[i].replace(/[0-9]/g, '') : ''; let labelText = premises[i] ? premises[i] : `Pertanyaan/Pasangan Nomor ${i+1}`; htmlOpsi += `<div class="flex flex-col md:flex-row items-start md:items-center justify-between p-2 md:p-3 bg-white border border-blue-100 rounded-lg shadow-sm gap-2"><span class="font-bold text-slate-700 text-[10px] md:text-sm md:w-1/2 leading-snug">${formatMath(labelText)}</span><select class="jodoh-select p-2 md:p-3 border-2 border-emerald-300 rounded-lg text-[10px] md:text-sm font-bold text-emerald-800 bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-1/2 cursor-pointer" onchange="cbtSaveJodoh(${totalPairs})"><option value="">- Silakan Pilih Jawaban -</option>`; opsiArray.forEach((val, idx) => { let huruf = abjad[idx]; let isSel = (currentSaved === huruf) ? "selected" : ""; htmlOpsi += `<option value="${huruf}" ${isSel}>${formatMath(val)}</option>`; }); htmlOpsi += `</select></div>`; } htmlOpsi += `</div></div>`;
         } else {
-            divTanya.innerHTML = formatMath(q.tanya || "");
+            // ── Teks soal: ukuran lebih besar, newline ditampilkan ──
+            divTanya.innerHTML = `<div class="text-sm md:text-[15px] leading-relaxed font-medium text-slate-800">${formatMath((q.tanya||'').replace(/\n/g,'<br>'))}</div>`;
             if (q.tipe === 'PG') {
                 const isImgOpsi = opsiArray.some(v => v.startsWith('http') && v.includes('drive.google'));
                 htmlOpsi += `<div class="${isImgOpsi ? 'grid grid-cols-2 gap-2' : 'space-y-2 md:space-y-3'}">`;
@@ -476,7 +500,9 @@ function renderActivityTable() {
 
     let filtered = (allActivityData || []).filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); });
     
-    let blocked = filtered.filter(a => a.status && a.status.includes('Curang'));
+    let terkunci = filtered.filter(a => a.status && (a.status.includes('Terkunci') || a.status==='Curang (Terkunci)'));
+    let warned   = filtered.filter(a => a.status && a.status.includes('Curang') && !a.status.includes('Terkunci'));
+    let blocked  = [...terkunci, ...warned];
     let finished = filtered.filter(a => a.status === 'Selesai');
     let working = filtered.filter(a => a.status === 'Mengerjakan' || (!a.status.includes('Curang') && a.status !== 'Selesai'));
 
@@ -620,11 +646,11 @@ async function clearUsers() { await fetch(API + '/admin/clear-users', {method:'D
 // -------------------------------------------------------------------
 
 async function importExcelSoal() {
-    const kodeUjian = document.getElementById('ex_judul').value;
+    const kodeUjian = (document.getElementById('ex_judul')?.value || '').trim();
     const fileInput = document.getElementById('ex_file');
-    const file = fileInput.files[0];
+    const file = fileInput ? fileInput.files[0] : null;
 
-    if (!kodeUjian) return Swal.fire('Oops', 'Isi Kode Ujian dulu!', 'warning');
+    if (!kodeUjian) return Swal.fire('Isi Kode Ujian', 'Kode Ujian (exam_id) wajib diisi sebelum upload Excel. Contoh: MTK-7A-2026', 'warning');
     if (!file) return Swal.fire('Oops', 'Pilih file Excel dulu!', 'warning');
 
     Swal.fire({ title: 'Membaca File...', didOpen: () => Swal.showLoading() });
