@@ -34,6 +34,18 @@ let publicActivityData = [];
 function formatMath(text) {
     if (typeof text !== 'string') return text;
 
+    // ── 0. Pecahan: (num/den) → tampil sebagai <span> bertumpuk ──
+    // Format dari Word equation maupun penulisan manual (2/3), (x+1/x-1)
+    // Hanya aktif jika dibungkus kurung: (2/3), (12x²y/3xy)
+    text = text.replace(/\(([^()\/]+)\/([^()\/]+)\)/g, function(match, num, den) {
+        // Jangan ubah jika keduanya murni URL atau teks panjang biasa
+        if (num.length > 30 || den.length > 30) return match;
+        return `<span class="inline-flex flex-col items-center leading-none mx-0.5 align-middle" style="vertical-align:middle">`
+             + `<span class="border-b border-current px-0.5 text-[0.85em]">${num}</span>`
+             + `<span class="px-0.5 text-[0.85em]">${den}</span>`
+             + `</span>`;
+    });
+
     // ── 1. Notasi eksplisit dengan ^ dan _ (dari input manual / Excel) ──
     text = text
         .replace(/\^\(([^)]*)\)/g, '<sup>$1</sup>')
@@ -862,6 +874,127 @@ async function importExcelSoal() {
     reader.readAsArrayBuffer(file);
 }
 
+// ============================================================
+// HELPER: Baca file docx sebagai ZIP & patch OMML fraction
+// docx adalah ZIP biasa — kita baca word/document.xml lalu
+// replace semua <m:f> (Word Equation fraction) dengan teks
+// "num/den" sebelum dikirim ke mammoth, sehingga pecahan
+// seperti 2/3 tampil benar (bukan "23" atau "2 3")
+// ============================================================
+function patchDocxFractions(arrayBuffer) {
+    return new Promise(function(resolve) {
+        try {
+            const bytes   = new Uint8Array(arrayBuffer);
+            const str     = String.fromCharCode.apply(null, bytes);
+
+            // Cari word/document.xml di dalam ZIP
+            // Signature entry: local file header = 0x504B0304
+            // Kita scan untuk nama file "word/document.xml"
+            const TARGET  = 'word/document.xml';
+            let xmlStart  = -1;
+            let xmlBytes  = null;
+
+            // Parse ZIP central directory untuk cari offset entry
+            // Scan dari belakang: end of central directory = 0x504B0506
+            let eocd = -1;
+            for (let i = bytes.length - 22; i >= 0; i--) {
+                if (bytes[i]===0x50 && bytes[i+1]===0x4B && bytes[i+2]===0x05 && bytes[i+3]===0x06) {
+                    eocd = i; break;
+                }
+            }
+            if (eocd < 0) { resolve(arrayBuffer); return; }
+
+            const cdOffset = bytes[eocd+16] | (bytes[eocd+17]<<8) | (bytes[eocd+18]<<16) | (bytes[eocd+19]<<24);
+            const cdSize   = bytes[eocd+12] | (bytes[eocd+13]<<8) | (bytes[eocd+14]<<16) | (bytes[eocd+15]<<24);
+
+            // Scan central directory entries
+            let pos = cdOffset;
+            while (pos < cdOffset + cdSize) {
+                if (bytes[pos]!==0x50||bytes[pos+1]!==0x4B||bytes[pos+2]!==0x01||bytes[pos+3]!==0x02) break;
+                const fnLen     = bytes[pos+28] | (bytes[pos+29]<<8);
+                const extraLen  = bytes[pos+30] | (bytes[pos+31]<<8);
+                const commentLen= bytes[pos+32] | (bytes[pos+33]<<8);
+                const localOff  = bytes[pos+42] | (bytes[pos+43]<<8) | (bytes[pos+44]<<16) | (bytes[pos+45]<<24);
+                const fname     = String.fromCharCode(...bytes.slice(pos+46, pos+46+fnLen));
+
+                if (fname === TARGET) {
+                    // Baca local file header untuk cari data
+                    const lhExtraLen = bytes[localOff+28] | (bytes[localOff+29]<<8);
+                    const dataStart  = localOff + 30 + fnLen + lhExtraLen;
+                    const compSize   = bytes[localOff+18] | (bytes[localOff+19]<<8) | (bytes[localOff+20]<<16) | (bytes[localOff+21]<<24);
+                    const compMethod = bytes[localOff+8] | (bytes[localOff+9]<<8);
+
+                    if (compMethod === 0) {
+                        // Stored (uncompressed)
+                        xmlBytes = bytes.slice(dataStart, dataStart + compSize);
+                    } else if (compMethod === 8) {
+                        // Deflate — gunakan DecompressionStream jika tersedia
+                        try {
+                            const ds = new DecompressionStream('deflate-raw');
+                            const writer = ds.writable.getWriter();
+                            const reader = ds.readable.getReader();
+                            writer.write(bytes.slice(dataStart, dataStart + compSize));
+                            writer.close();
+                            const chunks = [];
+                            const pump = () => reader.read().then(({done, value}) => {
+                                if (done) {
+                                    xmlBytes = new Uint8Array(chunks.reduce((a,c)=>[...a,...c],[]));
+                                    patchAndResolve();
+                                } else { chunks.push(value); pump(); }
+                            });
+                            pump(); return;
+                        } catch(e) { resolve(arrayBuffer); return; }
+                    }
+                    break;
+                }
+                pos += 46 + fnLen + extraLen + commentLen;
+            }
+
+            patchAndResolve();
+
+            function patchAndResolve() {
+                if (!xmlBytes) { resolve(arrayBuffer); return; }
+                try {
+                    const decoder = new TextDecoder('utf-8');
+                    let xmlStr = decoder.decode(xmlBytes);
+
+                    // ── Replace <m:f> (fraction) dengan teks (num/den) ──
+                    xmlStr = xmlStr.replace(/<m:f>[\s\S]*?<\/m:f>/g, function(frac) {
+                        const numMatch = frac.match(/<m:num>([\s\S]*?)<\/m:num>/);
+                        const denMatch = frac.match(/<m:den>([\s\S]*?)<\/m:den>/);
+                        const numText  = numMatch ? (numMatch[1].match(/<m:t[^>]*>([^<]*)<\/m:t>/g)||[]).map(t=>t.replace(/<[^>]+>/g,'')).join('') : '?';
+                        const denText  = denMatch ? (denMatch[1].match(/<m:t[^>]*>([^<]*)<\/m:t>/g)||[]).map(t=>t.replace(/<[^>]+>/g,'')).join('') : '?';
+                        return `<w:r><w:t xml:space="preserve">(${numText}/${denText})</w:t></w:r>`;
+                    });
+
+                    // ── Patch superscript dalam equation: <m:sSup> ──
+                    // Contoh: x² dalam equation → x^2
+                    xmlStr = xmlStr.replace(/<m:sSup>([\s\S]*?)<\/m:sSup>/g, function(sup) {
+                        const eMatch  = sup.match(/<m:e>([\s\S]*?)<\/m:e>/);
+                        const supMatch= sup.match(/<m:sup>([\s\S]*?)<\/m:sup>/);
+                        const base    = eMatch  ? (eMatch[1].match(/<m:t[^>]*>([^<]*)<\/m:t>/g)||[]).map(t=>t.replace(/<[^>]+>/g,'')).join('') : '';
+                        const exp2    = supMatch? (supMatch[1].match(/<m:t[^>]*>([^<]*)<\/m:t>/g)||[]).map(t=>t.replace(/<[^>]+>/g,'')).join('') : '';
+                        return `<w:r><w:t xml:space="preserve">${base}^(${exp2})</w:t></w:r>`;
+                    });
+
+                    // Encode kembali ke bytes dan rebuild ArrayBuffer
+                    const encoder   = new TextEncoder();
+                    const newXml    = encoder.encode(xmlStr);
+
+                    // Rebuild ZIP: ganti entry lama dengan yang baru
+                    // Strategi sederhana: cari & ganti raw bytes entry
+                    // (hanya works untuk stored/method=0; untuk deflate kita sudah
+                    //  decompress di atas jadi sekarang tinggal stored kembali)
+                    // Rebuild full ZIP dengan entry baru (stored, uncompressed)
+                    // Ini kompleks — gunakan pendekatan alternatif:
+                    // Kembalikan xmlStr sebagai text untuk diproses langsung
+                    resolve({ _patchedXml: xmlStr, _original: arrayBuffer });
+                } catch(e) { resolve(arrayBuffer); }
+            }
+        } catch(e) { resolve(arrayBuffer); }
+    });
+}
+
 function importWord() {
     const kodeUjian = document.getElementById('w_judul').value.trim();
     const fileInput = document.getElementById('w_file');
@@ -873,32 +1006,89 @@ function importWord() {
     Swal.fire({ title: 'Mengekstrak & Memproses Soal...', didOpen: () => Swal.showLoading() });
 
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = async function(event) {
         if (typeof mammoth === 'undefined') {
             return Swal.fire('Error', 'Library ekstrak Word belum termuat. Pastikan koneksi internet stabil lalu refresh halaman.', 'error');
         }
 
-        // ── LANGKAH 1: coba parse sebagai TABEL (format utama) ──
-        mammoth.convertToHtml({ arrayBuffer: event.target.result })
-            .then(function(htmlResult) {
-                let questions = parseWordTable(htmlResult.value, kodeUjian);
+        try {
+            // ── LANGKAH 1: Pre-process XML — perbaiki pecahan & superscript OMML ──
+            const patched = await patchDocxFractions(event.target.result);
 
-                // ── LANGKAH 2: fallback ke parser teks jika tidak ada tabel ──
-                if (questions.length === 0) {
-                    return mammoth.extractRawText({ arrayBuffer: event.target.result })
-                        .then(function(textResult) {
-                            questions = parseWordText(textResult.value, kodeUjian);
-                            handleWordQuestions(questions, kodeUjian, fileInput, htmlResult.value.substring(0, 600));
-                        });
-                }
-                handleWordQuestions(questions, kodeUjian, fileInput, '');
-            })
-            .catch(function(err) {
-                Swal.fire('Gagal Membaca File',
-                    'Format tidak didukung. Pastikan berekstensi .docx (bukan .doc). Detail: ' + err.message, 'error');
-            });
+            let htmlValue = '';
+            let rawText   = '';
+
+            if (patched && patched._patchedXml) {
+                // Gunakan patched XML — parse tabel langsung dari XML (tanpa mammoth)
+                // karena ZIP rebuild terlalu kompleks; kita parse tabel dari XML sendiri
+                htmlValue = patchedXmlToHtml(patched._patchedXml);
+                rawText   = patchedXmlToText(patched._patchedXml);
+            } else {
+                // Fallback: langsung pakai mammoth tanpa patch
+                const htmlResult = await mammoth.convertToHtml({ arrayBuffer: event.target.result });
+                htmlValue = htmlResult.value;
+                const textResult = await mammoth.extractRawText({ arrayBuffer: event.target.result });
+                rawText = textResult.value;
+            }
+
+            // ── LANGKAH 2: Parse tabel dari HTML ──
+            let questions = parseWordTable(htmlValue, kodeUjian);
+
+            // ── LANGKAH 3: Fallback ke parser teks ──
+            if (questions.length === 0) {
+                questions = parseWordText(rawText, kodeUjian);
+            }
+
+            handleWordQuestions(questions, kodeUjian, fileInput, htmlValue.substring(0, 600));
+
+        } catch(err) {
+            Swal.fire('Gagal Membaca File',
+                'Format tidak didukung. Pastikan berekstensi .docx (bukan .doc). Detail: ' + err.message, 'error');
+        }
     };
     reader.readAsArrayBuffer(file);
+}
+
+// ── Konversi patched XML ke HTML tabel (untuk parseWordTable) ──
+function patchedXmlToHtml(xmlStr) {
+    // Parse tabel dari XML word/document.xml
+    // Kita buat HTML tabel yang bisa dibaca parseWordTable
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
+
+    // Ambil semua tabel (w:tbl)
+    const tables = xmlDoc.querySelectorAll('tbl');
+    if (!tables.length) return '';
+
+    let html = '';
+    tables.forEach(tbl => {
+        html += '<table>';
+        const rows = tbl.querySelectorAll('tr');
+        rows.forEach(row => {
+            html += '<tr>';
+            const cells = row.querySelectorAll('tc');
+            cells.forEach(cell => {
+                // Ambil semua teks dari cell (w:t elements)
+                const texts = cell.querySelectorAll('t');
+                let cellText = '';
+                texts.forEach(t => { cellText += t.textContent; });
+                html += `<td>${cellText.trim()}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</table>';
+    });
+    return html;
+}
+
+// ── Konversi patched XML ke plain text (untuk parseWordText fallback) ──
+function patchedXmlToText(xmlStr) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
+    const texts  = xmlDoc.querySelectorAll('t');
+    const lines  = [];
+    texts.forEach(t => { if (t.textContent.trim()) lines.push(t.textContent); });
+    return lines.join('\n');
 }
 
 function handleWordQuestions(questions, kodeUjian, fileInput, rawPreview) {
