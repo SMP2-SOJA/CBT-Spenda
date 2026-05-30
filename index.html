@@ -25,6 +25,7 @@
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
+    <!-- ==================== HALAMAN LOGIN ==================== -->
     <div id="view-login" class="min-h-screen flex items-center justify-center p-3 bg-gradient-to-br from-slate-800 to-blue-900">
         <div class="w-full max-w-xs bg-white p-5 rounded-2xl shadow-2xl border-t-4 border-blue-600">
             <!-- Logo + Judul -->
@@ -50,9 +51,32 @@
                         <button type="button" onclick="togglePass('login-pass','eye-icon-login')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-blue-600"><i id="eye-icon-login" class="fa fa-eye-slash text-xs"></i></button>
                     </div>
                 </div>
-                <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 rounded-xl font-black shadow hover:bg-blue-700 transition text-sm">MASUK APLIKASI</button>
+                <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 rounded-xl font-black shadow hover:bg-blue-700 transition text-sm">
+                    <i class="fa fa-sign-in-alt mr-1"></i> MASUK APLIKASI
+                </button>
             </div>
+            <!-- Divider -->
+            <div class="relative my-3">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                <div class="relative flex justify-center"><span class="bg-white px-2 text-[10px] text-slate-400">atau</span></div>
+            </div>
+            <!-- Live Score + Demo -->
+            <button onclick="showPublicScore()" class="w-full bg-slate-700 text-white py-2 rounded-xl font-bold hover:bg-slate-800 transition text-[11px] mb-2">
+                <i class="fa fa-chart-bar mr-1"></i> LIVE SCORE PUBLIK
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="masukDemo()" class="bg-amber-500 text-white py-2 rounded-xl font-bold text-[10px] hover:bg-amber-600 transition">
+                    <i class="fa fa-flask mr-1"></i> Demo Admin
+                </button>
+                <button onclick="masukDemoSiswa()" class="bg-emerald-500 text-white py-2 rounded-xl font-bold text-[10px] hover:bg-emerald-600 transition">
+                    <i class="fa fa-pencil-alt mr-1"></i> Demo Siswa
+                </button>
+            </div>
+            <p class="text-center text-[9px] text-slate-300 mt-3">Hak Cipta &copy; 2026 | SPENDA-DIGI</p>
+        </div>
+    </div>
 
+    <!-- ==================== LIVE SCORE PUBLIK ==================== -->
     <div id="view-public-score" class="hidden min-h-screen bg-slate-100 flex-col p-4 relative">
         <div class="max-w-5xl mx-auto w-full bg-white rounded-3xl shadow-xl p-4 md:p-6 flex flex-col h-[90vh]">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -62,12 +86,10 @@
                 </div>
                 <button onclick="keluarPublic()" class="bg-red-100 text-red-600 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs"><i class="fa fa-arrow-left"></i> Kembali</button>
             </div>
-            
             <div class="flex gap-2 mb-4">
                 <select id="pub-filter-mapel" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Mapel</option></select>
                 <select id="pub-filter-kelas" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Kelas</option></select>
             </div>
-            
             <div class="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-2 scroll-saver">
                 <table class="w-full text-left text-[10px] md:text-xs">
                     <thead class="sticky top-0 bg-slate-200 text-slate-600 uppercase shadow-sm">
@@ -83,6 +105,7 @@
             </div>
         </div>
     </div>
+
 
     <div id="view-siswa-token" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-100">
         <div class="w-full max-w-sm bg-white p-6 md:p-8 rounded-3xl shadow-xl text-center border-t-8 border-emerald-500">
