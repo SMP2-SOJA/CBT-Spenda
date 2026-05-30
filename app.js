@@ -719,10 +719,14 @@ function exportExcelDetail() {
     const kkmMap = getKkmStorage(); const selMapel = document.getElementById('filter-mapel-nilai').value;
     const dataToExport = window.filteredResultsData.map(n => {
         let kkmLimit = 0; if(selMapel) { kkmLimit = kkmMap[selMapel] || 0; } else { for(let mKey in kkmMap) { if(n.mapel && n.mapel.includes(mKey)) { kkmLimit = kkmMap[mKey]; break; } } }
-        let isTuntas = 'Belum di-set KKM'; if (kkmLimit > 0) { isTuntas = n.nilai >= kkmLimit ? 'Tuntas' : 'Remedial'; }
-        return { "Nama Siswa": n.student_name, "Kelas": n.kelas || '-', "Mata Pelajaran": n.mapel, "Waktu Selesai": (n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-', "Jawaban Benar": n.benar, "Jawaban Salah": n.salah, "Nilai Akhir": n.nilai, "Status KKM": isTuntas };
+        const statusKetuntasan = kkmLimit > 0 ? (n.nilai >= kkmLimit ? 'Tuntas' : 'Tidak Tuntas') : '-';
+        const waktu = (n.tanggal || '').includes('|') ? (n.tanggal.split('|')[1]||'').trim() : (n.tanggal||'-');
+        let details = []; try { details = typeof n.detail_jawaban === 'string' ? JSON.parse(n.detail_jawaban) : (n.detail_jawaban || []); } catch(e) { details = []; }
+        const row = { "Nama Siswa": n.student_name, "Kelas": n.kelas || '-', "Mapel": n.mapel, "Waktu Pengerjaan": waktu, "Benar": n.benar, "Salah": n.salah, "Nilai Akhir": n.nilai, "Status Ketuntasan": statusKetuntasan };
+        details.forEach((d, i) => { row[`Soal No.${d.no || (i+1)}`] = d.jawab || '-'; });
+        return row;
     });
-    const ws = XLSX.utils.json_to_sheet(dataToExport); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Hasil_Nilai"); XLSX.writeFile(wb, `Hasil_Ujian_CBT_Spenda.xlsx`);
+    const ws = XLSX.utils.json_to_sheet(dataToExport); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Hasil_Nilai"); XLSX.writeFile(wb, `Hasil_Jawaban_Mapel.xlsx`);
 }
 
 function lihatDetail(rowIdx) {
