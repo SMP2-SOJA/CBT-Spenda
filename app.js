@@ -1,19 +1,3 @@
-let _isDemoMode = false;
-const _DEMO = {
-    admin:{id:0,username:'demo',name:'Demo Sekolah',role:'admin',kelas:'',mapel:'',_isDemo:true},
-    siswa:{id:0,username:'demo_siswa',name:'Siswa Demo',role:'siswa',kelas:'7A',mapel:'',_isDemo:true},
-    exam:{mapel:'DEMO-CBT-2026',durasi:30},
-    questions:[
-        {id:1,exam_id:'DEMO-CBT-2026',tipe:'PG',tanya:'Ibukota Indonesia adalah...',opsi_json:'Bandung|||Jakarta|||Surabaya|||Medan',kunci:'B',skor:1,media_path:'',gform_url:''},
-        {id:2,exam_id:'DEMO-CBT-2026',tipe:'PGK',tanya:'Yang merupakan bilangan prima... (boleh lebih dari 1)',opsi_json:'4|||7|||11|||9',kunci:'B,C',skor:2,media_path:'',gform_url:''},
-        {id:3,exam_id:'DEMO-CBT-2026',tipe:'ISIAN',tanya:'12 + 8 = ?',opsi_json:'',kunci:'20',skor:1,media_path:'',gform_url:''},
-        {id:4,exam_id:'DEMO-CBT-2026',tipe:'ESAI',tanya:'Jelaskan teorema Pythagoras!',opsi_json:'',kunci:'',skor:5,media_path:'',gform_url:''},
-    ],
-    activity:[{id:1,student_name:'Andi',exam_name:'DEMO-CBT-2026',kelas:'7A',status:'Mengerjakan',score:40,last_seen:'08:15'}],
-    results:[{id:1,student_name:'Andi',mapel:'DEMO-CBT-2026',kelas:'7A',nilai:80,benar:4,salah:1,detail_jawaban:'[]',tanggal:'2026-05-26|30 mnt'}],
-    schedules:[{id:1,mapel:'DEMO-CBT-2026',pin:'0000',tanggal:'2026-05-26',durasi:30,status:'Aktif',kelas:''}],
-    users:[{id:1,username:'siswa01',name:'Andi',role:'siswa',kelas:'7A',mapel:''}]
-};
 // CBT APP ENGINE - Copyright (c) | @spenda-digi
 const API = "/api";
 let activeUser = null; 
@@ -83,10 +67,76 @@ document.addEventListener('fullscreenchange', () => { if (isExamActive && !docum
 
 function deteksiKecurangan() {
     if (!isExamActive || !navigator.onLine) return;
-    curangCount++; 
-    fetch(API + '/siswa/flag-curang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, count: curangCount}) });
-    if (curangCount >= 3) { isExamActive = false; Swal.fire({title: 'UJIAN DIBATALKAN!', text: 'Layar ujian otomatis dikunci!', icon: 'error', allowOutsideClick: false}).then(() => { submitUjian(false, true); }); } 
-    else { Swal.fire('PERINGATAN!', `Dilarang meminimalkan layar/membuka tab lain! (${curangCount}/3)`, 'warning'); }
+    curangCount++;
+
+    // Kirim flag ke server
+    fetch(API + '/siswa/flag-curang', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, count: curangCount})
+    });
+
+    if (curangCount >= 3) {
+        // ── BLOKIR: Simpan progress, logout ke halaman login ──
+        isExamActive = false;
+        saveToLocal(); // simpan jawaban yang sudah diisi
+        Swal.fire({
+            title: '🔒 Akun Anda Diblokir!',
+            html: `<div class="text-left space-y-2 text-sm">
+                     <p class="text-red-600 font-bold">Anda telah terdeteksi <b>3 kali</b> meninggalkan layar ujian.</p>
+                     <p>Akun dikunci sementara. <b>Ujian tidak dibatalkan</b> — jawaban tersimpan.</p>
+                     <hr class="my-2">
+                     <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                       <p class="text-amber-800 font-bold text-xs">📋 Langkah selanjutnya:</p>
+                       <ol class="list-decimal list-inside text-amber-700 text-xs mt-1 space-y-1">
+                         <li>Hubungi <b>guru/pengawas</b> untuk membuka kembali akses</li>
+                         <li>Login ulang setelah akses dibuka</li>
+                         <li>Lanjutkan ujian dari soal yang belum dijawab</li>
+                       </ol>
+                     </div>
+                   </div>`,
+            icon: 'error',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            confirmButtonText: 'Keluar & Hubungi Guru',
+            confirmButtonColor: '#dc2626'
+        }).then(() => {
+            // Logout ke halaman login
+            activeUser = null;
+            currentExam = null;
+            document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-login').classList.remove('hidden');
+        });
+
+    } else {
+        // ── TEGURAN 1 atau 2: tampilkan peringatan, ujian tetap jalan ──
+        const sisaPeringatan = 3 - curangCount;
+        Swal.fire({
+            title: `⚠️ PERINGATAN ${curangCount} / 3`,
+            html: `<div class="text-center space-y-3">
+                     <p class="text-orange-600 font-bold">Dilarang meninggalkan layar ujian!</p>
+                     <p class="text-slate-600 text-xs">Jangan buka tab lain, minimize, atau keluar dari layar.</p>
+                     <div class="p-3 bg-red-50 rounded-xl border border-red-200">
+                       <p class="text-red-700 font-black text-sm">
+                         Sisa toleransi: <span class="text-3xl font-black text-red-600">${sisaPeringatan}</span> kali
+                       </p>
+                       <p class="text-red-400 text-xs mt-1">Pelanggaran ke-3 → akun <b>DIBLOKIR</b></p>
+                     </div>
+                   </div>`,
+            icon: 'warning',
+            confirmButtonText: 'Mengerti, Lanjutkan Ujian',
+            confirmButtonColor: '#d97706',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            timer: 10000,
+            timerProgressBar: true
+        }).then(() => {
+            // Paksa fullscreen kembali setelah teguran
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        });
+    }
 }
 
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === 'hidden') { deteksiKecurangan(); } });
@@ -113,51 +163,6 @@ async function prosesLogin() {
 }
 
 function logout() { location.reload(); }
-function masukDemo() {
-    _isDemoMode=true; activeUser=_DEMO.admin;
-    window.allActivityData=_DEMO.activity; window.allResultsData=_DEMO.results;
-    window.filteredResultsData=_DEMO.results; window.allSchedulesData=_DEMO.schedules;
-    const b=document.getElementById('demo-banner'); if(b) b.classList.remove('hidden');
-    document.getElementById('view-login').classList.add('hidden');
-    document.getElementById('view-admin').classList.remove('hidden');
-    const rb=document.getElementById('role-badge'); if(rb){rb.classList.remove('hidden');rb.innerText='⚡ DEMO';}
-    loadMaster(); showPage('dashboard');
-    Swal.fire({icon:'info',title:'Mode Demo',html:'<p class="text-sm">Data contoh. Tidak tersimpan ke database.<br>📌 PIN demo siswa: <b class="text-blue-600">0000</b></p>',confirmButtonColor:'#D97706',confirmButtonText:'Mengerti!'});
-}
-async function masukDemoSiswa() {
-    _isDemoMode=true; activeUser=_DEMO.siswa;
-    const b=document.getElementById('demo-banner'); if(b) b.classList.remove('hidden');
-    document.getElementById('view-login').classList.add('hidden');
-    document.getElementById('view-siswa-token').classList.remove('hidden');
-    const nw=document.getElementById('nama-siswa-welcome'); if(nw) nw.innerText=_DEMO.siswa.name;
-    await Swal.fire({icon:'info',title:'Demo Siswa',html:'<p class="text-sm">Coba ujian 4 soal contoh.<br>➡ Masukkan PIN: <b class="text-blue-600 text-lg">0000</b></p>',confirmButtonColor:'#059669',confirmButtonText:'Lanjut!'});
-    const p=document.getElementById('pin-input'); if(p) p.value='0000';
-}
-function keluarDemo() {
-    _isDemoMode=false; activeUser=null;
-    const b=document.getElementById('demo-banner'); if(b) b.classList.add('hidden');
-    ['view-admin','view-siswa-token','view-siswa-ujian'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('hidden');});
-    document.getElementById('view-login').classList.remove('hidden');
-}
-const _origFetch=window.fetch.bind(window);
-window.fetch=async function(url,opts){
-    if(!_isDemoMode) return _origFetch(url,opts);
-    const ok=d=>new Response(JSON.stringify(d),{status:200,headers:{'Content-Type':'application/json'}});
-    if(url.includes('/siswa/cek-pin')){const b=opts&&opts.body?JSON.parse(opts.body):{};return String(b.pin)==='0000'?ok({status:'success',exam:_DEMO.exam}):ok({status:'error',message:'PIN demo: 0000'});}
-    if(url.includes('/siswa/get-soal')) return ok({questions:_DEMO.questions});
-    if(url.includes('/siswa/')) return ok({status:'success'});
-    const m=((opts&&opts.method)||'GET').toUpperCase();
-    if(m==='GET'){
-        if(url.includes('/admin/users')) return ok(_DEMO.users);
-        if(url.includes('/admin/questions')) return ok(_DEMO.questions);
-        if(url.includes('/admin/available-exams')) return ok(['DEMO-CBT-2026']);
-        if(url.includes('/admin/schedules')) return ok(_DEMO.schedules);
-        if(url.includes('/admin/results')) return ok(_DEMO.results);
-        if(url.includes('/admin/recent-activity')) return ok(_DEMO.activity);
-        if(url.includes('/admin/stats')) return ok({total_siswa:30,total_guru:5});
-    }
-    return ok({status:'success',_demo:true});
-};
 
 function saveToLocal() { if(currentExam && activeUser) localStorage.setItem(`cbt_ans_${currentExam.mapel}_${activeUser.username}`, JSON.stringify(cbtAnswers)); }
 
@@ -412,43 +417,33 @@ function showCbtQuestion(index) {
             }
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') {
                 let savedArr = savedAns ? savedAns.split(',') : [];
+                let headers = [], statements = [];
 
-                // ── Tentukan header kolom ──
-                // Format opsi_json bisa:
-                //   HEADER:Kol1|||Kol2|||Baris1|||Baris2  (header kustom — diawali HEADER:)
-                //   Baris1|||Baris2  (header default sesuai tipe)
-                let headers = [];
-                let statements = [];
-
+                // ── Deteksi header kustom dari opsi_json ──
+                // Format: HEADER[Kol1,Kol2]|||Baris1|||Baris2|||Baris3
                 const firstOpsi = opsiArray[0] || '';
                 const headerMatch = firstOpsi.match(/^HEADER\[(.+)\]$/i);
                 if (headerMatch) {
-                    // Header kustom: "HEADER[Numerik,Kategorik]"
-                    headers = headerMatch[1].split(',').map(h => h.trim()).filter(h => h);
-                    statements = opsiArray.slice(1).filter(s => s.trim());
-                } else if (firstOpsi.startsWith('HEADER:')) {
-                    // Format lama (backward compat): "HEADER:Kol1|||Kol2"
-                    const headerPart = firstOpsi.replace(/^HEADER:/i, '').trim();
-                    headers = headerPart.split(',').map(h => h.trim()).filter(h => h);
+                    headers    = headerMatch[1].split(',').map(h => h.trim()).filter(h => h);
                     statements = opsiArray.slice(1).filter(s => s.trim());
                 } else {
-                    // Header default
+                    // Header default sesuai tipe
                     if (q.tipe === 'BS')    headers = ['Benar', 'Salah'];
                     else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai'];
                     else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
                     statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
                 }
 
-                // ── Render tabel matrix ──
-                htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm mt-1">
+                // ── Render tabel matrix seperti tampilan soal asli ──
+                htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm mt-1">
                   <table class="w-full text-[10px] md:text-sm text-left border-collapse">
-                    <thead class="bg-slate-700 text-white">
-                      <tr>
+                    <thead>
+                      <tr class="bg-slate-700 text-white">
                         <th class="p-3 md:p-4 border border-slate-600 font-bold text-left min-w-[160px]">Data</th>`;
                 headers.forEach(h => {
-                    htmlOpsi += `<th class="p-3 md:p-4 border border-slate-600 text-center font-bold min-w-[80px] md:min-w-[100px] text-[9px] md:text-xs leading-tight">${formatMath(h)}</th>`;
+                    htmlOpsi += `<th class="p-2 md:p-3 border border-slate-600 text-center font-bold min-w-[80px] text-[9px] md:text-xs">${formatMath(h)}</th>`;
                 });
-                htmlOpsi += `</tr></thead><tbody class="bg-white">`;
+                htmlOpsi += `</tr></thead><tbody>`;
 
                 statements.forEach((val, idx) => {
                     const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
@@ -457,19 +452,16 @@ function showCbtQuestion(index) {
                     headers.forEach((h, hIdx) => {
                         const huruf = abjad[hIdx];
                         const isChecked = savedArr[idx] === huruf ? 'checked' : '';
-                        const checkedStyle = isChecked ? 'bg-blue-600' : 'bg-white border-slate-300';
                         htmlOpsi += `<td class="p-3 md:p-4 text-center border border-slate-200">
-                          <label class="flex items-center justify-center cursor-pointer">
-                            <input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked}
-                              onchange="cbtSaveMatrix(${statements.length})"
-                              class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer">
-                          </label>
+                          <input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked}
+                            onchange="cbtSaveMatrix(${statements.length})"
+                            class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer">
                         </td>`;
                     });
                     htmlOpsi += `</tr>`;
                 });
                 htmlOpsi += `</tbody></table></div>
-                <p class="text-[9px] text-slate-400 mt-2 text-center">
+                <p class="text-[9px] text-slate-400 mt-2 text-center italic">
                   <i class="fa fa-info-circle mr-1"></i>Pilih satu pilihan untuk setiap baris data
                 </p>`;
             }
@@ -518,16 +510,9 @@ function getFullAnswerText(q, rawAnswer) {
         let hd = [];
         if (q.tipe === 'BS') hd = ['Benar', 'Salah'];
         else if (q.tipe === 'TS') {
-            // Cek apakah ada header kustom
             const fo = opsiArray[0] || '';
             const hm = fo.match(/^HEADER\[(.+)\]$/i);
-            if (hm) {
-                hd = hm[1].split(',').map(h => h.trim()).filter(h => h);
-            } else if (fo.startsWith('HEADER:')) {
-                hd = fo.replace(/^HEADER:/i,'').split(',').map(h=>h.trim()).filter(h=>h);
-            } else {
-                hd = ['Sesuai', 'Tidak Sesuai'];
-            }
+            hd = hm ? hm[1].split(',').map(h=>h.trim()).filter(h=>h) : ['Sesuai', 'Tidak Sesuai'];
         }
         else if (q.tipe === 'SIFAT') hd = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
         let ansArr = rawAnswer.split(','); let tx = []; ansArr.forEach((a, i) => { let idx = abjad.indexOf(a); if (q.tipe === 'BS' || q.tipe === 'TS') { if(a === 'B' && hd.length === 2 && idx === 1) {} else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } } if(idx !== -1 && hd[idx]) tx.push(`No.${i+1}:${hd[idx]}`); else tx.push(`No.${i+1}:-`); }); return tx.join(', '); 
@@ -927,21 +912,13 @@ async function importExcelSoal() {
                 const skor    = parseFloat(String(row[kSkor] || '1').replace(',','.')) || 1;
                 const gambar  = String(row[kGambar] || '').trim();
 
-                // ── Soal TS/BS: normalisasi opsi_json ──
-                // Jika tipe TS dan opsi berisi header kustom (mis. "Numerik|||Kategorik|||Baris1|||...")
-                // Deteksi otomatis: jika opsi ke-1 dan ke-2 pendek (≤25 karakter) → anggap sebagai header kolom
-                // lalu prefix dengan HEADER: agar renderer tahu mana header mana baris
+                // ── TS/BS: auto-inject HEADER[...] jika opsi ke-1 & ke-2 adalah header pendek ──
                 if ((tipeRaw === 'TS' || tipeRaw === 'BS') && opsiJson) {
                     const parts = opsiJson.split('|||').map(p => p.trim()).filter(p => p);
-                    // Cek apakah sudah berformat HEADER:
-                    if (parts.length >= 2 && !parts[0].startsWith('HEADER:')) {
-                        // Heuristic: 2 elemen pertama pendek = header kolom, sisanya = baris data
-                        const firstTwo = parts.slice(0, 2);
-                        const rest     = parts.slice(2);
-                        const firstTwoAreShort = firstTwo.every(p => p.length <= 30);
-                        if (firstTwoAreShort && rest.length > 0) {
-                            // Format: HEADER[Kol1,Kol2]|||Baris1|||Baris2|||...
-                            opsiJson = 'HEADER[' + firstTwo.join(',') + ']|||' + rest.join('|||');
+                    if (parts.length >= 3 && !parts[0].match(/^HEADER\[/i)) {
+                        const col1 = parts[0], col2 = parts[1];
+                        if (col1.length <= 30 && col2.length <= 30) {
+                            opsiJson = `HEADER[${col1},${col2}]|||` + parts.slice(2).join('|||');
                         }
                     }
                 }

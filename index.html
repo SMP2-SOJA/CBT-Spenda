@@ -25,12 +25,6 @@
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
-
-    <!-- DEMO BANNER -->
-    <div id="demo-banner" class="hidden fixed top-0 left-0 right-0 z-[300] bg-amber-400 text-amber-900 text-center py-1.5 text-xs font-bold shadow flex items-center justify-center gap-3">
-        <i class="fa fa-flask"></i> MODE DEMO — Data contoh, tidak tersimpan ke database asli
-        <button onclick="keluarDemo()" class="bg-amber-800 text-white px-2 py-0.5 rounded text-[10px]">✕ Keluar</button>
-    </div>
     <div id="view-login" class="min-h-screen flex items-center justify-center p-3 bg-gradient-to-br from-slate-800 to-blue-900">
         <div class="w-full max-w-xs bg-white p-5 rounded-2xl shadow-2xl border-t-4 border-blue-600">
             <!-- Logo + Judul -->
@@ -58,26 +52,6 @@
                 </div>
                 <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 rounded-xl font-black shadow hover:bg-blue-700 transition text-sm">MASUK APLIKASI</button>
             </div>
-
-            <!-- Demo Buttons -->
-            <div class="relative my-3">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-                <div class="relative flex justify-center"><span class="bg-white px-2 text-[10px] text-slate-400">atau coba dulu</span></div>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="masukDemo()" class="bg-amber-500 text-white py-2 rounded-xl font-bold text-[10px] hover:bg-amber-600 transition flex flex-col items-center gap-0.5">
-                    <i class="fa fa-user-shield"></i><span>Demo Admin</span>
-                </button>
-                <button onclick="masukDemoSiswa()" class="bg-emerald-500 text-white py-2 rounded-xl font-bold text-[10px] hover:bg-emerald-600 transition flex flex-col items-center gap-0.5">
-                    <i class="fa fa-pencil-alt"></i><span>Demo Siswa</span>
-                </button>
-            </div>
-
-            <!-- Live Score + Copyright -->
-            <button onclick="showPublicScore()" class="w-full mt-3 bg-slate-100 text-slate-600 py-1.5 rounded-lg font-bold hover:bg-slate-200 transition text-[10px]"><i class="fa fa-users mr-1"></i>Live Score Publik</button>
-            <p class="text-center text-[9px] text-slate-300 mt-3">Hak Cipta &copy; 2026 | SPENDA-DIGI</p>
-        </div>
-    </div>
 
     <div id="view-public-score" class="hidden min-h-screen bg-slate-100 flex-col p-4 relative">
         <div class="max-w-5xl mx-auto w-full bg-white rounded-3xl shadow-xl p-4 md:p-6 flex flex-col h-[90vh]">

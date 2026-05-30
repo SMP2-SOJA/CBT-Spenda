@@ -53,9 +53,9 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
         if (student_name) {
             const { data: actData } = await supabase.from('activity').select('status').eq('student_name', student_name).in('exam_name', allMapels);
             if (actData && actData.length > 0) {
-                const isBlocked = actData.some(a => a.status && a.status.includes('Curang'));
+                const isBlocked = actData.some(a => a.status && a.status.includes('Terkunci'));
                 if (isBlocked) {
-                    return res.json({status: "error", message: "Akses Ditolak! Layar Anda terkunci karena pelanggaran. Lapor ke pengawas untuk Buka Akses."});
+                    return res.json({status: "error", message: "🔒 Akun Anda masih terkunci karena pelanggaran. Hubungi guru/pengawas untuk membuka akses, lalu login kembali untuk melanjutkan ujian."});
                 }
             }
         }
@@ -147,10 +147,15 @@ app.post('/api/siswa/submit', async (req, res) => {
     res.json({status: "success"}); 
 });
 
-app.post('/api/siswa/flag-curang', async (req, res) => { 
-    const statusText = req.body.count >= 3 ? `Curang (Terkunci)` : `Curang (${req.body.count}x)`;
-    await supabase.from('activity').update({ status: statusText }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
-    res.json({status: "success"}); 
+app.post('/api/siswa/flag-curang', async (req, res) => {
+    const count = parseInt(req.body.count) || 1;
+    // count >= 3 → status Terkunci (guru harus buka); < 3 → catat peringatan saja
+    const statusText = count >= 3 ? 'Curang (Terkunci)' : `Mengerjakan (Peringatan ${count}x)`;
+    await supabase.from('activity')
+        .update({ status: statusText })
+        .eq('student_name', req.body.student_name)
+        .eq('exam_name', req.body.mapel);
+    res.json({ status: 'success' });
 });
 
 // ==========================================
@@ -166,8 +171,13 @@ app.get('/api/admin/recent-activity', async (req, res) => { const { data } = awa
 app.get('/api/admin/results', async (req, res) => { const { data } = await supabase.from('results').select('*').order('id', {ascending: false}); res.json(data || []); });
 
 app.post('/api/admin/reset-siswa', async (req, res) => {
-    await supabase.from('activity').delete().eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel);
-    res.json({status: "success"});
+    // Buka akses: ubah status kembali ke 'Mengerjakan' (bukan hapus)
+    // Siswa bisa login ulang dan melanjutkan ujian dari local storage
+    await supabase.from('activity')
+        .update({ status: 'Mengerjakan' })
+        .eq('student_name', req.body.student_name)
+        .eq('exam_name', req.body.mapel);
+    res.json({ status: 'success' });
 });
 app.delete('/api/admin/remove-activity/:id', async (req, res) => { await supabase.from('activity').delete().eq('id', req.params.id); res.json({status: "success"}); });
 app.delete('/api/admin/clear-monitoring', async (req, res) => { await supabase.from('activity').delete().neq('id', 0); res.json({status:"success"}); });
