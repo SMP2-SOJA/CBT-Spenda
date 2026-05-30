@@ -245,7 +245,7 @@ function getLiveScore() {
         if (q.kunci && q.kunci.trim() === '') {} 
         else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { totalSkorDiperoleh += bobot; } } 
         else if (q.tipe === 'PGK') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); if(kArr.length > 0) { let betul = 0; aArr.forEach(a => { if(kArr.includes(a)) betul++; }); if(betul === kArr.length && aArr.length === kArr.length) { totalSkorDiperoleh += bobot; } else if(betul > 0) { totalSkorDiperoleh += (betul / kArr.length) * bobot; } } } 
-        else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let correct = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correct++; } } if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
+        else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let correct = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correct++; } } if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
         else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let correct = 0; kArr.forEach(k => { if(aArr.includes(k)) correct++; }); if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
         else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let match = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) match++; }); if(match === kWords.length) { totalSkorDiperoleh += bobot; } else if(match > 0) { totalSkorDiperoleh += (match / kWords.length) * bobot; } } }
     });
@@ -257,7 +257,7 @@ setInterval(() => {
         let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey);
         let dMins = 0, dSecs = 0; if (start) { let diffMs = Date.now() - parseInt(start); dMins = Math.floor(diffMs / 60000); dSecs = Math.floor((diffMs % 60000) / 1000); }
         let terjawab = 0; let totalSoal = cbtQuestions.length;
-        for(let i=0; i<totalSoal; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
+        for(let i=0; i<totalSoal; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
         let durasiTeks = `${dMins}m ${dSecs}s | ${terjawab}/${totalSoal} Soal`; let lScore = getLiveScore(); 
         
         fetch(API + '/siswa/ping', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, durasi: durasiTeks, live_score: lScore, kelas: activeUser.kelas || '-'}) }).catch(e=>console.log(e)); 
@@ -268,7 +268,7 @@ function renderCbtGrid() {
     let html = "";
     for(let i = 0; i < cbtQuestions.length; i++) {
         let statusClass = "bg-white text-slate-600 border-slate-300"; let isAnswered = false;
-        if (cbtAnswers[i].ans !== "") { if (cbtQuestions[i].tipe === 'BS' || cbtQuestions[i].tipe === 'TS' || cbtQuestions[i].tipe === 'SIFAT') { isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; } else if(cbtQuestions[i].tipe === 'JODOH') { let h = (cbtQuestions[i].kunci||"").split(',').length; isAnswered = cbtAnswers[i].ans.split(',').length >= h; } else { isAnswered = true; } }
+        if (cbtAnswers[i].ans !== "") { if (cbtQuestions[i].tipe === 'BS' || cbtQuestions[i].tipe === 'TS' || cbtQuestions[i].tipe === 'NK' || cbtQuestions[i].tipe === 'SIFAT') { isAnswered = cbtAnswers[i].ans.indexOf('-') === -1; } else if(cbtQuestions[i].tipe === 'JODOH') { let h = (cbtQuestions[i].kunci||"").split(',').length; isAnswered = cbtAnswers[i].ans.split(',').length >= h; } else { isAnswered = true; } }
         if(isAnswered) statusClass = "bg-blue-600 text-white border-blue-700 shadow-md"; 
         let activeRing = (i === cbtCurrentIndex) ? "ring-4 ring-blue-300 scale-105" : "";
         html += `<button onclick="showCbtQuestion(${i}); if(window.innerWidth < 768) toggleCbtNav();" class="w-full aspect-square flex items-center justify-center rounded-lg font-black text-xs md:text-sm border-2 transition transform active:scale-95 ${statusClass} ${activeRing}">${i+1}</button>`;
@@ -313,6 +313,7 @@ function showCbtQuestion(index) {
         'PGK':   'bg-purple-100 text-purple-800',
         'BS':    'bg-orange-100 text-orange-800',
         'TS':    'bg-orange-100 text-orange-800',
+        'NK':    'bg-cyan-100 text-cyan-800',
         'SIFAT': 'bg-orange-100 text-orange-800',
         'ISIAN': 'bg-teal-100 text-teal-800',
         'ESAI':  'bg-red-100 text-red-800',
@@ -321,7 +322,7 @@ function showCbtQuestion(index) {
     };
     const tipeLabel = {
         'PG':    'PG', 'PGK': 'PG Kompleks', 'BS': 'Benar/Salah',
-        'TS':    'Tabel Sesuai', 'SIFAT': 'Sifat', 'ISIAN': 'Isian Singkat',
+        'TS':    'Tabel Sesuai', 'NK': 'Numerik/Kategorik', 'SIFAT': 'Sifat', 'ISIAN': 'Isian Singkat',
         'ESAI':  'Esai/Uraian', 'JODOH': 'Menjodohkan', 'GFORM': 'G-Form',
     };
     tipeEl.className = `text-[9px] md:text-[10px] font-bold px-3 py-1 rounded-full ${tipeColorMap[q.tipe] || 'bg-slate-100 text-slate-700'}`;
@@ -415,7 +416,7 @@ function showCbtQuestion(index) {
                 });
                 htmlOpsi += `</div>`;
             }
-            else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') {
+            else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') {
                 let savedArr = savedAns ? savedAns.split(',') : [];
                 let headers = [], statements = [];
 
@@ -430,8 +431,9 @@ function showCbtQuestion(index) {
                     // Header default sesuai tipe
                     if (q.tipe === 'BS')    headers = ['Benar', 'Salah'];
                     else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai'];
+                    else if (q.tipe === 'NK') headers = ['Numerik', 'Kategorik'];
                     else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
-                    statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
+                    statements = opsiArray.length > 0 ? opsiArray : ['Data 1', 'Data 2'];
                 }
 
                 // ── Render tabel matrix seperti tampilan soal asli ──
@@ -475,7 +477,7 @@ function cbtSaveCheckbox() { let checked = []; document.querySelectorAll('.cbt-p
 function cbtSaveMatrix(length) { let arr = []; for(let i=0; i<length; i++) { let selected = document.querySelector(`input[name="matrix_${i}"]:checked`); arr.push(selected ? selected.value : '-'); } cbtSaveAnswer(arr.join(',')); }
 function cbtSaveJodoh(totalPairs) { let arr = []; let selects = document.querySelectorAll('.jodoh-select'); selects.forEach((sel, idx) => { if(sel.value) arr.push(`${idx+1}${sel.value}`); }); cbtSaveAnswer(arr.join(',')); }
 function cbtSaveAnswer(val) { cbtAnswers[cbtCurrentIndex].ans = val; saveToLocal(); renderCbtGrid(); }
-function cbtNext() { if(cbtCurrentIndex < cbtQuestions.length - 1) { showCbtQuestion(cbtCurrentIndex + 1); } else { let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') return a === "" || a.indexOf('-') !== -1; if(q.tipe === 'JODOH') { let h = (q.kunci||"").split(',').length; return a.split(',').length < h; } return a === ""; }).length; if(kosong > 0) { Swal.fire('Peringatan!', `Ada <b class="text-red-500">${kosong} soal</b> belum dijawab!`, 'warning'); } else { Swal.fire('Selesai!', 'Semua soal dijawab. Silakan kumpulkan.', 'success'); } } }
+function cbtNext() { if(cbtCurrentIndex < cbtQuestions.length - 1) { showCbtQuestion(cbtCurrentIndex + 1); } else { let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') return a === "" || a.indexOf('-') !== -1; if(q.tipe === 'JODOH') { let h = (q.kunci||"").split(',').length; return a.split(',').length < h; } return a === ""; }).length; if(kosong > 0) { Swal.fire('Peringatan!', `Ada <b class="text-red-500">${kosong} soal</b> belum dijawab!`, 'warning'); } else { Swal.fire('Selesai!', 'Semua soal dijawab. Silakan kumpulkan.', 'success'); } } }
 function cbtPrev() { if(cbtCurrentIndex > 0) showCbtQuestion(cbtCurrentIndex - 1); }
 
 async function checkPendingSubmit(showFeedback = false) {
@@ -496,7 +498,7 @@ async function checkPendingSubmit(showFeedback = false) {
 function colorizeAnswer(jawab, kunci, tipe) {
     if (!jawab || jawab === '-') return '-'; if (jawab === kunci) return `<span style="color:#2563eb; font-weight:bold;">${formatMath(jawab)}</span>`; 
     let jArr = jawab.split(/, | \| /); let kArr = (kunci||"").split(/, | \| /);
-    if (jArr.length > 1 && ['BS', 'TS', 'SIFAT', 'JODOH', 'PGK', 'ISIAN', 'ESAI'].includes(tipe)) {
+    if (jArr.length > 1 && ['BS', 'TS', 'NK', 'SIFAT', 'JODOH', 'PGK', 'ISIAN', 'ESAI'].includes(tipe)) {
         let res = []; jArr.forEach((j) => { if (kArr.includes(j)) res.push(`<span style="color:#2563eb; font-weight:bold;">${formatMath(j)}</span>`); else res.push(`<span style="color:#dc2626; font-weight:bold;">${formatMath(j)}</span>`); }); return res.join('<br>');
     } return `<span style="color:#dc2626; font-weight:bold;">${formatMath(jawab)}</span>`; 
 }
@@ -506,13 +508,14 @@ function getFullAnswerText(q, rawAnswer) {
     if(q.tipe === 'PG') { let idx = abjad.indexOf(rawAnswer); return idx !== -1 && opsiArray[idx] ? `${rawAnswer}. ${opsiArray[idx]}` : rawAnswer; }
     if(q.tipe === 'PGK') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`${a}. ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(', '); }
     if(q.tipe === 'JODOH') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let num = a.replace(/[a-zA-Z]/g, ''); let letPart = a.replace(/[0-9]/g, ''); let idx = abjad.indexOf(letPart); if(idx !== -1 && opsiArray[idx]) texts.push(`No.${num} -> ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(' | '); }
-    if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') { 
+    if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { 
         let hd = [];
         if (q.tipe === 'BS') hd = ['Benar', 'Salah'];
-        else if (q.tipe === 'TS') {
+        else if (q.tipe === 'TS' || q.tipe === 'NK') {
             const fo = opsiArray[0] || '';
             const hm = fo.match(/^HEADER\[(.+)\]$/i);
-            hd = hm ? hm[1].split(',').map(h=>h.trim()).filter(h=>h) : ['Sesuai', 'Tidak Sesuai'];
+            const defaultHd = q.tipe === 'NK' ? ['Numerik', 'Kategorik'] : ['Sesuai', 'Tidak Sesuai'];
+            hd = hm ? hm[1].split(',').map(h=>h.trim()).filter(h=>h) : defaultHd;
         }
         else if (q.tipe === 'SIFAT') hd = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
         let ansArr = rawAnswer.split(','); let tx = []; ansArr.forEach((a, i) => { let idx = abjad.indexOf(a); if (q.tipe === 'BS' || q.tipe === 'TS') { if(a === 'B' && hd.length === 2 && idx === 1) {} else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } } if(idx !== -1 && hd[idx]) tx.push(`No.${i+1}:${hd[idx]}`); else tx.push(`No.${i+1}:-`); }); return tx.join(', '); 
@@ -527,7 +530,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
             if (q.kunci && q.kunci.trim() === '') { status = 'Menunggu Koreksi'; poin = 0; }
             else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; } } 
             else if (q.tipe === 'PGK') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); if(kArr.length > 0) { let betul = 0; aArr.forEach(a => { if(kArr.includes(a)) betul++; }); if(betul === kArr.length && aArr.length === kArr.length) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if(betul > 0) { status = `Sebagian Benar (${betul}/${kArr.length})`; poin = (betul / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } } else { salah++; } } 
-            else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let cor = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { cor++; } } if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
+            else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let cor = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { cor++; } } if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
             else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let cor = 0; kArr.forEach(k => { if(aArr.includes(k)) cor++; }); if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
             else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let mWord = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) mWord++; }); if(mWord === kWords.length) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if(mWord > 0) { status = `Sebagian Benar (${mWord}/${kWords.length})`; poin = (mWord / kWords.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } } else { status = 'Menunggu Koreksi'; poin = 0; } }
             poin = Math.round(poin * 100) / 100; detail.push({ no: index+1, tipe: q.tipe, tanya: q.tanya, jawab: getFullAnswerText(q, ans), kunci: getFullAnswerText(q, q.kunci), status: status, poin: poin });
@@ -537,7 +540,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
     let startTimeKey = `cbt_start_${currentExam.mapel}_${activeUser.username}`; let start = localStorage.getItem(startTimeKey); let durasiText = '-';
     if (start) { 
         let diffMs = Date.now() - parseInt(start); let dMins = Math.floor(diffMs / 60000); let dSecs = Math.floor((diffMs % 60000) / 1000); 
-        let terjawab = 0; for(let i=0; i<cbtQuestions.length; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
+        let terjawab = 0; for(let i=0; i<cbtQuestions.length; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
         durasiText = `${dMins}m ${dSecs}s | ${terjawab}/${cbtQuestions.length} Soal`; 
     }
     const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
@@ -555,7 +558,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
     };
 
     if (showConfirm && !isForceCurang) {
-        let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') return a === "" || a.indexOf('-') !== -1; if(q.tipe === 'JODOH') { return a.split(',').length < (q.kunci||"").split(',').length; } return a === ""; }).length;
+        let kosong = cbtQuestions.filter((q, i) => { let a = cbtAnswers[i].ans; if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') return a === "" || a.indexOf('-') !== -1; if(q.tipe === 'JODOH') { return a.split(',').length < (q.kunci||"").split(',').length; } return a === ""; }).length;
         let text = isGformOnly ? "Pastikan sudah Submit G-Form!" : (kosong > 0 ? `<b class='text-red-500'>${kosong} soal</b> belum dijawab! Yakin?` : "Kirim sekarang?");
         Swal.fire({ title: 'Kumpulkan Ujian?', html: text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya!' }).then((r) => { if(r.isConfirmed) sendLogic(); });
     } else sendLogic();
@@ -796,7 +799,7 @@ async function koreksiSoal(q) {
     else Swal.fire('Gagal', d.message||'Error','error');
 }
 
-function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border relative mt-4" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-7 h-7 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah</option><option value="TS">9 - TS (Tabel Sesuai)</option><option value="SIFAT">10 - SIFAT</option><option value="GFORM">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500">LINK DRIVE GAMBAR</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI (Pemisah |||)</label><input type="text" class="q-opsi w-full p-2 border rounded-lg text-xs"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); }
+function tambahBarisSoal() { questionCount++; const container = document.getElementById('bulk-questions-container'); const html = `<div class="question-item bg-slate-50 p-4 rounded-2xl border relative mt-4" data-no="${questionCount}"><div class="absolute -left-3 -top-3 w-7 h-7 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs">${questionCount}</div><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs shadow-md"><i class="fa fa-times"></i></button><div class="grid grid-cols-1 gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-xs outline-none"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah</option><option value="TS">9 - TS (Tabel Sesuai/Tidak Sesuai)</option><option value="NK">11 - NK (Numerik/Kategorik)</option><option value="SIFAT">10 - SIFAT</option><option value="GFORM">8 - Link G-Form</option></select></div><div><label class="text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border bg-blue-50 rounded-lg text-xs font-bold" value="1"></div></div><div><label class="text-[10px] font-bold text-blue-500">LINK DRIVE GAMBAR</label><input type="text" class="q-image w-full p-2 border rounded-lg text-xs"></div><div><label class="text-[10px] font-bold text-slate-500">PERTANYAAN</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs h-16"></textarea></div><div class="q-area-opsi"><label class="text-[10px] font-bold text-orange-600">OPSI (Pemisah |||)</label><input type="text" class="q-opsi w-full p-2 border rounded-lg text-xs"></div></div></div>`; container.insertAdjacentHTML('beforeend', html); }
 async function simpanSoalBulk() { const kodeUjian = document.getElementById('s_judul_bulk').value; if(!kodeUjian) return; const items = document.querySelectorAll('.question-item'); let dataSoal = []; items.forEach(el => { dataSoal.push({ exam_id: kodeUjian, tipe: el.querySelector('.q-tipe').value, tanya: el.querySelector('.q-tanya').value, opsi_json: el.querySelector('.q-opsi').value, kunci: el.querySelector('.q-kunci').value.toUpperCase(), gform_url: el.querySelector('.q-image').value, skor: parseFloat(el.querySelector('.q-skor').value) || 1 }); }); await fetch(API + '/admin/add-soal-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questions: dataSoal }) }); location.reload(); }
 
 async function loadUsers() { const res = await fetch(API + '/admin/users'); const data = await res.json(); document.getElementById('user-body').innerHTML = (data || []).map(u => `<tr><td class="p-2 font-medium">${u.name}</td><td>${u.username}</td><td>${u.kelas || u.mapel || '-'}</td><td>${u.role}</td><td class="text-right p-2"><button onclick='editUser(${JSON.stringify(u)})' class="bg-blue-100 text-blue-600 px-2 py-1 rounded mr-1">Edit</button><button onclick="hapusUser('${u.username}')" class="bg-red-100 text-red-600 px-2 py-1 rounded">Hapus</button></td></tr>`).join(''); }
@@ -859,7 +862,7 @@ async function importExcelSoal() {
             const tipePeta = {
                 'ESSAY':'ESAI','URAIAN':'ESAI','ISIAN SINGKAT':'ISIAN','SHORT ANSWER':'ISIAN',
                 'BENAR/SALAH':'BS','TRUE/FALSE':'BS','BENARSALAH':'BS','TRUEFALSE':'BS',
-                'SESUAI/TIDAKSESUAI':'TS','MENJODOHKAN':'JODOH','MATCHING':'JODOH',
+                'SESUAI/TIDAKSESUAI':'TS','NUMERIK/KATEGORIK':'NK','NUMERIKKATEGORIK':'NK','NK':'NK','MENJODOHKAN':'JODOH','MATCHING':'JODOH',
                 'PILIHAN GANDA KOMPLEKS':'PGK','PILIHAN GANDA':'PG','GOOGLE FORM':'GFORM',
             };
 
@@ -899,7 +902,7 @@ async function importExcelSoal() {
                 tipeRaw = tipePeta[tipeRaw] || tipeRaw;
 
                 // Auto-detect tipe jika kosong / tidak dikenali
-                const validTipe = ['PG','PGK','BS','TS','SIFAT','ISIAN','ESAI','JODOH','GFORM'];
+                const validTipe = ['PG','PGK','BS','TS','NK','SIFAT','ISIAN','ESAI','JODOH','GFORM'];
                 if (!validTipe.includes(tipeRaw)) {
                     if (opsiArr.length === 0) tipeRaw = 'ESAI';
                     else {
