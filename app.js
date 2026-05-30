@@ -411,11 +411,67 @@ function showCbtQuestion(index) {
                 htmlOpsi += `</div>`;
             }
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') {
-                let savedArr = savedAns ? savedAns.split(',') : []; let headers = []; if (q.tipe === 'BS') headers = ['Benar', 'Salah']; else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai']; else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
-                let statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
-                htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-[10px] md:text-sm text-left"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-3 md:p-4 border-b">Pernyataan</th>`;
-                headers.forEach(h => htmlOpsi += `<th class="p-3 md:p-4 border-b text-center font-bold min-w-[60px] md:min-w-[80px] leading-tight text-[9px] md:text-xs">${formatMath(h)}</th>`); htmlOpsi += `</tr></thead><tbody class="divide-y divide-slate-100 bg-white">`;
-                statements.forEach((val, idx) => { htmlOpsi += `<tr class="hover:bg-slate-50 transition"><td class="p-3 md:p-4 text-slate-700 font-medium whitespace-normal min-w-[150px] md:min-w-[200px] leading-snug">${formatMath(val)}</td>`; headers.forEach((h, hIdx) => { let huruf = abjad[hIdx]; let isChecked = savedArr[idx] === huruf ? 'checked' : ''; htmlOpsi += `<td class="p-3 md:p-4 text-center border-l"><input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked} onchange="cbtSaveMatrix(${statements.length})" class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer"></td>`; }); htmlOpsi += `</tr>`; }); htmlOpsi += `</tbody></table></div>`;
+                let savedArr = savedAns ? savedAns.split(',') : [];
+
+                // ── Tentukan header kolom ──
+                // Format opsi_json bisa:
+                //   HEADER:Kol1|||Kol2|||Baris1|||Baris2  (header kustom — diawali HEADER:)
+                //   Baris1|||Baris2  (header default sesuai tipe)
+                let headers = [];
+                let statements = [];
+
+                const firstOpsi = opsiArray[0] || '';
+                const headerMatch = firstOpsi.match(/^HEADER\[(.+)\]$/i);
+                if (headerMatch) {
+                    // Header kustom: "HEADER[Numerik,Kategorik]"
+                    headers = headerMatch[1].split(',').map(h => h.trim()).filter(h => h);
+                    statements = opsiArray.slice(1).filter(s => s.trim());
+                } else if (firstOpsi.startsWith('HEADER:')) {
+                    // Format lama (backward compat): "HEADER:Kol1|||Kol2"
+                    const headerPart = firstOpsi.replace(/^HEADER:/i, '').trim();
+                    headers = headerPart.split(',').map(h => h.trim()).filter(h => h);
+                    statements = opsiArray.slice(1).filter(s => s.trim());
+                } else {
+                    // Header default
+                    if (q.tipe === 'BS')    headers = ['Benar', 'Salah'];
+                    else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai'];
+                    else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
+                    statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
+                }
+
+                // ── Render tabel matrix ──
+                htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm mt-1">
+                  <table class="w-full text-[10px] md:text-sm text-left border-collapse">
+                    <thead class="bg-slate-700 text-white">
+                      <tr>
+                        <th class="p-3 md:p-4 border border-slate-600 font-bold text-left min-w-[160px]">Data</th>`;
+                headers.forEach(h => {
+                    htmlOpsi += `<th class="p-3 md:p-4 border border-slate-600 text-center font-bold min-w-[80px] md:min-w-[100px] text-[9px] md:text-xs leading-tight">${formatMath(h)}</th>`;
+                });
+                htmlOpsi += `</tr></thead><tbody class="bg-white">`;
+
+                statements.forEach((val, idx) => {
+                    const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+                    htmlOpsi += `<tr class="${rowBg} hover:bg-blue-50 transition border-b border-slate-200">
+                      <td class="p-3 md:p-4 text-slate-800 font-medium whitespace-normal leading-snug border border-slate-200">${formatMath(val)}</td>`;
+                    headers.forEach((h, hIdx) => {
+                        const huruf = abjad[hIdx];
+                        const isChecked = savedArr[idx] === huruf ? 'checked' : '';
+                        const checkedStyle = isChecked ? 'bg-blue-600' : 'bg-white border-slate-300';
+                        htmlOpsi += `<td class="p-3 md:p-4 text-center border border-slate-200">
+                          <label class="flex items-center justify-center cursor-pointer">
+                            <input type="radio" name="matrix_${idx}" value="${huruf}" ${isChecked}
+                              onchange="cbtSaveMatrix(${statements.length})"
+                              class="w-4 h-4 md:w-5 md:h-5 accent-blue-600 cursor-pointer">
+                          </label>
+                        </td>`;
+                    });
+                    htmlOpsi += `</tr>`;
+                });
+                htmlOpsi += `</tbody></table></div>
+                <p class="text-[9px] text-slate-400 mt-2 text-center">
+                  <i class="fa fa-info-circle mr-1"></i>Pilih satu pilihan untuk setiap baris data
+                </p>`;
             }
             else if (q.tipe === 'ISIAN') { htmlOpsi += `<input type="text" onkeyup="cbtSaveAnswer(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth', block:'center'}), 300)" value="${savedAns}" class="w-full p-3 md:p-4 border-2 rounded-xl text-xs md:text-sm font-bold bg-white focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`; }
             else if (q.tipe === 'ESAI') { htmlOpsi += `<textarea onkeyup="cbtSaveAnswer(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth', block:'center'}), 300)" class="w-full p-3 md:p-4 border-2 rounded-xl h-24 md:h-32 text-xs md:text-sm bg-white focus:border-blue-500 outline-none" placeholder="Uraikan jawaban Anda di sini...">${savedAns}</textarea>`; }
@@ -459,7 +515,21 @@ function getFullAnswerText(q, rawAnswer) {
     if(q.tipe === 'PGK') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let idx = abjad.indexOf(a); if(idx !== -1 && opsiArray[idx]) texts.push(`${a}. ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(', '); }
     if(q.tipe === 'JODOH') { let ansArr = rawAnswer.split(','); let texts = []; ansArr.forEach(a => { let num = a.replace(/[a-zA-Z]/g, ''); let letPart = a.replace(/[0-9]/g, ''); let idx = abjad.indexOf(letPart); if(idx !== -1 && opsiArray[idx]) texts.push(`No.${num} -> ${opsiArray[idx]}`); else texts.push(a); }); return texts.join(' | '); }
     if(q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'SIFAT') { 
-        let hd = []; if (q.tipe === 'BS') headers = ['Benar', 'Salah']; else if (q.tipe === 'TS') hd = ['Sesuai', 'Tidak Sesuai']; else if (q.tipe === 'SIFAT') hd = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
+        let hd = [];
+        if (q.tipe === 'BS') hd = ['Benar', 'Salah'];
+        else if (q.tipe === 'TS') {
+            // Cek apakah ada header kustom
+            const fo = opsiArray[0] || '';
+            const hm = fo.match(/^HEADER\[(.+)\]$/i);
+            if (hm) {
+                hd = hm[1].split(',').map(h => h.trim()).filter(h => h);
+            } else if (fo.startsWith('HEADER:')) {
+                hd = fo.replace(/^HEADER:/i,'').split(',').map(h=>h.trim()).filter(h=>h);
+            } else {
+                hd = ['Sesuai', 'Tidak Sesuai'];
+            }
+        }
+        else if (q.tipe === 'SIFAT') hd = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
         let ansArr = rawAnswer.split(','); let tx = []; ansArr.forEach((a, i) => { let idx = abjad.indexOf(a); if (q.tipe === 'BS' || q.tipe === 'TS') { if(a === 'B' && hd.length === 2 && idx === 1) {} else if(a === 'B' && !['A','B','C','D'].includes(a)) { idx = 0; } else if(a === 'S' && !['A','B','C','D'].includes(a)) { idx = 1; } } if(idx !== -1 && hd[idx]) tx.push(`No.${i+1}:${hd[idx]}`); else tx.push(`No.${i+1}:-`); }); return tx.join(', '); 
     } return rawAnswer;
 }
@@ -857,6 +927,25 @@ async function importExcelSoal() {
                 const skor    = parseFloat(String(row[kSkor] || '1').replace(',','.')) || 1;
                 const gambar  = String(row[kGambar] || '').trim();
 
+                // ── Soal TS/BS: normalisasi opsi_json ──
+                // Jika tipe TS dan opsi berisi header kustom (mis. "Numerik|||Kategorik|||Baris1|||...")
+                // Deteksi otomatis: jika opsi ke-1 dan ke-2 pendek (≤25 karakter) → anggap sebagai header kolom
+                // lalu prefix dengan HEADER: agar renderer tahu mana header mana baris
+                if ((tipeRaw === 'TS' || tipeRaw === 'BS') && opsiJson) {
+                    const parts = opsiJson.split('|||').map(p => p.trim()).filter(p => p);
+                    // Cek apakah sudah berformat HEADER:
+                    if (parts.length >= 2 && !parts[0].startsWith('HEADER:')) {
+                        // Heuristic: 2 elemen pertama pendek = header kolom, sisanya = baris data
+                        const firstTwo = parts.slice(0, 2);
+                        const rest     = parts.slice(2);
+                        const firstTwoAreShort = firstTwo.every(p => p.length <= 30);
+                        if (firstTwoAreShort && rest.length > 0) {
+                            // Format: HEADER[Kol1,Kol2]|||Baris1|||Baris2|||...
+                            opsiJson = 'HEADER[' + firstTwo.join(',') + ']|||' + rest.join('|||');
+                        }
+                    }
+                }
+
                 questions.push({
                     exam_id  : kodeUjian,
                     tipe     : tipeRaw,
@@ -864,7 +953,8 @@ async function importExcelSoal() {
                     opsi_json: opsiJson,
                     kunci    : kunci,
                     skor     : skor,
-                    gform_url: gambar
+                    gform_url: gambar,
+                    media_path: gambar
                 });
             });
 
