@@ -76,14 +76,14 @@ function deteksiKecurangan() {
         body: JSON.stringify({student_name: activeUser.name, mapel: currentExam.mapel, count: curangCount})
     });
 
-    if (curangCount >= 3) {
-        // ── BLOKIR: Simpan progress, logout ke halaman login ──
+    if (curangCount >= 4) {
+        // ── BLOKIR: setelah 3 peringatan, ke-4 langsung dikunci ──
         isExamActive = false;
-        saveToLocal(); // simpan jawaban yang sudah diisi
+        saveToLocal();
         Swal.fire({
             title: '🔒 Akun Anda Diblokir!',
             html: `<div class="text-left space-y-2 text-sm">
-                     <p class="text-red-600 font-bold">Anda telah terdeteksi <b>3 kali</b> meninggalkan layar ujian.</p>
+                     <p class="text-red-600 font-bold">Anda telah menerima <b>3 peringatan</b> dan tetap meninggalkan layar ujian.</p>
                      <p>Akun dikunci sementara. <b>Ujian tidak dibatalkan</b> — jawaban tersimpan.</p>
                      <hr class="my-2">
                      <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -101,7 +101,6 @@ function deteksiKecurangan() {
             confirmButtonText: 'Keluar & Hubungi Guru',
             confirmButtonColor: '#dc2626'
         }).then(() => {
-            // Logout ke halaman login
             activeUser = null;
             currentExam = null;
             document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
@@ -109,18 +108,19 @@ function deteksiKecurangan() {
         });
 
     } else {
-        // ── TEGURAN 1 atau 2: tampilkan peringatan, ujian tetap jalan ──
+        // ── PERINGATAN 1, 2, atau 3 ── ujian tetap jalan
         const sisaPeringatan = 3 - curangCount;
+        const isLast = curangCount === 3;
         Swal.fire({
             title: `⚠️ PERINGATAN ${curangCount} / 3`,
             html: `<div class="text-center space-y-3">
                      <p class="text-orange-600 font-bold">Dilarang meninggalkan layar ujian!</p>
                      <p class="text-slate-600 text-xs">Jangan buka tab lain, minimize, atau keluar dari layar.</p>
-                     <div class="p-3 bg-red-50 rounded-xl border border-red-200">
+                     <div class="p-3 ${isLast ? 'bg-red-100 border border-red-400' : 'bg-red-50 border border-red-200'} rounded-xl">
                        <p class="text-red-700 font-black text-sm">
-                         Sisa toleransi: <span class="text-3xl font-black text-red-600">${sisaPeringatan}</span> kali
+                         ${isLast ? '🚨 PERINGATAN TERAKHIR!' : `Sisa toleransi: <span class="text-3xl font-black text-red-600">${sisaPeringatan}</span> kali`}
                        </p>
-                       <p class="text-red-400 text-xs mt-1">Pelanggaran ke-3 → akun <b>DIBLOKIR</b></p>
+                       <p class="text-red-500 text-xs mt-1">Pelanggaran ke-4 → akun <b>DIBLOKIR</b></p>
                      </div>
                    </div>`,
             icon: 'warning',
@@ -131,7 +131,6 @@ function deteksiKecurangan() {
             timer: 10000,
             timerProgressBar: true
         }).then(() => {
-            // Paksa fullscreen kembali setelah teguran
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(() => {});
             }
@@ -400,16 +399,15 @@ function showCbtQuestion(index) {
                         htmlOpsi += `<label class="pgk-lbl flex flex-col items-center p-2 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'bg-white border-slate-200'}">
                             <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
                                 onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
-                                class="cbt-pgk-cb hidden">
+                                class="cbt-pgk-cb sr-only">
                             <span class="pgk-b font-black text-xs mb-1 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white w-7 h-7 flex items-center justify-center rounded-md">${huruf}</span>
                             ${opsiContent}
                         </label>`;
                     } else {
                         htmlOpsi += `<label class="pgk-lbl flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}">
                             <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
-                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'),ck=l.querySelector('.pgk-ck'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked); ck.style.background=this.checked?'#7c3aed':''; ck.innerHTML=this.checked?'&#10003;':'';"
-                                class="cbt-pgk-cb hidden">
-                            <span class="pgk-ck w-5 h-5 flex-shrink-0 rounded border-2 flex items-center justify-center mr-2 text-white text-xs font-bold ${isSel ? 'border-purple-600' : 'border-slate-400'}" style="${isSel ? 'background:#7c3aed' : ''}"> ${isSel ? '&#10003;' : ''}</span>
+                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
+                                class="cbt-pgk-cb sr-only">
                             <span class="pgk-b font-black text-xs md:text-sm mr-3 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 flex items-center justify-center rounded-md flex-shrink-0">${huruf}</span>
                             ${opsiContent}
                         </label>`;
@@ -420,17 +418,20 @@ function showCbtQuestion(index) {
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') {
                 let savedArr = savedAns ? savedAns.split(',') : [];
                 let headers = [], statements = [];
+                const firstOpsi   = opsiArray[0] || '';
+                const hasHeaderTag = /^HEADER\[/i.test(firstOpsi);
 
-                // BS dan TS SELALU pakai header baku
+                // BS dan TS SELALU pakai header baku (tidak bisa di-override)
                 if (q.tipe === 'BS') {
-                    headers = ['Benar', 'Salah'];
-                    statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
+                    headers    = ['Benar', 'Salah'];
+                    statements = hasHeaderTag ? opsiArray.slice(1).filter(s => s.trim())
+                                              : (opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2']);
                 } else if (q.tipe === 'TS') {
-                    headers = ['Sesuai', 'Tidak Sesuai'];
-                    statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
+                    headers    = ['Sesuai', 'Tidak Sesuai'];
+                    statements = hasHeaderTag ? opsiArray.slice(1).filter(s => s.trim())
+                                              : (opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2']);
                 } else {
-                    // NK dan SIFAT: boleh pakai HEADER[...] custom
-                    const firstOpsi = opsiArray[0] || '';
+                    // NK dan SIFAT: boleh pakai HEADER[...] custom dari opsi_json
                     const headerMatch = firstOpsi.match(/^HEADER\[(.+)\]$/i);
                     if (headerMatch) {
                         headers    = headerMatch[1].split(',').map(h => h.trim()).filter(h => h);
@@ -445,6 +446,7 @@ function showCbtQuestion(index) {
                 }
 
                 // ── Render tabel matrix ──
+                const firstColHeader = (q.tipe === 'NK') ? 'Data' : 'Pernyataan';
                 htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm mt-1">
                   <table class="w-full text-[10px] md:text-sm text-left border-collapse">
                     <thead>
