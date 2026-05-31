@@ -41,10 +41,9 @@ function formatMath(text) {
     // Word menyimpan x² sebagai "x2", 4x²y sebagai "4x2y", y² sebagai "y2"
     // Pola: huruf variabel + satu/dua digit, diikuti huruf atau non-digit/akhir
     // Tidak menyentuh: angka murni (50000, 2026), angka diikuti digit lagi
-    // Pola: huruf variabel + digit pangkat, diikuti huruf/spasi/tanda baca/akhir string
-    // Tidak menyentuh: angka murni (50000, 2026), x200 (digit diikuti digit lagi)
+    // Tidak menyentuh: angka ribuan seperti 5.000.000 atau 5,000,000
     text = text.replace(
-        /([a-zA-Z])(\d{1,2})(?=[a-zA-Z\s\+\-\*\/\=\.\,\;\:\!\?\)\(\[\]\{\}]|$)/g,
+        /([a-zA-Z])(\d{1,2})(?!\.\d)(?!,\d)(?=[a-zA-Z\s\+\-\*\/\=\;\:\!\?\)\(\[\]\{\}]|$)/g,
         function(match, varChar, exp, offset, str) {
             // Jangan angkat jika digit diikuti digit lagi (mis. x200 → biarkan)
             const nextChar = str[offset + varChar.length + exp.length];
@@ -396,17 +395,19 @@ function showCbtQuestion(index) {
                     let huruf = abjad[idx] || '';
                     let isSel = savedArr.includes(huruf);
                     let opsiContent = renderOpsiContent(val);
-                    const onChange = `cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'),ck=l.querySelector('.pgk-ck'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked); ck.style.background=this.checked?'#7c3aed':''; ck.innerHTML=this.checked?'<i class=\\'fa fa-check\\' style=\\'color:white;font-size:10px;\\'></i>':'';`;
                     if (isImgOpsi) {
                         htmlOpsi += `<label class="pgk-lbl flex flex-col items-center p-2 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'bg-white border-slate-200'}">
-                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''} onchange="${onChange}" class="cbt-pgk-cb hidden">
+                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
+                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
+                                class="cbt-pgk-cb sr-only">
                             <span class="pgk-b font-black text-xs mb-1 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white w-7 h-7 flex items-center justify-center rounded-md">${huruf}</span>
                             ${opsiContent}
                         </label>`;
                     } else {
                         htmlOpsi += `<label class="pgk-lbl flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}">
-                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''} onchange="${onChange}" class="cbt-pgk-cb hidden">
-                            <span class="pgk-ck w-5 h-5 flex-shrink-0 border-2 rounded ${isSel ? 'border-purple-600' : 'border-slate-400'} flex items-center justify-center mr-2" style="${isSel ? 'background:#7c3aed' : ''}">${isSel ? '<i class=\'fa fa-check\' style=\'color:white;font-size:10px;\'></i>' : ''}</span>
+                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
+                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
+                                class="cbt-pgk-cb sr-only">
                             <span class="pgk-b font-black text-xs md:text-sm mr-3 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 flex items-center justify-center rounded-md flex-shrink-0">${huruf}</span>
                             ${opsiContent}
                         </label>`;
@@ -435,11 +436,12 @@ function showCbtQuestion(index) {
                 }
 
                 // ── Render tabel matrix seperti tampilan soal asli ──
+                const firstColHeader = (q.tipe === 'NK') ? 'Data' : 'Pernyataan';
                 htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm mt-1">
                   <table class="w-full text-[10px] md:text-sm text-left border-collapse">
                     <thead>
                       <tr class="bg-slate-700 text-white">
-                        <th class="p-3 md:p-4 border border-slate-600 font-bold text-left min-w-[160px]">Data</th>`;
+                        <th class="p-3 md:p-4 border border-slate-600 font-bold text-left min-w-[160px]">${firstColHeader}</th>`;
                 headers.forEach(h => {
                     htmlOpsi += `<th class="p-2 md:p-3 border border-slate-600 text-center font-bold min-w-[80px] text-[9px] md:text-xs">${formatMath(h)}</th>`;
                 });
