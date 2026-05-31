@@ -396,19 +396,17 @@ function showCbtQuestion(index) {
                     let huruf = abjad[idx] || '';
                     let isSel = savedArr.includes(huruf);
                     let opsiContent = renderOpsiContent(val);
+                    const onChange = `cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'),ck=l.querySelector('.pgk-ck'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked); ck.style.background=this.checked?'#7c3aed':''; ck.innerHTML=this.checked?'<i class=\\'fa fa-check\\' style=\\'color:white;font-size:10px;\\'></i>':'';`;
                     if (isImgOpsi) {
                         htmlOpsi += `<label class="pgk-lbl flex flex-col items-center p-2 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'bg-white border-slate-200'}">
-                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
-                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
-                                class="cbt-pgk-cb sr-only">
+                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''} onchange="${onChange}" class="cbt-pgk-cb hidden">
                             <span class="pgk-b font-black text-xs mb-1 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white w-7 h-7 flex items-center justify-center rounded-md">${huruf}</span>
                             ${opsiContent}
                         </label>`;
                     } else {
                         htmlOpsi += `<label class="pgk-lbl flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}">
-                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
-                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
-                                class="cbt-pgk-cb sr-only">
+                            <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''} onchange="${onChange}" class="cbt-pgk-cb hidden">
+                            <span class="pgk-ck w-5 h-5 flex-shrink-0 border-2 rounded ${isSel ? 'border-purple-600' : 'border-slate-400'} flex items-center justify-center mr-2" style="${isSel ? 'background:#7c3aed' : ''}">${isSel ? '<i class=\'fa fa-check\' style=\'color:white;font-size:10px;\'></i>' : ''}</span>
                             <span class="pgk-b font-black text-xs md:text-sm mr-3 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 flex items-center justify-center rounded-md flex-shrink-0">${huruf}</span>
                             ${opsiContent}
                         </label>`;
@@ -717,81 +715,12 @@ function renderNilaiTable() {
 function exportExcelDetail() {
     if(window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Tidak ada data.', 'info');
     const kkmMap = getKkmStorage(); const selMapel = document.getElementById('filter-mapel-nilai').value;
-
-    // Kumpulkan jumlah soal terbanyak untuk header dinamis
-    let maxSoal = 0;
-    window.filteredResultsData.forEach(n => {
-        let d = []; try { d = typeof n.detail_jawaban === 'string' ? JSON.parse(n.detail_jawaban) : (n.detail_jawaban||[]); } catch(e){}
-        if(d.length > maxSoal) maxSoal = d.length;
+    const dataToExport = window.filteredResultsData.map(n => {
+        let kkmLimit = 0; if(selMapel) { kkmLimit = kkmMap[selMapel] || 0; } else { for(let mKey in kkmMap) { if(n.mapel && n.mapel.includes(mKey)) { kkmLimit = kkmMap[mKey]; break; } } }
+        let isTuntas = 'Belum di-set KKM'; if (kkmLimit > 0) { isTuntas = n.nilai >= kkmLimit ? 'Tuntas' : 'Remedial'; }
+        return { "Nama Siswa": n.student_name, "Kelas": n.kelas || '-', "Mata Pelajaran": n.mapel, "Waktu Selesai": (n.tanggal || '').includes('|') ? n.tanggal.split('|')[1] : '-', "Jawaban Benar": n.benar, "Jawaban Salah": n.salah, "Nilai Akhir": n.nilai, "Status KKM": isTuntas };
     });
-
-    // Header
-    const fixedHeaders = ['Nama Siswa','Kelas','Mapel','Waktu Pengerjaan','Benar','Salah','Nilai Akhir','Status Ketuntasan'];
-    const soalHeaders = Array.from({length: maxSoal}, (_, i) => `Soal No.${i+1}`);
-    const allHeaders = [...fixedHeaders, ...soalHeaders];
-
-    const thStyle = 'background-color:#f8fafc;font-weight:bold;border:1px solid #cbd5e1;padding:6px 8px;font-size:11px;text-align:center;white-space:nowrap;';
-    const tdStyle = 'border:1px solid #e2e8f0;padding:6px 8px;font-size:11px;vertical-align:top;';
-    const tdBoldStyle = tdStyle + 'font-weight:bold;';
-
-    let headerRow = allHeaders.map(h => `<th style="${thStyle}">${h}</th>`).join('');
-
-    let dataRows = window.filteredResultsData.map(n => {
-        let kkmLimit = 0;
-        if(selMapel) { kkmLimit = kkmMap[selMapel] || 0; }
-        else { for(let mKey in kkmMap) { if(n.mapel && n.mapel.includes(mKey)) { kkmLimit = kkmMap[mKey]; break; } } }
-        const statusKetuntasan = kkmLimit > 0 ? (n.nilai >= kkmLimit ? 'Tuntas' : 'Tidak Tuntas') : '-';
-        const waktu = (n.tanggal||'').includes('|') ? (n.tanggal.split('|')[1]||'').trim() : (n.tanggal||'-');
-
-        let details = [];
-        try { details = typeof n.detail_jawaban === 'string' ? JSON.parse(n.detail_jawaban) : (n.detail_jawaban||[]); } catch(e) {}
-
-        // Sel data tetap
-        let cells = [
-            `<td style="${tdStyle}">${n.student_name||'-'}</td>`,
-            `<td style="${tdStyle};text-align:center;">${n.kelas||'-'}</td>`,
-            `<td style="${tdStyle}">${n.mapel||'-'}</td>`,
-            `<td style="${tdStyle};text-align:center;">${waktu}</td>`,
-            `<td style="${tdStyle};text-align:center;">${n.benar||0}</td>`,
-            `<td style="${tdStyle};text-align:center;">${n.salah||0}</td>`,
-            `<td style="${tdBoldStyle};text-align:center;">${n.nilai||0}</td>`,
-            `<td style="${tdStyle};text-align:center;font-weight:bold;color:${kkmLimit>0?(n.nilai>=kkmLimit?'#16a34a':'#dc2626'):'#64748b'};">${statusKetuntasan}</td>`,
-        ];
-
-        // Sel per soal — pakai colorizeAnswer persis seperti tampilan app
-        for(let i = 0; i < maxSoal; i++) {
-            const d = details[i];
-            if(d) {
-                const colored = colorizeAnswer(d.jawab, d.kunci, d.tipe);
-                cells.push(`<td style="${tdStyle}">${colored}</td>`);
-            } else {
-                cells.push(`<td style="${tdStyle}">-</td>`);
-            }
-        }
-
-        return `<tr>${cells.join('')}</tr>`;
-    }).join('\n');
-
-    // Buat HTML XLS (format sama dengan file yang dikirim)
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-<head><meta charset="UTF-8">
-<style>
-table{border-collapse:collapse;font-family:Arial,sans-serif;}
-</style>
-</head>
-<body>
-<table>
-<thead><tr>${headerRow}</tr></thead>
-<tbody>${dataRows}</tbody>
-</table>
-</body></html>`;
-
-    const blob = new Blob([html], {type: 'application/vnd.ms-excel;charset=utf-8'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'Hasil_Jawaban_Mapel.xls';
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+    const ws = XLSX.utils.json_to_sheet(dataToExport); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Hasil_Nilai"); XLSX.writeFile(wb, `Hasil_Ujian_CBT_Spenda.xlsx`);
 }
 
 function lihatDetail(rowIdx) {
