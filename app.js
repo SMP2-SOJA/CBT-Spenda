@@ -41,9 +41,10 @@ function formatMath(text) {
     // Word menyimpan x² sebagai "x2", 4x²y sebagai "4x2y", y² sebagai "y2"
     // Pola: huruf variabel + satu/dua digit, diikuti huruf atau non-digit/akhir
     // Tidak menyentuh: angka murni (50000, 2026), angka diikuti digit lagi
-    // Tidak menyentuh: angka ribuan seperti 5.000.000 atau 5,000,000
+    // Pola: huruf variabel + digit pangkat, diikuti huruf/spasi/tanda baca/akhir string
+    // Tidak menyentuh: angka murni (50000, 2026), x200 (digit diikuti digit lagi)
     text = text.replace(
-        /([a-zA-Z])(\d{1,2})(?!\.\d)(?!,\d)(?=[a-zA-Z\s\+\-\*\/\=\;\:\!\?\)\(\[\]\{\}]|$)/g,
+        /([a-zA-Z])(\d{1,2})(?=[a-zA-Z\s\+\-\*\/\=\.\,\;\:\!\?\)\(\[\]\{\}]|$)/g,
         function(match, varChar, exp, offset, str) {
             // Jangan angkat jika digit diikuti digit lagi (mis. x200 → biarkan)
             const nextChar = str[offset + varChar.length + exp.length];
@@ -399,15 +400,16 @@ function showCbtQuestion(index) {
                         htmlOpsi += `<label class="pgk-lbl flex flex-col items-center p-2 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'bg-white border-slate-200'}">
                             <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
                                 onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
-                                class="cbt-pgk-cb sr-only">
+                                class="cbt-pgk-cb hidden">
                             <span class="pgk-b font-black text-xs mb-1 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white w-7 h-7 flex items-center justify-center rounded-md">${huruf}</span>
                             ${opsiContent}
                         </label>`;
                     } else {
                         htmlOpsi += `<label class="pgk-lbl flex items-center p-2.5 md:p-3 border-2 rounded-xl cursor-pointer transition ${isSel ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}">
                             <input type="checkbox" value="${huruf}" ${isSel ? 'checked' : ''}
-                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked);"
-                                class="cbt-pgk-cb sr-only">
+                                onchange="cbtSaveCheckbox(); var l=this.closest('.pgk-lbl'),b=l.querySelector('.pgk-b'),ck=l.querySelector('.pgk-ck'); l.classList.toggle('border-purple-500',this.checked); l.classList.toggle('bg-purple-50',this.checked); l.classList.toggle('border-slate-200',!this.checked); b.classList.toggle('bg-purple-600',this.checked); b.classList.toggle('bg-slate-500',!this.checked); ck.style.background=this.checked?'#7c3aed':''; ck.innerHTML=this.checked?'&#10003;':'';"
+                                class="cbt-pgk-cb hidden">
+                            <span class="pgk-ck w-5 h-5 flex-shrink-0 rounded border-2 flex items-center justify-center mr-2 text-white text-xs font-bold ${isSel ? 'border-purple-600' : 'border-slate-400'}" style="${isSel ? 'background:#7c3aed' : ''}"> ${isSel ? '&#10003;' : ''}</span>
                             <span class="pgk-b font-black text-xs md:text-sm mr-3 ${isSel ? 'bg-purple-600' : 'bg-slate-500'} text-white min-w-[28px] h-7 flex items-center justify-center rounded-md flex-shrink-0">${huruf}</span>
                             ${opsiContent}
                         </label>`;
@@ -419,24 +421,30 @@ function showCbtQuestion(index) {
                 let savedArr = savedAns ? savedAns.split(',') : [];
                 let headers = [], statements = [];
 
-                // ── Deteksi header kustom dari opsi_json ──
-                // Format: HEADER[Kol1,Kol2]|||Baris1|||Baris2|||Baris3
-                const firstOpsi = opsiArray[0] || '';
-                const headerMatch = firstOpsi.match(/^HEADER\[(.+)\]$/i);
-                if (headerMatch) {
-                    headers    = headerMatch[1].split(',').map(h => h.trim()).filter(h => h);
-                    statements = opsiArray.slice(1).filter(s => s.trim());
+                // BS dan TS SELALU pakai header baku
+                if (q.tipe === 'BS') {
+                    headers = ['Benar', 'Salah'];
+                    statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
+                } else if (q.tipe === 'TS') {
+                    headers = ['Sesuai', 'Tidak Sesuai'];
+                    statements = opsiArray.length > 0 ? opsiArray : ['Pernyataan 1', 'Pernyataan 2'];
                 } else {
-                    // Header default sesuai tipe
-                    if (q.tipe === 'BS')    headers = ['Benar', 'Salah'];
-                    else if (q.tipe === 'TS') headers = ['Sesuai', 'Tidak Sesuai'];
-                    else if (q.tipe === 'NK') headers = ['Numerik', 'Kategorik'];
-                    else if (q.tipe === 'SIFAT') headers = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
-                    statements = opsiArray.length > 0 ? opsiArray : ['Data 1', 'Data 2'];
+                    // NK dan SIFAT: boleh pakai HEADER[...] custom
+                    const firstOpsi = opsiArray[0] || '';
+                    const headerMatch = firstOpsi.match(/^HEADER\[(.+)\]$/i);
+                    if (headerMatch) {
+                        headers    = headerMatch[1].split(',').map(h => h.trim()).filter(h => h);
+                        statements = opsiArray.slice(1).filter(s => s.trim());
+                    } else if (q.tipe === 'NK') {
+                        headers    = ['Numerik', 'Kategorik'];
+                        statements = opsiArray.length > 0 ? opsiArray : ['Data 1', 'Data 2'];
+                    } else {
+                        headers    = ['Sifat Komutatif', 'Sifat Asosiatif', 'Sifat Distributif'];
+                        statements = opsiArray.length > 0 ? opsiArray : ['Sifat 1', 'Sifat 2'];
+                    }
                 }
 
-                // ── Render tabel matrix seperti tampilan soal asli ──
-                const firstColHeader = (q.tipe === 'NK') ? 'Data' : 'Pernyataan';
+                // ── Render tabel matrix ──
                 htmlOpsi += `<div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm mt-1">
                   <table class="w-full text-[10px] md:text-sm text-left border-collapse">
                     <thead>
