@@ -49,13 +49,17 @@ app.post('/api/siswa/cek-pin', async (req, res) => {
         let allMapels = [];
         data.forEach(d => { if(d.mapel) d.mapel.split(',').forEach(m => { if(m.trim()) allMapels.push(m.trim()); }); });
 
-        // CEK APAKAH SISWA SEDANG DIBLOKIR
+        // CEK APAKAH SISWA SEDANG DIBLOKIR ATAU SUDAH SELESAI
         if (student_name) {
             const { data: actData } = await supabase.from('activity').select('status').eq('student_name', student_name).in('exam_name', allMapels);
             if (actData && actData.length > 0) {
-                const isBlocked = actData.some(a => a.status && a.status.includes('Terkunci'));
+                const isBlocked  = actData.some(a => a.status && a.status.includes('Terkunci'));
+                const isFinished = actData.some(a => a.status === 'Selesai');
                 if (isBlocked) {
                     return res.json({status: "error", message: "🔒 Akun Anda masih terkunci karena pelanggaran. Hubungi guru/pengawas untuk membuka akses, lalu login kembali untuk melanjutkan ujian."});
+                }
+                if (isFinished) {
+                    return res.json({status: "error", message: "✅ Anda sudah menyelesaikan ujian ini. Hasil telah tersimpan. Hubungi guru jika ada pertanyaan."});
                 }
             }
         }
@@ -133,6 +137,17 @@ app.post('/api/siswa/get-soal', async (req, res) => {
 // 3. AKTIVITAS & REKAP (BYPASS SUPABASE)
 // ==========================================
 app.post('/api/siswa/ping', async (req, res) => { 
+    // Cek status saat ini — jangan timpa status yang dilindungi
+    const { data: cur } = await supabase
+        .from('activity').select('status')
+        .eq('student_name', req.body.student_name)
+        .eq('exam_name', req.body.mapel)
+        .maybeSingle();
+    
+    const curStatus = cur?.status || '';
+    const isProtected = curStatus.includes('Terkunci') || curStatus === 'Selesai' || curStatus.includes('Curang') || curStatus.includes('Peringatan');
+    if (isProtected) return res.json({status: "protected"});
+
     const lstText = new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')'; 
     const payload = { student_name: req.body.student_name, exam_name: req.body.mapel, status: 'Mengerjakan', score: req.body.live_score, last_seen: lstText };
     const { error } = await supabase.from('activity').upsert({ ...payload, kelas: req.body.kelas || '-' }, {onConflict: 'student_name,exam_name'}); 
@@ -149,8 +164,8 @@ app.post('/api/siswa/submit', async (req, res) => {
 
 app.post('/api/siswa/flag-curang', async (req, res) => {
     const count = parseInt(req.body.count) || 1;
-    // count >= 3 → status Terkunci (guru harus buka); < 3 → catat peringatan saja
-    const statusText = count >= 3 ? 'Curang (Terkunci)' : `Mengerjakan (Peringatan ${count}x)`;
+    // count >= 4 → status Terkunci (setelah 3 peringatan); < 4 → catat peringatan saja
+    const statusText = count >= 4 ? 'Curang (Terkunci)' : `Mengerjakan (Peringatan ${count}x)`;
     await supabase.from('activity')
         .update({ status: statusText })
         .eq('student_name', req.body.student_name)
