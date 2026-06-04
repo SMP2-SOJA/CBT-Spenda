@@ -156,10 +156,59 @@ app.post('/api/siswa/ping', async (req, res) => {
 });
 
 app.post('/api/siswa/submit', async (req, res) => { 
-    const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (req.body.durasi || '-');
-    await supabase.from('results').insert([{ student_name: req.body.student_name, mapel: req.body.mapel, nilai: req.body.nilai, benar: req.body.benar, salah: req.body.salah, detail_jawaban: req.body.detail_jawaban, tanggal: tglDB }]); 
-    await supabase.from('activity').update({ status: 'Selesai', score: req.body.nilai, last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')' }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel); 
-    res.json({status: "success"}); 
+    try {
+        const tglDB = new Date().toLocaleDateString('id-ID') + '|' + (req.body.durasi || '-');
+        const isCurang = req.body.is_curang === true || req.body.is_curang === 'true';
+
+        // ── Cegah duplikasi record (Bug 2 & 3) ──
+        // Jika sudah ada record & bukan force-curang, cek nilai lama
+        // → selalu pakai nilai terbaru (siswa lanjut setelah dibuka guru)
+        const { data: existing } = await supabase
+            .from('results')
+            .select('nilai')
+            .eq('student_name', req.body.student_name)
+            .eq('mapel', req.body.mapel)
+            .maybeSingle();
+
+        // Jika force-curang (submit paksa) tapi sudah ada record dengan nilai LEBIH TINGGI, skip
+        if (isCurang && existing && existing.nilai >= req.body.nilai) {
+            // Jangan timpa nilai yang sudah lebih tinggi saat force-submit curang
+            return res.json({status: "success", skipped: true});
+        }
+
+        // Hapus record lama agar tidak ada duplikasi
+        if (existing) {
+            await supabase.from('results')
+                .delete()
+                .eq('student_name', req.body.student_name)
+                .eq('mapel', req.body.mapel);
+        }
+
+        // Insert nilai baru
+        const { error: insertErr } = await supabase.from('results').insert([{ 
+            student_name: req.body.student_name, 
+            mapel: req.body.mapel, 
+            nilai: req.body.nilai, 
+            benar: req.body.benar, 
+            salah: req.body.salah, 
+            detail_jawaban: req.body.detail_jawaban, 
+            tanggal: tglDB 
+        }]);
+
+        if (insertErr) throw insertErr;
+
+        // Update status aktivitas
+        await supabase.from('activity').update({ 
+            status: isCurang ? 'Curang (Terkunci)' : 'Selesai', 
+            score: req.body.nilai, 
+            last_seen: new Date().toLocaleTimeString('id-ID') + ' (' + (req.body.durasi || '-') + ')' 
+        }).eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel);
+
+        res.json({status: "success"});
+    } catch(err) {
+        // Return error yang jelas agar client bisa simpan ke pending (Bug 1)
+        res.json({status: "error", message: "Gagal simpan: " + err.message});
+    }
 });
 
 app.post('/api/siswa/flag-curang', async (req, res) => {

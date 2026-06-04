@@ -596,6 +596,63 @@ function showPage(p) {
 
 async function showPublicScore() { document.getElementById('view-login').classList.add('hidden'); document.getElementById('view-public-score').classList.remove('hidden'); document.getElementById('view-public-score').classList.add('flex'); await loadPublicData(); publicInterval = setInterval(loadPublicData, 5000); }
 async function loadPublicData() { try { const res = await fetch(API + '/admin/recent-activity'); publicActivityData = await res.json(); if(document.getElementById('pub-filter-kelas').options.length === 1) { let kelasSet = new Set(); let mapelSet = new Set(); (publicActivityData || []).forEach(a => { if(a.kelas && a.kelas !== '-') kelasSet.add(a.kelas); if(a.exam_name) mapelSet.add(a.exam_name); }); const fKelas = document.getElementById('pub-filter-kelas'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); }); const fMapel = document.getElementById('pub-filter-mapel'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); }); } renderPublicTable(); } catch(e) { console.log("Gagal load score"); } }
+function renderPublicTable() {
+    const selKelas = document.getElementById('pub-filter-kelas').value;
+    const selMapel = document.getElementById('pub-filter-mapel').value;
+    let filtered = (publicActivityData || []).filter(a =>
+        (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel)
+    );
+    filtered.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0));
+
+    document.getElementById('public-table-body').innerHTML = filtered.map((a, idx) => {
+        const isSelesai = a.status === 'Selesai';
+        const isCurang  = a.status && a.status.includes('Curang');
+        const badge = isSelesai ? 'bg-emerald-100 text-emerald-700'
+                    : isCurang ? 'bg-red-100 text-red-700'
+                    : 'bg-blue-100 text-blue-700';
+        const skorMentah = a.score != null ? String(a.score) : '-';
+        const nilaiTampil = skorMentah.includes('|') ? skorMentah.split('|')[0].trim() : skorMentah;
+
+        // Parse progress dari last_seen: "14:32:10 (15m 30s | 20/30 Soal)"
+        let terjawab = null, totalSoal = null;
+        const ls = a.last_seen || '';
+        const pm = ls.indexOf('(') >= 0 ? ls.slice(ls.indexOf('(')+1, ls.lastIndexOf(')')) : '';
+        if (pm.includes('/')) {
+            const nums = pm.match(/(\d+)\/(\d+)/);
+            if (nums) { terjawab = parseInt(nums[1]); totalSoal = parseInt(nums[2]); }
+        }
+        if (isSelesai && totalSoal) terjawab = totalSoal;
+        const belum = (terjawab !== null && totalSoal !== null) ? totalSoal - terjawab : null;
+
+        let progressHtml = '<span class="text-slate-300 text-[9px]">-</span>';
+        if (totalSoal !== null) {
+            const pct = Math.round((terjawab / totalSoal) * 100);
+            const bar = isSelesai ? 'bg-emerald-400' : pct >= 80 ? 'bg-blue-400' : pct >= 50 ? 'bg-amber-400' : 'bg-red-400';
+            progressHtml = '<div class="flex flex-col items-center gap-0.5">'
+                + '<span class="font-black text-slate-700 text-xs">' + terjawab + '<span class="text-slate-400 font-normal">/' + totalSoal + '</span></span>'
+                + '<div class="w-14 h-1.5 bg-slate-200 rounded-full overflow-hidden"><div class="' + bar + ' h-full rounded-full" style="width:' + pct + '%"></div></div>'
+                + '<span class="text-[8px] text-slate-400">' + belum + ' belum</span>'
+                + '</div>';
+        }
+
+        const rankLabel = idx < 3 ? ['🥇','🥈','🥉'][idx] : (idx+1);
+        const skor = '<span class="font-black text-sm ' + (isSelesai ? 'text-emerald-600' : 'text-blue-600') + '">' + nilaiTampil + '</span>';
+
+        return '<tr class="hover:bg-slate-50 border-b border-slate-100">'
+            + '<td class="p-2 md:p-3"><div class="flex items-center gap-1.5">'
+            + '<div class="text-sm flex-shrink-0">' + rankLabel + '</div>'
+            + '<div><div class="font-bold text-slate-800 text-[11px] md:text-xs">' + a.student_name + '</div>'
+            + '<div class="text-[8px] text-slate-400">' + (a.kelas||'-') + ' · ' + a.exam_name + '</div></div>'
+            + '</div></td>'
+            + '<td class="p-2 md:p-3 text-center"><span class="px-1.5 py-0.5 rounded text-[8px] font-bold ' + badge + ' block">' + a.status + '</span></td>'
+            + '<td class="p-2 md:p-3 text-center">' + progressHtml + '</td>'
+            + '<td class="p-2 md:p-3 text-center">' + skor + '</td>'
+            + '</tr>';
+    }).join('') || '<tr><td colspan="4" class="text-center p-6 text-slate-400 text-xs">Belum ada aktivitas ujian.</td></tr>';
+}
+
+
+async function loadPublicData() { try { const res = await fetch(API + '/admin/recent-activity'); publicActivityData = await res.json(); if(document.getElementById('pub-filter-kelas').options.length === 1) { let kelasSet = new Set(); let mapelSet = new Set(); (publicActivityData || []).forEach(a => { if(a.kelas && a.kelas !== '-') kelasSet.add(a.kelas); if(a.exam_name) mapelSet.add(a.exam_name); }); const fKelas = document.getElementById('pub-filter-kelas'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); }); const fMapel = document.getElementById('pub-filter-mapel'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); }); } renderPublicTable(); } catch(e) { console.log("Gagal load score"); } }
 function renderPublicTable() { const selKelas = document.getElementById('pub-filter-kelas').value; const selMapel = document.getElementById('pub-filter-mapel').value; let filtered = (publicActivityData || []).filter(a => { return (selKelas === "" || a.kelas === selKelas) && (selMapel === "" || a.exam_name === selMapel); }); filtered.sort((a,b) => (parseFloat(String(b.score).split('|')[0])||0) - (parseFloat(String(a.score).split('|')[0])||0)); document.getElementById('public-table-body').innerHTML = filtered.map(a => { let badge = a.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : (a.status.includes('Curang') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'); let skorMentah = a.score !== null && a.score !== undefined ? String(a.score) : '-'; let nilaiTampil = skorMentah.includes('|') ? skorMentah.split('|')[0].trim() : skorMentah; return `<tr class="hover:bg-slate-50"><td class="p-2 md:p-3 font-bold text-slate-800">${a.student_name}</td><td class="p-2 md:p-3 font-medium text-slate-600">${a.kelas||'-'} <br><span class="text-[9px]">${a.exam_name}</span></td><td class="p-2 md:p-3 text-center"><span class="px-2 py-1 rounded text-[9px] font-bold ${badge}">${a.status}</span></td><td class="p-2 md:p-3 text-center font-black text-sm text-blue-600">${nilaiTampil}</td></tr>`; }).join('') || `<tr><td colspan="4" class="text-center p-4 text-slate-400">Belum ada aktivitas.</td></tr>`; }
 function keluarPublic() { clearInterval(publicInterval); document.getElementById('view-public-score').classList.add('hidden'); document.getElementById('view-public-score').classList.remove('flex'); document.getElementById('view-login').classList.remove('hidden'); }
 
