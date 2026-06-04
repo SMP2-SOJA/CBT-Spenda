@@ -243,7 +243,7 @@ function getLiveScore() {
         let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1; 
         if (q.kunci && q.kunci.trim() === '') {} 
         else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { totalSkorDiperoleh += bobot; } } 
-        else if (q.tipe === 'PGK') { let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); if(kArr.length > 0) { totalSkorMaksimal += bobot * kArr.length; let betul = 0; aArr.forEach(a => { if(kArr.includes(a)) betul++; }); totalSkorDiperoleh += betul * bobot; } } 
+        else if (q.tipe === 'PGK') { let kArr=(q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr=(ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0){totalSkorMaksimal+=bobot*kArr.length; let betul=0; aArr.forEach(a=>{if(kArr.includes(a))betul++;}); totalSkorDiperoleh+=betul*bobot; } } 
         else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let correct = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correct++; } } if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
         else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let correct = 0; kArr.forEach(k => { if(aArr.includes(k)) correct++; }); if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
         else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let match = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) match++; }); if(match === kWords.length) { totalSkorDiperoleh += bobot; } else if(match > 0) { totalSkorDiperoleh += (match / kWords.length) * bobot; } } }
@@ -539,7 +539,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
             let ans = cbtAnswers[index].ans; let status = 'Salah'; let bobot = q.skor ? parseFloat(q.skor) : 1; let poin = 0;
             if (q.kunci && q.kunci.trim() === '') { status = 'Menunggu Koreksi'; poin = 0; }
             else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; } } 
-            else if (q.tipe === 'PGK') { let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); if(kArr.length > 0) { totalSkorMaksimal += bobot * kArr.length; let betul = 0; aArr.forEach(a => { if(kArr.includes(a)) betul++; }); poin = betul * bobot; totalSkorDiperoleh += poin; if(betul === kArr.length) { status = 'Benar'; benar++; } else if(betul > 0) { status = 'Sebagian Benar (' + betul + '/' + kArr.length + ')'; benar++; } else { status = 'Salah'; salah++; } } else { salah++; } } 
+            else if (q.tipe === 'PGK') { let kArr=(q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr=(ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0){totalSkorMaksimal+=bobot*kArr.length; let betul=0; aArr.forEach(a=>{if(kArr.includes(a))betul++;}); poin=betul*bobot; totalSkorDiperoleh+=poin; if(betul===kArr.length){status='Benar';benar++;}else if(betul>0){status='Sebagian Benar ('+betul+'/'+kArr.length+')';benar++;}else{status='Salah';salah++;} }else{salah++;} } 
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let cor = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { cor++; } } if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
             else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let cor = 0; kArr.forEach(k => { if(aArr.includes(k)) cor++; }); if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
             else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let mWord = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) mWord++; }); if(mWord === kWords.length) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if(mWord > 0) { status = `Sebagian Benar (${mWord}/${kWords.length})`; poin = (mWord / kWords.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } } else { status = 'Menunggu Koreksi'; poin = 0; } }
@@ -725,73 +725,83 @@ function renderNilaiTable() {
 }
 
 function exportExcelDetail() {
-    if(window.filteredResultsData.length === 0) return Swal.fire('Kosong', 'Tidak ada data.', 'info');
+    if(window.filteredResultsData.length === 0) return Swal.fire('Kosong','Tidak ada data.','info');
 
-    // Hitung jumlah soal terbanyak
     let maxSoal = 0;
     window.filteredResultsData.forEach(n => {
-        let d = []; try { d = typeof n.detail_jawaban === 'string' ? JSON.parse(n.detail_jawaban) : (n.detail_jawaban||[]); } catch(e){}
-        if(d.length > maxSoal) maxSoal = d.length;
+        let d=[]; try{d=typeof n.detail_jawaban==='string'?JSON.parse(n.detail_jawaban):(n.detail_jawaban||[]);}catch(e){}
+        if(d.length>maxSoal) maxSoal=d.length;
     });
 
-    const thSt  = 'background-color: #f8fafc; font-weight: bold;';
-    const tdTop = 'vertical-align: top;';
+    const BLUE = '#2563eb'; // jawaban BENAR
+    const RED  = '#dc2626'; // jawaban SALAH
+    const thSt = 'background-color:#f8fafc;font-weight:bold;';
+    const tdSt = 'vertical-align:top;';
+    const sp   = (t, c) => '<span style="color:'+c+';font-weight:bold;">'+t+'</span>';
 
-    // Format jawaban: tiap bagian dipisah <br>
-    function fmtJawab(jawab, tipe) {
-        if (!jawab || jawab === '-') return '-';
-        const sp = t => '<span style="color:#dc2626; font-weight:bold;">' + t + '</span>';
-        let parts = [];
-        if (tipe === 'BS' || tipe === 'TS' || tipe === 'NK' || tipe === 'SIFAT') {
-            parts = jawab.split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
-        } else if (tipe === 'JODOH') {
-            parts = jawab.split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
-        } else if (tipe === 'PGK') {
-            parts = jawab.split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
-        } else {
-            parts = [jawab];
+    // Format jawaban dengan warna biru (benar) / merah (salah) per bagian
+    function fmtJawab(jawab, kunci, tipe, status) {
+        if (!jawab || jawab==='-') return '-';
+        const isBenar    = status==='Benar';
+        const isSebagian = status && status.startsWith('Sebagian Benar');
+
+        if (tipe==='PG'||tipe==='ISIAN'||tipe==='ESAI'||tipe==='GFORM') {
+            return sp(jawab, isBenar ? BLUE : RED);
         }
-        return parts.map(p => sp(p)).join('<br>');
+        if (tipe==='BS'||tipe==='TS'||tipe==='NK'||tipe==='SIFAT') {
+            const jParts = jawab.split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
+            const kParts = (kunci||'').split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
+            if (!isSebagian) return jParts.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
+            return jParts.map((p,i)=>sp(p, p===kParts[i]?BLUE:RED)).join('<br>');
+        }
+        if (tipe==='PGK') {
+            const jParts = jawab.split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
+            const kParts = (kunci||'').split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
+            const kLetters = kParts.map(p=>p.charAt(0).toUpperCase());
+            if (!isSebagian) return jParts.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
+            return jParts.map(p=>sp(p, kLetters.includes(p.charAt(0).toUpperCase())?BLUE:RED)).join('<br>');
+        }
+        if (tipe==='JODOH') {
+            const jParts = jawab.split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
+            const kParts = (kunci||'').split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
+            if (!isSebagian) return jParts.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
+            return jParts.map((p,i)=>sp(p, p===kParts[i]?BLUE:RED)).join('<br>');
+        }
+        return sp(jawab, isBenar?BLUE:RED);
     }
 
-    // Header kolom
     const hdr = ['Nama Siswa','Kelas','Mapel','Waktu Pengerjaan','Benar','Salah','Nilai Akhir'];
-    for (let i = 1; i <= maxSoal; i++) hdr.push('Soal No.' + i);
-    const thRow = hdr.map(h => '<th style="' + thSt + '">' + h + '</th>').join('');
+    for(let i=1;i<=maxSoal;i++) hdr.push('Soal No.'+i);
+    const thRow = hdr.map(h=>'<th style="'+thSt+'">'+h+'</th>').join('');
 
-    // Baris data
     const dataRows = window.filteredResultsData.map(n => {
-        let details = [];
-        try { details = typeof n.detail_jawaban === 'string' ? JSON.parse(n.detail_jawaban) : (n.detail_jawaban||[]); } catch(e){}
-        const waktu = (n.tanggal||'').includes('|') ? (n.tanggal.split('|')[1]||'').trim() : (n.tanggal||'-');
-
-        const cells = [
-            '<td style="' + tdTop + '">' + (n.student_name||'-') + '</td>',
-            '<td style="' + tdTop + '">' + (n.kelas||'-') + '</td>',
-            '<td style="' + tdTop + '">' + (n.mapel||'-') + '</td>',
-            '<td style="' + tdTop + ' font-weight: bold;">' + waktu + '</td>',
-            '<td style="' + tdTop + '">' + (n.benar||0) + '</td>',
-            '<td style="' + tdTop + '">' + (n.salah||0) + '</td>',
-            '<td style="font-weight: bold; ' + tdTop + '">' + (n.nilai||0) + '</td>',
+        let details=[];
+        try{details=typeof n.detail_jawaban==='string'?JSON.parse(n.detail_jawaban):(n.detail_jawaban||[]);}catch(e){}
+        const waktu=(n.tanggal||'').includes('|')?(n.tanggal.split('|')[1]||'').trim():(n.tanggal||'-');
+        const cells=[
+            '<td style="'+tdSt+'">'+(n.student_name||'-')+'</td>',
+            '<td style="'+tdSt+'">'+(n.kelas||'-')+'</td>',
+            '<td style="'+tdSt+'">'+(n.mapel||'-')+'</td>',
+            '<td style="'+tdSt+'font-weight:bold;">'+waktu+'</td>',
+            '<td style="'+tdSt+'">'+(n.benar||0)+'</td>',
+            '<td style="'+tdSt+'">'+(n.salah||0)+'</td>',
+            '<td style="font-weight:bold;'+tdSt+'">'+(n.nilai||0)+'</td>',
         ];
-        for (let i = 0; i < maxSoal; i++) {
-            const d = details[i];
-            cells.push('<td style="' + tdTop + '">' + (d && d.jawab ? fmtJawab(d.jawab, d.tipe) : '-') + '</td>');
+        for(let i=0;i<maxSoal;i++){
+            const d=details[i];
+            cells.push('<td style="'+tdSt+'">'+(d&&d.jawab?fmtJawab(d.jawab,d.kunci,d.tipe,d.status):'-')+'</td>');
         }
-        return '<tr>' + cells.join('') + '</tr>';
+        return '<tr>'+cells.join('')+'</tr>';
     }).join('');
 
-    const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
-        + '<head><meta charset="UTF-8">'
-        + '<style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;}td,th{border:1px solid #ccc;padding:6px 8px;}</style>'
-        + '</head><body>'
-        + '<table border="1"><thead><tr>' + thRow + '</tr></thead><tbody>' + dataRows + '</tbody></table>'
-        + '</body></html>';
+    const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
+        +'<head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;}td,th{border:1px solid #ccc;padding:6px 8px;}</style></head>'
+        +'<body><table border="1"><thead><tr>'+thRow+'</tr></thead><tbody>'+dataRows+'</tbody></table></body></html>';
 
-    const blob = new Blob([html], {type: 'application/vnd.ms-excel;charset=utf-8'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'Hasil_Ujian_Lengkap_Berwarna.xls';
+    const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='Hasil_Ujian_Lengkap_Berwarna.xls';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
