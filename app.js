@@ -553,7 +553,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
         let terjawab = 0; for(let i=0; i<cbtQuestions.length; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
         durasiText = `${dMins}m ${dSecs}s | ${terjawab}/${cbtQuestions.length} Soal`; 
     }
-    const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
+    const payload = { student_name: activeUser.name, mapel: currentExam.mapel, kelas: activeUser.kelas || '-', nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
 
     const sendLogic = async () => {
         clearInterval(examTimerInterval); isExamActive = false;
@@ -683,22 +683,21 @@ function updateKkmMapel(val) { const selMapel = document.getElementById('filter-
 async function loadNilai() { 
     const res = await fetch(API + '/admin/results' + getAuthParams()); 
     const data = await res.json();
-    // Deduplikasi sisi client (backup)
+    // Deduplikasi sisi client
     const seen = new Set();
     window.allResultsData = (data || []).filter(r => {
         const k = `${r.student_name}|${r.mapel}`;
-        if (seen.has(k)) return false;
-        seen.add(k); return true;
+        if(seen.has(k)) return false; seen.add(k); return true;
     });
-    // Selalu rebuild dropdown kelas & mapel (bukan hanya saat pertama kali)
+    // Selalu rebuild dropdown kelas & mapel
     const fKelas = document.getElementById('filter-kelas-nilai');
     const fMapel = document.getElementById('filter-mapel-nilai');
-    while (fKelas.options.length > 1) fKelas.remove(1);
-    while (fMapel.options.length > 1) fMapel.remove(1);
+    while(fKelas.options.length > 1) fKelas.remove(1);
+    while(fMapel.options.length > 1) fMapel.remove(1);
     const kelasSet = new Set(), mapelSet = new Set();
     window.allResultsData.forEach(r => {
-        if (r.kelas && r.kelas !== '-') kelasSet.add(r.kelas);
-        if (r.mapel) mapelSet.add(r.mapel);
+        if(r.kelas && r.kelas !== '-') kelasSet.add(r.kelas);
+        if(r.mapel) mapelSet.add(r.mapel);
     });
     [...kelasSet].sort().forEach(k => fKelas.add(new Option(k, k)));
     [...mapelSet].sort().forEach(m => fMapel.add(new Option(m, m)));

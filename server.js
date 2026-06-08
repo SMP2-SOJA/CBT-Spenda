@@ -187,7 +187,8 @@ app.post('/api/siswa/submit', async (req, res) => {
         // Insert nilai baru
         const { error: insertErr } = await supabase.from('results').insert([{ 
             student_name: req.body.student_name, 
-            mapel: req.body.mapel, 
+            mapel: req.body.mapel,
+            kelas: req.body.kelas || '-',
             nilai: req.body.nilai, 
             benar: req.body.benar, 
             salah: req.body.salah, 
@@ -237,13 +238,13 @@ app.get('/api/admin/results', async (req, res) => {
         supabase.from('results').select('*').order('id', { ascending: false }),
         supabase.from('activity').select('student_name, exam_name, kelas')
     ]);
-    // Peta kelas dari activity: key = "student_name|exam_name"
-    const kelasMap = {};
-    (activity || []).forEach(a => { kelasMap[`${a.student_name}|${a.exam_name}`] = a.kelas || '-'; });
-    // Gabungkan kelas, deduplikasi — pertahankan hanya record terbaru per siswa+mapel
+    // Fallback kelas dari activity jika hasil DB tidak ada kelas
+    const actMap = {};
+    (activity || []).forEach(a => { actMap[`${a.student_name}|${a.exam_name}`] = a.kelas || '-'; });
+    // Gabungkan & deduplikasi (record terbaru per siswa+mapel)
     const seen = new Set();
     const merged = (results || [])
-        .map(r => ({ ...r, kelas: kelasMap[`${r.student_name}|${r.mapel}`] || r.kelas || '-' }))
+        .map(r => ({ ...r, kelas: (r.kelas && r.kelas !== '-') ? r.kelas : (actMap[`${r.student_name}|${r.mapel}`] || '-') }))
         .filter(r => { const k = `${r.student_name}|${r.mapel}`; if(seen.has(k)) return false; seen.add(k); return true; });
     res.json(merged);
 });
