@@ -232,7 +232,21 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.get('/api/admin/recent-activity', async (req, res) => { const { data } = await supabase.from('activity').select('*').order('last_seen', {ascending: false}); res.json(data || []); });
-app.get('/api/admin/results', async (req, res) => { const { data } = await supabase.from('results').select('*').order('id', {ascending: false}); res.json(data || []); });
+app.get('/api/admin/results', async (req, res) => { 
+    const [{ data: results }, { data: activity }] = await Promise.all([
+        supabase.from('results').select('*').order('id', { ascending: false }),
+        supabase.from('activity').select('student_name, exam_name, kelas')
+    ]);
+    // Peta kelas dari activity: key = "student_name|exam_name"
+    const kelasMap = {};
+    (activity || []).forEach(a => { kelasMap[`${a.student_name}|${a.exam_name}`] = a.kelas || '-'; });
+    // Gabungkan kelas, deduplikasi — pertahankan hanya record terbaru per siswa+mapel
+    const seen = new Set();
+    const merged = (results || [])
+        .map(r => ({ ...r, kelas: kelasMap[`${r.student_name}|${r.mapel}`] || r.kelas || '-' }))
+        .filter(r => { const k = `${r.student_name}|${r.mapel}`; if(seen.has(k)) return false; seen.add(k); return true; });
+    res.json(merged);
+});
 
 app.post('/api/admin/reset-siswa', async (req, res) => {
     // Buka akses: ubah status kembali ke 'Mengerjakan' (bukan hapus)

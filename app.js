@@ -681,12 +681,28 @@ function handleMapelNilaiChange() { const selMapel = document.getElementById('fi
 function updateKkmMapel(val) { const selMapel = document.getElementById('filter-mapel-nilai').value; if(!selMapel) { Swal.fire('Perhatian', 'Pilih Mapel dulu pada filter.', 'info'); document.getElementById('input-kkm-nilai').value = ''; return; } const kkmMap = getKkmStorage(); if(val && parseFloat(val) > 0) { kkmMap[selMapel] = parseFloat(val); } else { delete kkmMap[selMapel]; } localStorage.setItem('cbt_kkm_mapel', JSON.stringify(kkmMap)); renderNilaiTable(); }
 
 async function loadNilai() { 
-    const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); window.allResultsData = data || []; 
-    if(document.getElementById('filter-kelas-nilai').options.length === 1) { 
-        let kelasSet = new Set(); let mapelSet = new Set(); window.allResultsData.forEach(r => { if(r.kelas && r.kelas !== '-') kelasSet.add(r.kelas); if(r.mapel) mapelSet.add(r.mapel); }); 
-        const fKelas = document.getElementById('filter-kelas-nilai'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); }); 
-        const fMapel = document.getElementById('filter-mapel-nilai'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); }); 
-    } renderNilaiTable(); 
+    const res = await fetch(API + '/admin/results' + getAuthParams()); 
+    const data = await res.json();
+    // Deduplikasi sisi client (backup)
+    const seen = new Set();
+    window.allResultsData = (data || []).filter(r => {
+        const k = `${r.student_name}|${r.mapel}`;
+        if (seen.has(k)) return false;
+        seen.add(k); return true;
+    });
+    // Selalu rebuild dropdown kelas & mapel (bukan hanya saat pertama kali)
+    const fKelas = document.getElementById('filter-kelas-nilai');
+    const fMapel = document.getElementById('filter-mapel-nilai');
+    while (fKelas.options.length > 1) fKelas.remove(1);
+    while (fMapel.options.length > 1) fMapel.remove(1);
+    const kelasSet = new Set(), mapelSet = new Set();
+    window.allResultsData.forEach(r => {
+        if (r.kelas && r.kelas !== '-') kelasSet.add(r.kelas);
+        if (r.mapel) mapelSet.add(r.mapel);
+    });
+    [...kelasSet].sort().forEach(k => fKelas.add(new Option(k, k)));
+    [...mapelSet].sort().forEach(m => fMapel.add(new Option(m, m)));
+    renderNilaiTable(); 
 }
 
 function renderNilaiTable() { 
