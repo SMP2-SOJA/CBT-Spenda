@@ -233,42 +233,71 @@ app.get('/api/admin/stats', async (req, res) => {
 
 app.get('/api/admin/recent-activity', async (req, res) => { const { data } = await supabase.from('activity').select('*').order('last_seen', {ascending: false}); res.json(data || []); });
 app.get('/api/admin/results', async (req, res) => { 
-    const [{ data: results }, { data: activity }] = await Promise.all([
+    const [{ data: results }, { data: activity }, { data: users }] = await Promise.all([
         supabase.from('results').select('*').order('id', { ascending: false }),
-        supabase.from('activity').select('student_name, exam_name, kelas')
+        supabase.from('activity').select('student_name, exam_name, kelas'),
+        supabase.from('users').select('name, kelas').eq('role', 'siswa')
     ]);
-    const actMap = {};
+    // Peta kelas dari activity dan users table
+    const actMap = {}, userMap = {};
     (activity || []).forEach(a => { actMap[`${a.student_name}|${a.exam_name}`] = a.kelas || '-'; });
+    (users    || []).forEach(u => { if(u.name) userMap[u.name] = u.kelas || '-'; });
+    // Deduplikasi + isi kelas dari berbagai sumber
     const seen = new Set();
     const merged = (results || [])
-        .map(r => ({ ...r, kelas: (r.kelas && r.kelas !== '-') ? r.kelas : (actMap[`${r.student_name}|${r.mapel}`] || '-') }))
+        .map(r => {
+            let kelas = (r.kelas && r.kelas !== '-') ? r.kelas
+                : (actMap[`${r.student_name}|${r.mapel}`] || '-');
+            if (kelas === '-') kelas = userMap[r.student_name] || '-';
+            return { ...r, kelas };
+        })
         .filter(r => { const k = `${r.student_name}|${r.mapel}`; if(seen.has(k)) return false; seen.add(k); return true; });
     res.json(merged);
 });
 
-// Endpoint: semua peserta yang seharusnya ikut ujian (termasuk yang tidak hadir)
+// Roster peserta ujian: hanya kelas yang SUDAH terdaftar ikut ujian ini
 app.get('/api/admin/exam-roster', async (req, res) => {
     const { mapel } = req.query;
     if (!mapel) return res.json([]);
     try {
-        // Ambil kelas target dari jadwal
-        const { data: sched } = await supabase.from('schedules').select('kelas').eq('mapel', mapel).limit(1);
-        const kelasTarget = sched && sched[0] ? sched[0].kelas : null;
-
-        // Gabungkan dari 2 sumber: users (siswa terdaftar) + activity (yang pernah masuk)
-        const [{ data: usersData }, { data: actData }] = await Promise.all([
-            kelasTarget
-                ? supabase.from('users').select('name, kelas').eq('role', 'siswa').eq('kelas', kelasTarget)
-                : supabase.from('users').select('name, kelas').eq('role', 'siswa'),
-            supabase.from('activity').select('student_name, kelas').eq('exam_name', mapel)
+        const [{ data: actData }, { data: resData }, { data: usersData }] = await Promise.all([
+            supabase.from('activity').select('student_name, kelas').eq('exam_name', mapel),
+            supabase.from('results').select('student_name, kelas').eq('mapel', mapel),
+            supabase.from('users').select('name, kelas').eq('role', 'siswa')
         ]);
 
+        // Kumpulkan kelas dari siswa yang SUDAH ikut ujian (activity + results)
+        const userMap = {};
+        (usersData || []).forEach(u => { if(u.name) userMap[u.name] = u.kelas || '-'; });
+
+        const kelasIkut = new Set();
+        (actData || []).forEach(a => {
+            const k = (a.kelas && a.kelas !== '-') ? a.kelas : (userMap[a.student_name] || null);
+            if (k && k !== '-') kelasIkut.add(k);
+        });
+        (resData || []).forEach(r => {
+            const k = (r.kelas && r.kelas !== '-') ? r.kelas : (userMap[r.student_name] || null);
+            if (k && k !== '-') kelasIkut.add(k);
+        });
+
+        if (kelasIkut.size === 0) return res.json([]);
+
+        // Ambil HANYA siswa dari kelas yang ikut ujian
+        const { data: siswaDiKelas } = await supabase.from('users')
+            .select('name, kelas').eq('role', 'siswa').in('kelas', [...kelasIkut]);
+
         const roster = new Map();
-        (usersData || []).forEach(u => roster.set(u.name, u.kelas || '-'));
-        (actData   || []).forEach(a => { if(!roster.has(a.student_name)) roster.set(a.student_name, a.kelas || '-'); });
+        (siswaDiKelas || []).forEach(u => roster.set(u.name, u.kelas || '-'));
+        // Tambah siswa dari activity yang mungkin tidak ada di users
+        (actData || []).forEach(a => {
+            if (!roster.has(a.student_name)) {
+                const k = (a.kelas && a.kelas !== '-') ? a.kelas : (userMap[a.student_name] || '-');
+                if (kelasIkut.has(k)) roster.set(a.student_name, k);
+            }
+        });
 
         res.json([...roster.entries()].map(([name, kelas]) => ({ name, kelas })));
-    } catch(e) { res.json([]); }
+    } catch(e) { console.error(e); res.json([]); }
 });
 
 app.post('/api/admin/reset-siswa', async (req, res) => {
