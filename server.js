@@ -187,8 +187,7 @@ app.post('/api/siswa/submit', async (req, res) => {
         // Insert nilai baru
         const { error: insertErr } = await supabase.from('results').insert([{ 
             student_name: req.body.student_name, 
-            mapel: req.body.mapel,
-            kelas: req.body.kelas || '-',
+            mapel: req.body.mapel, 
             nilai: req.body.nilai, 
             benar: req.body.benar, 
             salah: req.body.salah, 
@@ -238,15 +237,38 @@ app.get('/api/admin/results', async (req, res) => {
         supabase.from('results').select('*').order('id', { ascending: false }),
         supabase.from('activity').select('student_name, exam_name, kelas')
     ]);
-    // Fallback kelas dari activity jika hasil DB tidak ada kelas
     const actMap = {};
     (activity || []).forEach(a => { actMap[`${a.student_name}|${a.exam_name}`] = a.kelas || '-'; });
-    // Gabungkan & deduplikasi (record terbaru per siswa+mapel)
     const seen = new Set();
     const merged = (results || [])
         .map(r => ({ ...r, kelas: (r.kelas && r.kelas !== '-') ? r.kelas : (actMap[`${r.student_name}|${r.mapel}`] || '-') }))
         .filter(r => { const k = `${r.student_name}|${r.mapel}`; if(seen.has(k)) return false; seen.add(k); return true; });
     res.json(merged);
+});
+
+// Endpoint: semua peserta yang seharusnya ikut ujian (termasuk yang tidak hadir)
+app.get('/api/admin/exam-roster', async (req, res) => {
+    const { mapel } = req.query;
+    if (!mapel) return res.json([]);
+    try {
+        // Ambil kelas target dari jadwal
+        const { data: sched } = await supabase.from('schedules').select('kelas').eq('mapel', mapel).limit(1);
+        const kelasTarget = sched && sched[0] ? sched[0].kelas : null;
+
+        // Gabungkan dari 2 sumber: users (siswa terdaftar) + activity (yang pernah masuk)
+        const [{ data: usersData }, { data: actData }] = await Promise.all([
+            kelasTarget
+                ? supabase.from('users').select('name, kelas').eq('role', 'siswa').eq('kelas', kelasTarget)
+                : supabase.from('users').select('name, kelas').eq('role', 'siswa'),
+            supabase.from('activity').select('student_name, kelas').eq('exam_name', mapel)
+        ]);
+
+        const roster = new Map();
+        (usersData || []).forEach(u => roster.set(u.name, u.kelas || '-'));
+        (actData   || []).forEach(a => { if(!roster.has(a.student_name)) roster.set(a.student_name, a.kelas || '-'); });
+
+        res.json([...roster.entries()].map(([name, kelas]) => ({ name, kelas })));
+    } catch(e) { res.json([]); }
 });
 
 app.post('/api/admin/reset-siswa', async (req, res) => {

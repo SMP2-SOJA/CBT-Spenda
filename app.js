@@ -243,7 +243,7 @@ function getLiveScore() {
         let ans = cbtAnswers[index]?.ans || ""; let bobot = q.skor ? parseFloat(q.skor) : 1; 
         if (q.kunci && q.kunci.trim() === '') {} 
         else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { totalSkorDiperoleh += bobot; } } 
-        else if (q.tipe === 'PGK') { let kArr=(q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr=(ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0){totalSkorMaksimal+=bobot*kArr.length; let betul=0; aArr.forEach(a=>{if(kArr.includes(a))betul++;}); totalSkorDiperoleh+=betul*bobot; } } 
+        else if (q.tipe === 'PGK') { let kArr=(q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr=(ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0){totalSkorMaksimal+=bobot*kArr.length; let betul=0,salahPgk=0; aArr.forEach(a=>{if(kArr.includes(a))betul++; else salahPgk++;}); totalSkorDiperoleh+=Math.max(0,(betul-salahPgk)*bobot); } } 
         else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let correct = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { correct++; } } if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
         else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let correct = 0; kArr.forEach(k => { if(aArr.includes(k)) correct++; }); if(correct === kArr.length && kArr.length > 0) { totalSkorDiperoleh += bobot; } else if (correct > 0) { totalSkorDiperoleh += (correct / kArr.length) * bobot; } }
         else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let match = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) match++; }); if(match === kWords.length) { totalSkorDiperoleh += bobot; } else if(match > 0) { totalSkorDiperoleh += (match / kWords.length) * bobot; } } }
@@ -539,7 +539,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
             let ans = cbtAnswers[index].ans; let status = 'Salah'; let bobot = q.skor ? parseFloat(q.skor) : 1; let poin = 0;
             if (q.kunci && q.kunci.trim() === '') { status = 'Menunggu Koreksi'; poin = 0; }
             else if (q.tipe === 'PG') { totalSkorMaksimal += bobot; let kBersih = (q.kunci || "").replace(/\s/g, '').toLowerCase(); let aBersih = (ans || "").replace(/\s/g, '').toLowerCase(); if(aBersih && aBersih === kBersih) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else { salah++; } } 
-            else if (q.tipe === 'PGK') { let kArr=(q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr=(ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0){totalSkorMaksimal+=bobot*kArr.length; let betul=0; aArr.forEach(a=>{if(kArr.includes(a))betul++;}); poin=betul*bobot; totalSkorDiperoleh+=poin; if(betul===kArr.length){status='Benar';benar++;}else if(betul>0){status='Sebagian Benar ('+betul+'/'+kArr.length+')';benar++;}else{status='Salah';salah++;} }else{salah++;} } 
+            else if (q.tipe === 'PGK') { let kArr=(q.kunci||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); let aArr=(ans||"").replace(/\s/g,'').toLowerCase().split(',').filter(x=>x); if(kArr.length>0){totalSkorMaksimal+=bobot*kArr.length; let betul=0,salahPgk=0; aArr.forEach(a=>{if(kArr.includes(a))betul++; else salahPgk++;}); poin=Math.max(0,(betul-salahPgk)*bobot); totalSkorDiperoleh+=poin; if(betul===kArr.length&&salahPgk===0){status='Benar';benar++;}else if(poin>0){status='Sebagian Benar ('+betul+'/'+kArr.length+(salahPgk>0?', -'+salahPgk+' salah':'')+')';benar++;}else{status='Salah'+(salahPgk>0?' (-'+salahPgk+' salah)':'');salah++;} }else{salah++;} } 
             else if (q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toUpperCase().split(',').filter(x=>x); if ((q.tipe === 'BS' || q.tipe === 'TS') && kArr.some(k => k === 'S')) { kArr = kArr.map(k => k === 'B' ? 'A' : (k === 'S' ? 'B' : k)); } let aArr = (ans||"").replace(/\s/g, '').toUpperCase().split(','); let cor = 0; for(let j=0; j<kArr.length; j++) { if(aArr[j] === kArr[j] && aArr[j] !== '-' && aArr[j] !== "") { cor++; } } if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
             else if (q.tipe === 'JODOH') { totalSkorMaksimal += bobot; let kArr = (q.kunci||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let aArr = (ans||"").replace(/\s/g, '').toLowerCase().split(',').filter(x=>x); let cor = 0; kArr.forEach(k => { if(aArr.includes(k)) cor++; }); if(cor === kArr.length && kArr.length > 0) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if (cor > 0) { status = `Sebagian Benar (${cor}/${kArr.length})`; poin = (cor / kArr.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } }
             else if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') { let kWords = (q.kunci || "").toLowerCase().match(/[a-z0-9]+/gi) || []; let aWords = (ans || "").toLowerCase().match(/[a-z0-9]+/gi) || []; if (kWords.length > 0) { totalSkorMaksimal += bobot; let mWord = 0; let aUnique = [...new Set(aWords)]; kWords.forEach(kw => { if(aUnique.includes(kw)) mWord++; }); if(mWord === kWords.length) { status = 'Benar'; poin = bobot; totalSkorDiperoleh += bobot; benar++; } else if(mWord > 0) { status = `Sebagian Benar (${mWord}/${kWords.length})`; poin = (mWord / kWords.length) * bobot; totalSkorDiperoleh += poin; benar++; } else { salah++; } } else { status = 'Menunggu Koreksi'; poin = 0; } }
@@ -553,7 +553,7 @@ async function submitUjian(showConfirm = true, isForceCurang = false) {
         let terjawab = 0; for(let i=0; i<cbtQuestions.length; i++){ let a = cbtAnswers[i]?.ans || ""; let q = cbtQuestions[i]; if(a === "") continue; if((q.tipe === 'BS' || q.tipe === 'TS' || q.tipe === 'NK' || q.tipe === 'SIFAT') && a.indexOf('-') !== -1) continue; if(q.tipe === 'JODOH' && a.split(',').length < (q.kunci||"").split(',').length) continue; terjawab++; }
         durasiText = `${dMins}m ${dSecs}s | ${terjawab}/${cbtQuestions.length} Soal`; 
     }
-    const payload = { student_name: activeUser.name, mapel: currentExam.mapel, kelas: activeUser.kelas || '-', nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
+    const payload = { student_name: activeUser.name, mapel: currentExam.mapel, nilai: nilaiAkhir, benar: benar, salah: salah, detail_jawaban: JSON.stringify(detail), is_curang: isForceCurang, durasi: durasiText };
 
     const sendLogic = async () => {
         clearInterval(examTimerInterval); isExamActive = false;
@@ -681,27 +681,12 @@ function handleMapelNilaiChange() { const selMapel = document.getElementById('fi
 function updateKkmMapel(val) { const selMapel = document.getElementById('filter-mapel-nilai').value; if(!selMapel) { Swal.fire('Perhatian', 'Pilih Mapel dulu pada filter.', 'info'); document.getElementById('input-kkm-nilai').value = ''; return; } const kkmMap = getKkmStorage(); if(val && parseFloat(val) > 0) { kkmMap[selMapel] = parseFloat(val); } else { delete kkmMap[selMapel]; } localStorage.setItem('cbt_kkm_mapel', JSON.stringify(kkmMap)); renderNilaiTable(); }
 
 async function loadNilai() { 
-    const res = await fetch(API + '/admin/results' + getAuthParams()); 
-    const data = await res.json();
-    // Deduplikasi sisi client
-    const seen = new Set();
-    window.allResultsData = (data || []).filter(r => {
-        const k = `${r.student_name}|${r.mapel}`;
-        if(seen.has(k)) return false; seen.add(k); return true;
-    });
-    // Selalu rebuild dropdown kelas & mapel
-    const fKelas = document.getElementById('filter-kelas-nilai');
-    const fMapel = document.getElementById('filter-mapel-nilai');
-    while(fKelas.options.length > 1) fKelas.remove(1);
-    while(fMapel.options.length > 1) fMapel.remove(1);
-    const kelasSet = new Set(), mapelSet = new Set();
-    window.allResultsData.forEach(r => {
-        if(r.kelas && r.kelas !== '-') kelasSet.add(r.kelas);
-        if(r.mapel) mapelSet.add(r.mapel);
-    });
-    [...kelasSet].sort().forEach(k => fKelas.add(new Option(k, k)));
-    [...mapelSet].sort().forEach(m => fMapel.add(new Option(m, m)));
-    renderNilaiTable(); 
+    const res = await fetch(API + '/admin/results' + getAuthParams()); const data = await res.json(); window.allResultsData = data || []; 
+    if(document.getElementById('filter-kelas-nilai').options.length === 1) { 
+        let kelasSet = new Set(); let mapelSet = new Set(); window.allResultsData.forEach(r => { if(r.kelas && r.kelas !== '-') kelasSet.add(r.kelas); if(r.mapel) mapelSet.add(r.mapel); }); 
+        const fKelas = document.getElementById('filter-kelas-nilai'); kelasSet.forEach(k => { fKelas.add(new Option(k, k)); }); 
+        const fMapel = document.getElementById('filter-mapel-nilai'); mapelSet.forEach(m => { fMapel.add(new Option(m, m)); }); 
+    } renderNilaiTable(); 
 }
 
 function renderNilaiTable() { 
@@ -739,8 +724,9 @@ function renderNilaiTable() {
     }).join(''); 
 }
 
-function exportExcelDetail() {
+async function exportExcelDetail() {
     if(window.filteredResultsData.length === 0) return Swal.fire('Kosong','Tidak ada data.','info');
+    Swal.fire({title:'Menyiapkan file...', didOpen:()=>Swal.showLoading()});
 
     let maxSoal = 0;
     window.filteredResultsData.forEach(n => {
@@ -748,48 +734,42 @@ function exportExcelDetail() {
         if(d.length>maxSoal) maxSoal=d.length;
     });
 
-    const BLUE = '#2563eb'; // jawaban BENAR
-    const RED  = '#dc2626'; // jawaban SALAH
-    const thSt = 'background-color:#f8fafc;font-weight:bold;';
-    const tdSt = 'vertical-align:top;';
-    const sp   = (t, c) => '<span style="color:'+c+';font-weight:bold;">'+t+'</span>';
+    const BLUE='#2563eb', RED='#dc2626';
+    const thSt='background-color:#f8fafc;font-weight:bold;';
+    const tdSt='vertical-align:top;';
+    const sp=(t,c)=>'<span style="color:'+c+';font-weight:bold;">'+t+'</span>';
 
-    // Format jawaban dengan warna biru (benar) / merah (salah) per bagian
-    function fmtJawab(jawab, kunci, tipe, status) {
-        if (!jawab || jawab==='-') return '-';
-        const isBenar    = status==='Benar';
-        const isSebagian = status && status.startsWith('Sebagian Benar');
-
-        if (tipe==='PG'||tipe==='ISIAN'||tipe==='ESAI'||tipe==='GFORM') {
-            return sp(jawab, isBenar ? BLUE : RED);
+    function fmtJawab(jawab,kunci,tipe,status) {
+        if(!jawab||jawab==='-') return '-';
+        const isBenar=status==='Benar', isSebagian=status&&status.startsWith('Sebagian Benar');
+        if(tipe==='PG'||tipe==='ISIAN'||tipe==='ESAI'||tipe==='GFORM') return sp(jawab,isBenar?BLUE:RED);
+        if(tipe==='BS'||tipe==='TS'||tipe==='NK'||tipe==='SIFAT') {
+            const jP=jawab.split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
+            const kP=(kunci||'').split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
+            if(!isSebagian) return jP.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
+            return jP.map((p,i)=>sp(p,p===kP[i]?BLUE:RED)).join('<br>');
         }
-        if (tipe==='BS'||tipe==='TS'||tipe==='NK'||tipe==='SIFAT') {
-            const jParts = jawab.split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
-            const kParts = (kunci||'').split(/(?=No\.\d+[:])/).map(s=>s.trim()).filter(s=>s);
-            if (!isSebagian) return jParts.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
-            return jParts.map((p,i)=>sp(p, p===kParts[i]?BLUE:RED)).join('<br>');
+        if(tipe==='PGK') {
+            const jP=jawab.split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
+            const kP=(kunci||'').split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
+            const kL=kP.map(p=>p.charAt(0).toUpperCase());
+            if(!isSebagian) return jP.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
+            return jP.map(p=>sp(p,kL.includes(p.charAt(0).toUpperCase())?BLUE:RED)).join('<br>');
         }
-        if (tipe==='PGK') {
-            const jParts = jawab.split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
-            const kParts = (kunci||'').split(/(?=[A-Fa-f]\.)/).map(s=>s.trim()).filter(s=>s);
-            const kLetters = kParts.map(p=>p.charAt(0).toUpperCase());
-            if (!isSebagian) return jParts.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
-            return jParts.map(p=>sp(p, kLetters.includes(p.charAt(0).toUpperCase())?BLUE:RED)).join('<br>');
+        if(tipe==='JODOH') {
+            const jP=jawab.split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
+            const kP=(kunci||'').split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
+            if(!isSebagian) return jP.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
+            return jP.map((p,i)=>sp(p,p===kP[i]?BLUE:RED)).join('<br>');
         }
-        if (tipe==='JODOH') {
-            const jParts = jawab.split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
-            const kParts = (kunci||'').split(/(?=No\.\d+ ->)/).map(s=>s.trim()).filter(s=>s);
-            if (!isSebagian) return jParts.map(p=>sp(p,isBenar?BLUE:RED)).join('<br>');
-            return jParts.map((p,i)=>sp(p, p===kParts[i]?BLUE:RED)).join('<br>');
-        }
-        return sp(jawab, isBenar?BLUE:RED);
+        return sp(jawab,isBenar?BLUE:RED);
     }
 
-    const hdr = ['Nama Siswa','Kelas','Mapel','Waktu Pengerjaan','Benar','Salah','Nilai Akhir'];
+    const hdr=['Nama Siswa','Kelas','Mapel','Waktu Pengerjaan','Benar','Salah','Nilai Akhir'];
     for(let i=1;i<=maxSoal;i++) hdr.push('Soal No.'+i);
-    const thRow = hdr.map(h=>'<th style="'+thSt+'">'+h+'</th>').join('');
+    const thRow=hdr.map(h=>'<th style="'+thSt+'">'+h+'</th>').join('');
 
-    const dataRows = window.filteredResultsData.map(n => {
+    let dataRows=window.filteredResultsData.map(n=>{
         let details=[];
         try{details=typeof n.detail_jawaban==='string'?JSON.parse(n.detail_jawaban):(n.detail_jawaban||[]);}catch(e){}
         const waktu=(n.tanggal||'').includes('|')?(n.tanggal.split('|')[1]||'').trim():(n.tanggal||'-');
@@ -809,17 +789,42 @@ function exportExcelDetail() {
         return '<tr>'+cells.join('')+'</tr>';
     }).join('');
 
+    // Tambah baris TIDAK HADIR untuk siswa yang tidak ikut ujian
+    const selMapel=document.getElementById('filter-mapel-nilai').value;
+    if(selMapel) {
+        try {
+            const rosterRes=await fetch(API+'/admin/exam-roster?mapel='+encodeURIComponent(selMapel)+getAuthParams().replace('?','&'));
+            const roster=await rosterRes.json();
+            const submitted=new Set(window.filteredResultsData.map(r=>r.student_name));
+            (roster||[]).forEach(s=>{
+                if(!submitted.has(s.name)){
+                    const cells=[
+                        '<td style="'+tdSt+'">'+s.name+'</td>',
+                        '<td style="'+tdSt+'">'+(s.kelas||'-')+'</td>',
+                        '<td style="'+tdSt+'">'+selMapel+'</td>',
+                        '<td style="'+tdSt+'">-</td>',
+                        '<td style="'+tdSt+'">0</td>',
+                        '<td style="'+tdSt+'">0</td>',
+                        '<td style="font-weight:bold;color:'+RED+';">TIDAK HADIR</td>',
+                    ];
+                    for(let i=0;i<maxSoal;i++) cells.push('<td style="'+tdSt+'">-</td>');
+                    dataRows+='<tr>'+cells.join('')+'</tr>';
+                }
+            });
+        } catch(e){ console.log('Roster error:',e); }
+    }
+
     const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
         +'<head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;}td,th{border:1px solid #ccc;padding:6px 8px;}</style></head>'
         +'<body><table border="1"><thead><tr>'+thRow+'</tr></thead><tbody>'+dataRows+'</tbody></table></body></html>';
 
+    Swal.close();
     const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url; a.download='Hasil_Ujian_Lengkap_Berwarna.xls';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
-
 
 function lihatDetail(rowIdx) {
     const n = window.filteredResultsData[rowIdx];
