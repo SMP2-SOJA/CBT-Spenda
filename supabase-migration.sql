@@ -40,3 +40,15 @@ create table if not exists exam_sessions (
     updated_at     timestamptz default now(),
     unique (student_name, mapel)
 );
+
+-- ============================================================
+-- GAMBAR SOAL (v4.7): unggah langsung tanpa Google Drive
+-- ============================================================
+create table if not exists media (
+    id         text primary key,
+    mime       text not null,
+    data       text not null,
+    size       int,
+    uploader   text,
+    created_at timestamptz default now()
+);

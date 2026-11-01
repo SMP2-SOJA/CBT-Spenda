@@ -1,16 +1,54 @@
 {
   "version": 2,
   "builds": [
-    { "src": "server.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "*.png", "use": "@vercel/static" },
-    { "src": "manifest.json", "use": "@vercel/static" },
-    { "src": "sw.js", "use": "@vercel/static" }
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "manifest.json",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.docx",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sw.js",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/server.js" },
-    { "src": "/sw.js", "headers": { "Cache-Control": "no-cache", "Service-Worker-Allowed": "/" }, "dest": "/sw.js" },
-    { "src": "/(manifest\\.json|[^/]+\\.png)", "dest": "/$1" },
-    { "src": "/(.*)", "headers": { "Cache-Control": "no-cache" }, "dest": "/index.html" }
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/sw.js",
+      "headers": {
+        "Cache-Control": "no-cache",
+        "Service-Worker-Allowed": "/"
+      },
+      "dest": "/sw.js"
+    },
+    {
+      "src": "/(manifest\\.json|[^/]+\\.png|[^/]+\\.docx)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "headers": {
+        "Cache-Control": "no-cache"
+      },
+      "dest": "/index.html"
+    }
   ]
 }

@@ -19,10 +19,14 @@ const MATRIX_TYPES = ['BS', 'TS', 'NK', 'SIFAT'];
 
 const splitOpsi = q => (q.opsi_json ? String(q.opsi_json).split(/\|\|\|/).map(o => o.trim()).filter(o => o) : []);
 
+// Teks bacaan (stimulus) disimpan di awal kolom tanya: [stimulus]…[/stimulus]
+const STIM_RE = /^\s*\[stimulus\][\s\S]*?\[\/stimulus\]\s*/i;
+const tanpaStimulus = t => String(t || '').replace(STIM_RE, '');
+
 // Jumlah pasangan menjodohkan (dipakai klien tanpa perlu tahu kunci)
 function jodohPairCount(q) {
     if (q.kunci && String(q.kunci).trim()) return String(q.kunci).split(',').filter(x => x.trim()).length;
-    const premises = String(q.tanya || '').split(/\r?\n|<br\s*\/?>/i).filter(l => /^\s*\d+[.)]\s?/.test(l));
+    const premises = tanpaStimulus(q.tanya).split(/\r?\n|<br\s*\/?>/i).filter(l => /^\s*\d+[.)]\s?/.test(l));
     return premises.length || 4;
 }
 
@@ -133,7 +137,7 @@ function scoreExam(questions, answers) {
         maks += r.maks; dapat += r.poin;
         if (r.hit === true) benar++; else if (r.hit === false) salah++;
         return {
-            no: i + 1, qid: q.id, tipe: q.tipe, tanya: q.tanya,
+            no: i + 1, qid: q.id, tipe: q.tipe, tanya: tanpaStimulus(q.tanya),
             jawab: getFullAnswerText(q, ans), kunci: getFullAnswerText(q, q.kunci, true),
             status: r.status, poin: Math.round(r.poin * 100) / 100,
         };
@@ -545,6 +549,40 @@ app.get('/api/public/logo', wrap(async (req, res) => {
     res.send(Buffer.from(m[2], 'base64'));
 }));
 
+// ============================================================
+// GAMBAR SOAL (tanpa Google Drive) — disimpan di tabel `media`
+// Gambar sudah dikompres di browser (maks ±1280 px) sebelum dikirim.
+// URL: /api/media/<id acak>  — di-cache browser & CDN Vercel.
+// ============================================================
+const MEDIA_RE = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/;
+const mediaCache = new Map();
+app.post('/api/admin/media', STAFF, wrap(async (req, res) => {
+    const m = String(req.body.data || '').match(MEDIA_RE);
+    if (!m) return res.json({ status: 'error', message: 'Format gambar harus PNG, JPG, WEBP, atau GIF.' });
+    if (m[2].length > 2.5 * 1024 * 1024) return res.json({ status: 'error', message: 'Gambar terlalu besar (maks ±1,8 MB setelah dikompres).' });
+    const id = crypto.randomUUID().replace(/-/g, '');
+    const { error } = await supabase.from('media').insert([{ id, mime: m[1], data: m[2], size: Math.round(m[2].length * 0.75), uploader: req.user.username }]);
+    if (error) {
+        const missing = /media/.test(error.message || '') && /(exist|schema cache|relation)/i.test(error.message || '');
+        return res.json({ status: 'error', message: missing ? 'Tabel "media" belum ada. Jalankan file supabase-migration.sql di Supabase lalu coba lagi.' : error.message });
+    }
+    res.json({ status: 'success', url: '/api/media/' + id });
+}));
+app.get('/api/media/:id', wrap(async (req, res) => {
+    const id = String(req.params.id || '').replace(/[^a-f0-9]/g, '').slice(0, 40);
+    let row = mediaCache.get(id);
+    if (!row) {
+        const { data } = await supabase.from('media').select('mime,data').eq('id', id).maybeSingle();
+        if (!data) return res.status(404).end();
+        row = { mime: data.mime, buf: Buffer.from(data.data, 'base64') };
+        if (mediaCache.size > 200) mediaCache.delete(mediaCache.keys().next().value);
+        mediaCache.set(id, row);
+    }
+    res.set('Content-Type', row.mime);
+    res.set('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
+    res.send(row.buf);
+}));
+
 app.put('/api/admin/sekolah', ADMIN, wrap(async (req, res) => {
     const cur = await getSekolah();
     const next = { ...cur };
@@ -742,7 +780,7 @@ app.get('/api/admin/questions', STAFF, wrap(async (req, res) => {
     res.json(data || []);
 }));
 app.post('/api/admin/add-soal-bulk', STAFF, wrap(async (req, res) => {
-    const qs = (req.body.questions || []).filter(q => q && q.exam_id && (q.tanya || q.tipe === 'GFORM'));
+    const qs = (req.body.questions || []).filter(q => q && q.exam_id && (q.tanya || q.media_path || q.tipe === 'GFORM'));
     if (!qs.length) return res.json({ status: 'error', message: 'Tidak ada soal valid untuk disimpan.' });
     const { error } = await supabase.from('questions').insert(qs);
     clearQCache();

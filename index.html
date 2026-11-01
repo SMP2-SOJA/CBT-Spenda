@@ -18,6 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -111,6 +112,33 @@ body.exam-active img { pointer-events: none; }
 .soal-tanya { line-height: 1.6; color: var(--ink); overflow-wrap: anywhere; }
 .soal-tanya p + p { margin-top: .6em; }
 .soal-media img { max-height: 46vh; width: auto; max-width: 100%; margin: 0 auto 1.1em; border-radius: 12px; border: 1px solid var(--line); display: block; }
+/* Format teks soal & teks bacaan */
+.soal-tanya .st-judul, .stim .st-judul { text-align: center; font-weight: 800; margin: .3em 0 .7em; }
+.st-tengah { text-align: center; }
+.st-sumber { font-size: .8em; font-style: italic; color: var(--muted); margin: .5em 0 .8em; overflow-wrap: anywhere; }
+.st-link { color: #1d4ed8; text-decoration: underline; overflow-wrap: anywhere; }
+.st-list { list-style: disc; padding-left: 1.4em; margin: .4em 0 .7em; }
+.st-list li + li { margin-top: .15em; }
+.st-img { margin: .6em 0; }
+.st-img img { max-height: 46vh; width: auto; max-width: 100%; margin: 0 auto; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.st-tabel-wrap { overflow-x: auto; margin: .6em 0 .9em; }
+.st-tabel { border-collapse: collapse; font-size: .92em; min-width: 50%; }
+.st-tabel th, .st-tabel td { border: 1px solid #b9c3d6; padding: .35em .7em; text-align: left; vertical-align: top; }
+.st-tabel th { background: #eef2f8; font-weight: 700; }
+.soal-tanya > p + p, .soal-tanya > p + .st-tabel-wrap, .soal-tanya > .st-tabel-wrap + p { margin-top: .6em; }
+.soal u, .stim u { text-underline-offset: 3px; }
+/* Teks bacaan (stimulus) */
+.stim { background: #f7f9fc; border: 1px solid var(--line); border-radius: 12px; padding: .9em 1.1em 1em; margin-bottom: 1.1em; line-height: 1.65; color: var(--ink); overflow-wrap: anywhere; }
+.stim-label { font-size: .72em; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--navy); display: flex; gap: 6px; align-items: center; margin-bottom: .6em; }
+.stim .soal-media img { max-height: 40vh; }
+.stim .st-p { text-align: justify; hyphens: auto; }
+.stim .st-p + .st-p { margin-top: .35em; }
+.stim .st-ind { text-indent: 2em; }
+@media (min-width: 1024px) {
+    .soal.has-stim { max-width: none; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.4em; height: 100%; padding-top: 1em; padding-bottom: 1em; }
+    .soal.has-stim .stim { margin: 0; overflow-y: auto; }
+    .soal.has-stim .soal-main { overflow-y: auto; padding-right: .3em; }
+}
 .soal sup { font-size: .72em; vertical-align: super; line-height: 0; }
 .soal sub { font-size: .72em; vertical-align: sub; line-height: 0; }
 .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1; margin: 0 2px; font-size: .88em; }
@@ -430,9 +458,42 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
     .pod-score, .pod.is-first .pod-score { font-size: 22px; }
 }
 
+/* ---------- Editor soal: toolbar rumus & gambar ---------- */
+.mt-bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 5px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; margin-top: 2px; }
+.mt-btn { height: 30px; padding: 0 9px; border-radius: 7px; background: #fff; border: 1px solid var(--line); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; color: var(--ink); }
+.mt-btn:hover, .mt-sym:hover { border-color: var(--navy); color: var(--navy); }
+.mt-btn sup, .mt-btn sub { font-size: 9px; }
+.mt-frac { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-size: 9px; }
+.mt-frac i:first-child { border-bottom: 1.3px solid currentColor; padding: 0 2px 1px; font-style: normal; }
+.mt-frac i:last-child { padding-top: 1px; font-style: normal; }
+.mt-sym { width: 30px; height: 30px; border-radius: 7px; background: #fff; border: 1px solid var(--line); font-size: 15px; display: inline-grid; place-items: center; color: var(--ink); }
+.mt-sep { width: 1px; height: 20px; background: var(--line); margin: 0 3px; }
+@media (max-width: 639px) { .mt-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .mt-bar > * { flex-shrink: 0; } }
+.rd-prev { min-height: 56px; display: grid; place-items: center; background: var(--paper); border-radius: 10px; font-size: 22px; padding: 8px; overflow-x: auto; }
+.img-drop { border: 1.5px dashed #B7C2D6; border-radius: 12px; background: #FAFBFD; transition: border-color .15s, background .15s; }
+.img-drop.is-over { border-color: var(--navy); background: #EEF2FA; }
+.img-drop-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 18px 12px; font-size: 13px; color: var(--ink); }
+.img-drop-empty i { font-size: 22px; color: #9AA7BD; }
+.img-drop-has { display: flex; align-items: center; gap: 12px; padding: 10px; }
+.img-drop-has img { max-height: 140px; max-width: 70%; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+.ed-side { margin-top: 18px; }
+@media (min-width: 1180px) {
+    .ed-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 20px; align-items: start; }
+    .ed-side { margin-top: 0; position: sticky; top: 0; }
+}
+
+/* Editor: teks bacaan */
+.ed-stim { border: 1px dashed #c4cddc; border-radius: 12px; padding: 9px 12px; background: #fafbfd; }
+.ed-stim[open] { border-style: solid; background: #fff; }
+.ed-stim summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--ink); display: flex; gap: 7px; align-items: center; flex-wrap: wrap; list-style: none; }
+.ed-stim summary::-webkit-details-marker { display: none; }
+.ed-stim summary::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 10px; margin-left: auto; color: var(--muted); transition: transform .15s; }
+.ed-stim[open] summary::after { transform: rotate(180deg); }
+.mt-bar + .mt-bar { margin-top: 4px; }
+
 </style>
     <style>/* tailwind.css */
-*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Plus Jakarta Sans,system-ui,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}.pointer-events-none{pointer-events:none}.visible{visibility:visible}.collapse{visibility:collapse}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.inset-y-0{top:0;bottom:0}.right-0{right:0}.right-4{right:1rem}.top-4{top:1rem}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-3{margin-top:.75rem;margin-bottom:.75rem}.-ml-2{margin-left:-.5rem}.-mr-2{margin-right:-.5rem}.-mt-1{margin-top:-.25rem}.-mt-2{margin-top:-.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.ml-0{margin-left:0}.ml-2{margin-left:.5rem}.ml-auto{margin-left:auto}.mr-1{margin-right:.25rem}.mr-2{margin-right:.5rem}.mr-auto{margin-right:auto}.mt-0\.5{margin-top:.125rem}.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}.mt-7{margin-top:1.75rem}.mt-8{margin-top:2rem}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.hidden{display:none}.h-1{height:.25rem}.h-10{height:2.5rem}.h-11{height:2.75rem}.h-12{height:3rem}.h-16{height:4rem}.h-20{height:5rem}.h-28{height:7rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-7{height:1.75rem}.h-9{height:2.25rem}.h-\[100dvh\]{height:100dvh}.h-full{height:100%}.max-h-28{max-height:7rem}.max-h-52{max-height:13rem}.max-h-\[60vh\]{max-height:60vh}.max-h-\[70vh\]{max-height:70vh}.max-h-full{max-height:100%}.min-h-\[100dvh\]{min-height:100dvh}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-16{width:4rem}.w-20{width:5rem}.w-3\.5{width:.875rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-7{width:1.75rem}.w-9{width:2.25rem}.w-auto{width:auto}.w-full{width:100%}.min-w-0{min-width:0}.min-w-\[150px\]{min-width:150px}.min-w-\[170px\]{min-width:170px}.min-w-\[180px\]{min-width:180px}.min-w-\[190px\]{min-width:190px}.min-w-\[200px\]{min-width:200px}.min-w-\[220px\]{min-width:220px}.max-w-3xl{max-width:48rem}.max-w-7xl{max-width:80rem}.max-w-\[230px\]{max-width:230px}.max-w-\[420px\]{max-width:420px}.max-w-\[520px\]{max-width:520px}.max-w-full{max-width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.border-collapse{border-collapse:collapse}.rotate-90{--tw-rotate:90deg}.rotate-90,.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;-moz-user-select:none;user-select:none}.resize{resize:both}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.place-items-center{place-items:center}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-2\.5{gap:.625rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-x-3{-moz-column-gap:.75rem;column-gap:.75rem}.gap-x-4{-moz-column-gap:1rem;column-gap:1rem}.gap-x-6{-moz-column-gap:1.5rem;column-gap:1.5rem}.gap-y-1{row-gap:.25rem}.gap-y-2{row-gap:.5rem}.gap-y-3{row-gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.divide-y>:not([hidden])~:not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px*(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px*var(--tw-divide-y-reverse))}.divide-line>:not([hidden])~:not([hidden]){--tw-divide-opacity:1;border-color:rgb(220 226 236/var(--tw-divide-opacity,1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis}.truncate,.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-0{border-width:0}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-\[\#8C99B1\]{--tw-border-opacity:1;border-color:rgb(140 153 177/var(--tw-border-opacity,1))}.border-bad\/30{border-color:rgba(180,35,24,.3)}.border-gold{--tw-border-opacity:1;border-color:rgb(217 162 27/var(--tw-border-opacity,1))}.border-gold\/50{border-color:rgba(217,162,27,.5)}.border-line{--tw-border-opacity:1;border-color:rgb(220 226 236/var(--tw-border-opacity,1))}.border-navy\/20{border-color:rgba(20,48,107,.2)}.border-white\/10{border-color:hsla(0,0%,100%,.1)}.bg-bad-50{--tw-bg-opacity:1;background-color:rgb(253 236 234/var(--tw-bg-opacity,1))}.bg-gold{--tw-bg-opacity:1;background-color:rgb(217 162 27/var(--tw-bg-opacity,1))}.bg-gold-50{--tw-bg-opacity:1;background-color:rgb(253 247 230/var(--tw-bg-opacity,1))}.bg-ink\/50{background-color:rgba(14,30,61,.5)}.bg-ink\/60{background-color:rgba(14,30,61,.6)}.bg-navy{--tw-bg-opacity:1;background-color:rgb(20 48 107/var(--tw-bg-opacity,1))}.bg-navy-50{--tw-bg-opacity:1;background-color:rgb(238 242 250/var(--tw-bg-opacity,1))}.bg-navy-900\/10{background-color:rgba(14,30,61,.1)}.bg-ok{--tw-bg-opacity:1;background-color:rgb(31 138 91/var(--tw-bg-opacity,1))}.bg-ok-50{--tw-bg-opacity:1;background-color:rgb(232 245 238/var(--tw-bg-opacity,1))}.bg-paper{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.bg-white\/10{background-color:hsla(0,0%,100%,.1)}.object-contain{-o-object-fit:contain;object-fit:contain}.p-0\.5{padding:.125rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-10{padding-bottom:2.5rem}.pb-2{padding-bottom:.5rem}.pb-3{padding-bottom:.75rem}.pb-6{padding-bottom:1.5rem}.pr-12{padding-right:3rem}.pt-0\.5{padding-top:.125rem}.pt-1{padding-top:.25rem}.pt-3{padding-top:.75rem}.pt-4{padding-top:1rem}.pt-7{padding-top:1.75rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.lowercase{text-transform:lowercase}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)}.leading-\[1\.1\]{line-height:1.1}.leading-relaxed{line-height:1.625}.leading-snug{line-height:1.375}.leading-tight{line-height:1.25}.tracking-\[\.14em\]{letter-spacing:.14em}.tracking-\[\.2em\]{letter-spacing:.2em}.tracking-tight{letter-spacing:-.025em}.text-\[\#B6C0D2\]{--tw-text-opacity:1;color:rgb(182 192 210/var(--tw-text-opacity,1))}.text-bad{--tw-text-opacity:1;color:rgb(180 35 24/var(--tw-text-opacity,1))}.text-gold{--tw-text-opacity:1;color:rgb(217 162 27/var(--tw-text-opacity,1))}.text-gold-700{--tw-text-opacity:1;color:rgb(143 102 9/var(--tw-text-opacity,1))}.text-ink{--tw-text-opacity:1;color:rgb(14 30 61/var(--tw-text-opacity,1))}.text-ink\/80{color:rgba(14,30,61,.8)}.text-muted{--tw-text-opacity:1;color:rgb(91 107 134/var(--tw-text-opacity,1))}.text-navy{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.text-ok{--tw-text-opacity:1;color:rgb(31 138 91/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.text-white\/45{color:hsla(0,0%,100%,.45)}.text-white\/50{color:hsla(0,0%,100%,.5)}.text-white\/60{color:hsla(0,0%,100%,.6)}.text-white\/70{color:hsla(0,0%,100%,.7)}.text-white\/75{color:hsla(0,0%,100%,.75)}.text-white\/80{color:hsla(0,0%,100%,.8)}.underline{text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-\[\#14306B\]{accent-color:#14306b}.opacity-50{opacity:.5}.opacity-75{opacity:.75}.outline-none{outline:2px solid transparent;outline-offset:2px}.blur{--tw-blur:blur(8px)}.blur,.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-300{transition-duration:.3s}.hover\:bg-paper:hover{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.hover\:bg-white\/10:hover{background-color:hsla(0,0%,100%,.1)}.hover\:bg-white\/20:hover{background-color:hsla(0,0%,100%,.2)}.hover\:\!text-bad:hover{--tw-text-opacity:1!important;color:rgb(180 35 24/var(--tw-text-opacity,1))!important}.hover\:text-navy:hover{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}@media (min-width:640px){.sm\:col-span-2{grid-column:span 2/span 2}.sm\:mb-5{margin-bottom:1.25rem}.sm\:mb-6{margin-bottom:1.5rem}.sm\:ml-2{margin-left:.5rem}.sm\:ml-auto{margin-left:auto}.sm\:mt-10{margin-top:2.5rem}.sm\:inline{display:inline}.sm\:w-44{width:11rem}.sm\:w-60{width:15rem}.sm\:w-72{width:18rem}.sm\:w-auto{width:auto}.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:gap-3{gap:.75rem}.sm\:space-y-5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem*var(--tw-space-y-reverse))}.sm\:p-4{padding:1rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-sm{font-size:.875rem;line-height:1.25rem}}@media (min-width:1024px){.lg\:m-3{margin:.75rem}.lg\:mb-auto{margin-bottom:auto}.lg\:mr-0{margin-right:0}.lg\:mt-4{margin-top:1rem}.lg\:mt-auto{margin-top:auto}.lg\:block{display:block}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:h-14{height:3.5rem}.lg\:w-14{width:3.5rem}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-\[1\.05fr_1fr\]{grid-template-columns:1.05fr 1fr}.lg\:grid-cols-\[1fr_340px\]{grid-template-columns:1fr 340px}.lg\:grid-cols-\[380px_1fr\]{grid-template-columns:380px 1fr}.lg\:items-center{align-items:center}.lg\:rounded-xl{border-radius:.75rem}.lg\:border{border-width:1px}.lg\:p-10{padding:2.5rem}.lg\:p-12{padding:3rem}.lg\:p-6{padding:1.5rem}.lg\:px-5{padding-left:1.25rem;padding-right:1.25rem}.lg\:px-6{padding-left:1.5rem;padding-right:1.5rem}.lg\:px-7{padding-left:1.75rem;padding-right:1.75rem}.lg\:py-5{padding-top:1.25rem;padding-bottom:1.25rem}.lg\:py-7{padding-top:1.75rem;padding-bottom:1.75rem}.lg\:text-4xl{font-size:2.25rem;line-height:2.5rem}.lg\:text-base{font-size:1rem;line-height:1.5rem}}@media (min-width:1280px){.xl\:sticky{position:sticky}.xl\:top-0{top:0}.xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.xl\:grid-cols-\[1fr_520px\]{grid-template-columns:1fr 520px}}
+*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Plus Jakarta Sans,system-ui,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}.pointer-events-none{pointer-events:none}.visible{visibility:visible}.collapse{visibility:collapse}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.inset-y-0{top:0;bottom:0}.right-0{right:0}.right-4{right:1rem}.top-4{top:1rem}.z-30{z-index:30}.z-50{z-index:50}.col-span-2{grid-column:span 2/span 2}.mx-auto{margin-left:auto;margin-right:auto}.my-3{margin-top:.75rem;margin-bottom:.75rem}.-ml-2{margin-left:-.5rem}.-mr-2{margin-right:-.5rem}.-mt-1{margin-top:-.25rem}.-mt-2{margin-top:-.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.ml-0{margin-left:0}.ml-2{margin-left:.5rem}.ml-auto{margin-left:auto}.mr-1{margin-right:.25rem}.mr-2{margin-right:.5rem}.mt-0\.5{margin-top:.125rem}.mt-1{margin-top:.25rem}.mt-1\.5{margin-top:.375rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}.mt-7{margin-top:1.75rem}.mt-8{margin-top:2rem}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.hidden{display:none}.h-1{height:.25rem}.h-10{height:2.5rem}.h-11{height:2.75rem}.h-12{height:3rem}.h-16{height:4rem}.h-20{height:5rem}.h-28{height:7rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-7{height:1.75rem}.h-9{height:2.25rem}.h-\[100dvh\]{height:100dvh}.h-full{height:100%}.max-h-28{max-height:7rem}.max-h-52{max-height:13rem}.max-h-\[60vh\]{max-height:60vh}.max-h-\[70vh\]{max-height:70vh}.max-h-full{max-height:100%}.min-h-\[100dvh\]{min-height:100dvh}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-16{width:4rem}.w-20{width:5rem}.w-3\.5{width:.875rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-7{width:1.75rem}.w-9{width:2.25rem}.w-auto{width:auto}.w-full{width:100%}.min-w-0{min-width:0}.min-w-\[150px\]{min-width:150px}.min-w-\[170px\]{min-width:170px}.min-w-\[180px\]{min-width:180px}.min-w-\[190px\]{min-width:190px}.min-w-\[200px\]{min-width:200px}.min-w-\[220px\]{min-width:220px}.max-w-3xl{max-width:48rem}.max-w-7xl{max-width:80rem}.max-w-\[230px\]{max-width:230px}.max-w-\[420px\]{max-width:420px}.max-w-\[520px\]{max-width:520px}.max-w-full{max-width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.border-collapse{border-collapse:collapse}.rotate-90{--tw-rotate:90deg}.rotate-90,.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;-moz-user-select:none;user-select:none}.resize{resize:both}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.place-items-center{place-items:center}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-2\.5{gap:.625rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-x-3{-moz-column-gap:.75rem;column-gap:.75rem}.gap-x-4{-moz-column-gap:1rem;column-gap:1rem}.gap-x-6{-moz-column-gap:1.5rem;column-gap:1.5rem}.gap-y-1{row-gap:.25rem}.gap-y-2{row-gap:.5rem}.gap-y-3{row-gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.divide-y>:not([hidden])~:not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px*(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px*var(--tw-divide-y-reverse))}.divide-line>:not([hidden])~:not([hidden]){--tw-divide-opacity:1;border-color:rgb(220 226 236/var(--tw-divide-opacity,1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis}.truncate,.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-0{border-width:0}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-\[\#8C99B1\]{--tw-border-opacity:1;border-color:rgb(140 153 177/var(--tw-border-opacity,1))}.border-bad\/30{border-color:rgba(180,35,24,.3)}.border-gold{--tw-border-opacity:1;border-color:rgb(217 162 27/var(--tw-border-opacity,1))}.border-gold\/50{border-color:rgba(217,162,27,.5)}.border-line{--tw-border-opacity:1;border-color:rgb(220 226 236/var(--tw-border-opacity,1))}.border-navy\/20{border-color:rgba(20,48,107,.2)}.border-white\/10{border-color:hsla(0,0%,100%,.1)}.bg-bad-50{--tw-bg-opacity:1;background-color:rgb(253 236 234/var(--tw-bg-opacity,1))}.bg-gold{--tw-bg-opacity:1;background-color:rgb(217 162 27/var(--tw-bg-opacity,1))}.bg-gold-50{--tw-bg-opacity:1;background-color:rgb(253 247 230/var(--tw-bg-opacity,1))}.bg-ink\/50{background-color:rgba(14,30,61,.5)}.bg-ink\/60{background-color:rgba(14,30,61,.6)}.bg-navy{--tw-bg-opacity:1;background-color:rgb(20 48 107/var(--tw-bg-opacity,1))}.bg-navy-50{--tw-bg-opacity:1;background-color:rgb(238 242 250/var(--tw-bg-opacity,1))}.bg-navy-900\/10{background-color:rgba(14,30,61,.1)}.bg-ok{--tw-bg-opacity:1;background-color:rgb(31 138 91/var(--tw-bg-opacity,1))}.bg-ok-50{--tw-bg-opacity:1;background-color:rgb(232 245 238/var(--tw-bg-opacity,1))}.bg-paper{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.bg-white\/10{background-color:hsla(0,0%,100%,.1)}.object-contain{-o-object-fit:contain;object-fit:contain}.p-0\.5{padding:.125rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-10{padding-bottom:2.5rem}.pb-2{padding-bottom:.5rem}.pb-3{padding-bottom:.75rem}.pb-6{padding-bottom:1.5rem}.pr-12{padding-right:3rem}.pt-0\.5{padding-top:.125rem}.pt-1{padding-top:.25rem}.pt-3{padding-top:.75rem}.pt-4{padding-top:1rem}.pt-7{padding-top:1.75rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.font-serif{font-family:ui-serif,Georgia,Cambria,Times New Roman,Times,serif}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.lowercase{text-transform:lowercase}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)}.leading-\[1\.1\]{line-height:1.1}.leading-relaxed{line-height:1.625}.leading-snug{line-height:1.375}.leading-tight{line-height:1.25}.tracking-\[\.14em\]{letter-spacing:.14em}.tracking-\[\.2em\]{letter-spacing:.2em}.tracking-tight{letter-spacing:-.025em}.text-\[\#B6C0D2\]{--tw-text-opacity:1;color:rgb(182 192 210/var(--tw-text-opacity,1))}.text-bad{--tw-text-opacity:1;color:rgb(180 35 24/var(--tw-text-opacity,1))}.text-gold{--tw-text-opacity:1;color:rgb(217 162 27/var(--tw-text-opacity,1))}.text-gold-700{--tw-text-opacity:1;color:rgb(143 102 9/var(--tw-text-opacity,1))}.text-ink{--tw-text-opacity:1;color:rgb(14 30 61/var(--tw-text-opacity,1))}.text-ink\/80{color:rgba(14,30,61,.8)}.text-muted{--tw-text-opacity:1;color:rgb(91 107 134/var(--tw-text-opacity,1))}.text-navy{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.text-ok{--tw-text-opacity:1;color:rgb(31 138 91/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.text-white\/45{color:hsla(0,0%,100%,.45)}.text-white\/50{color:hsla(0,0%,100%,.5)}.text-white\/60{color:hsla(0,0%,100%,.6)}.text-white\/70{color:hsla(0,0%,100%,.7)}.text-white\/75{color:hsla(0,0%,100%,.75)}.text-white\/80{color:hsla(0,0%,100%,.8)}.underline{text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-\[\#14306B\]{accent-color:#14306b}.opacity-50{opacity:.5}.opacity-75{opacity:.75}.outline-none{outline:2px solid transparent;outline-offset:2px}.blur{--tw-blur:blur(8px)}.blur,.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-300{transition-duration:.3s}.hover\:border-navy:hover{--tw-border-opacity:1;border-color:rgb(20 48 107/var(--tw-border-opacity,1))}.hover\:bg-navy-50:hover{--tw-bg-opacity:1;background-color:rgb(238 242 250/var(--tw-bg-opacity,1))}.hover\:bg-paper:hover{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.hover\:bg-white\/10:hover{background-color:hsla(0,0%,100%,.1)}.hover\:bg-white\/20:hover{background-color:hsla(0,0%,100%,.2)}.hover\:\!text-bad:hover{--tw-text-opacity:1!important;color:rgb(180 35 24/var(--tw-text-opacity,1))!important}.hover\:text-navy:hover{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}@media (min-width:640px){.sm\:col-span-1{grid-column:span 1/span 1}.sm\:col-span-2{grid-column:span 2/span 2}.sm\:mb-5{margin-bottom:1.25rem}.sm\:mb-6{margin-bottom:1.5rem}.sm\:ml-2{margin-left:.5rem}.sm\:ml-auto{margin-left:auto}.sm\:mt-10{margin-top:2.5rem}.sm\:inline{display:inline}.sm\:w-44{width:11rem}.sm\:w-60{width:15rem}.sm\:w-72{width:18rem}.sm\:w-auto{width:auto}.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:gap-3{gap:.75rem}.sm\:space-y-5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem*var(--tw-space-y-reverse))}.sm\:p-4{padding:1rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-sm{font-size:.875rem;line-height:1.25rem}}@media (min-width:1024px){.lg\:m-3{margin:.75rem}.lg\:mb-auto{margin-bottom:auto}.lg\:mr-0{margin-right:0}.lg\:mt-4{margin-top:1rem}.lg\:mt-auto{margin-top:auto}.lg\:block{display:block}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:h-14{height:3.5rem}.lg\:w-14{width:3.5rem}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-\[1\.05fr_1fr\]{grid-template-columns:1.05fr 1fr}.lg\:grid-cols-\[1fr_340px\]{grid-template-columns:1fr 340px}.lg\:grid-cols-\[380px_1fr\]{grid-template-columns:380px 1fr}.lg\:items-center{align-items:center}.lg\:rounded-xl{border-radius:.75rem}.lg\:border{border-width:1px}.lg\:p-10{padding:2.5rem}.lg\:p-12{padding:3rem}.lg\:p-6{padding:1.5rem}.lg\:px-5{padding-left:1.25rem;padding-right:1.25rem}.lg\:px-6{padding-left:1.5rem;padding-right:1.5rem}.lg\:px-7{padding-left:1.75rem;padding-right:1.75rem}.lg\:py-5{padding-top:1.25rem;padding-bottom:1.25rem}.lg\:py-7{padding-top:1.75rem;padding-bottom:1.75rem}.lg\:text-4xl{font-size:2.25rem;line-height:2.5rem}.lg\:text-base{font-size:1rem;line-height:1.5rem}}@media (min-width:1280px){.xl\:sticky{position:sticky}.xl\:top-0{top:0}.xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.xl\:grid-cols-\[1fr_520px\]{grid-template-columns:1fr 520px}}
 </style>
 </head>
 <body class="bg-paper text-ink antialiased">
@@ -597,9 +658,12 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
             </div>
             <div id="soal-scroll" class="flex-1 overflow-y-auto">
                 <article id="soal-body" class="soal px-4 lg:px-7 py-4 lg:py-5 max-w-3xl">
-                    <div id="cbt-media-area"></div>
-                    <div id="cbt-tanya" class="soal-tanya"></div>
-                    <div id="cbt-opsi-area" class="mt-4"></div>
+                    <aside id="cbt-stim" class="stim hidden" aria-label="Teks bacaan"></aside>
+                    <div class="soal-main">
+                        <div id="cbt-media-area"></div>
+                        <div id="cbt-tanya" class="soal-tanya"></div>
+                        <div id="cbt-opsi-area" class="mt-4"></div>
+                    </div>
                 </article>
             </div>
             <footer class="exam-foot">
@@ -781,6 +845,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal'
 // Pecahan (a/b), pangkat ^, indeks _, dan pangkat implisit dari Word (x2 → x²)
 function formatMath(text) {
     if (typeof text !== 'string') return text ?? '';
+    // Bagian rumus $...$ dibiarkan utuh untuk KaTeX
+    if (text.includes('$')) return text.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/).map((part, i) => i % 2 ? part : formatMathPlain(part)).join('');
+    return formatMathPlain(text);
+}
+function formatMathPlain(text) {
     text = text.replace(/\(([^()\/]+)\/([^()\/]+)\)/g, (m, num, den) => {
         if (num.length > 30 || den.length > 30) return m;
         return `<span class="frac"><span>${num}</span><span>${den}</span></span>`;
@@ -811,8 +880,12 @@ function applyMathRendering(el) {
 }
 
 // Konversi link Google Drive menjadi URL gambar langsung
+// Gambar yang diunggah langsung (/api/media/…) atau data URL (pratinjau impor)
+const isMediaPath = v => typeof v === 'string' && (v.startsWith('/api/media/') || v.startsWith('data:image/'));
+const hasMedia = v => typeof v === 'string' && (v.trim().startsWith('http') || isMediaPath(v.trim()));
 function driveImg(url, size = 1200) {
     url = String(url || '').trim();
+    if (isMediaPath(url)) return { src: url, fallback: url };
     if (!url.startsWith('http')) return { src: '', fallback: '' };
     if (url.includes('drive.google.com')) {
         const m = url.match(/[?&]id=([^&\s]+)/) || url.match(/\/d\/([^\/\s?]+)/);
@@ -821,6 +894,7 @@ function driveImg(url, size = 1200) {
     return { src: url, fallback: url };
 }
 function isImageUrl(v) {
+    if (isMediaPath(v)) return true;
     return typeof v === 'string' && v.startsWith('http') && (v.includes('drive.google.com') || v.includes('googleusercontent') || /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(v));
 }
 function imgTag(url, size, cls = '') {
@@ -831,6 +905,77 @@ function imgTag(url, size, cls = '') {
 
 const TIPE_LABEL = { PG: 'Pilihan ganda', PGK: 'PG kompleks', BS: 'Benar / salah', TS: 'Sesuai / tidak', NK: 'Numerik / kategorik', SIFAT: 'Sifat', ISIAN: 'Isian singkat', ESAI: 'Uraian', JODOH: 'Menjodohkan', GFORM: 'Google Form' };
 const splitOpsi = q => (q.opsi_json ? String(q.opsi_json).split(/\|\|\|/).map(o => o.trim()).filter(o => o) : []);
+
+// ============================================================
+// TEKS BACAAN (STIMULUS) & FORMAT TEKS SOAL
+// Stimulus disimpan di awal kolom tanya: [stimulus]…[/stimulus]
+// Format: [b]tebal[/b] [i]miring[/i] [u]garis bawah[/u]
+//   # Judul (rata tengah, tebal) · [tengah]…[/tengah]
+//   baris "Sumber: …" otomatis kecil & miring · "- butir" = daftar
+//   [tabel] baris per baris, kolom dipisah | [/tabel]
+//   [gambar]/api/media/…[/gambar] · [pilih 2] = PGK wajib 2 jawaban
+// ============================================================
+const STIM_RE = /^\s*\[stimulus\]([\s\S]*?)\[\/stimulus\]\s*/i;
+const PILIH_RE = /\[pilih\s*:?\s*(\d+)\]/i;
+function pisahStimulus(t) {
+    t = String(t ?? ''); const m = t.match(STIM_RE);
+    return m ? { stim: m[1].replace(/^\s*\n|\n\s*$/g, ''), tanya: t.slice(m[0].length) } : { stim: '', tanya: t };
+}
+function gabungStimulus(stim, tanya) { stim = String(stim || '').trim(); return stim ? `[stimulus]\n${stim}\n[/stimulus]\n${tanya || ''}` : (tanya || ''); }
+const maksPilih = q => { const m = String(q.tanya || '').match(PILIH_RE); return m ? parseInt(m[1]) : 0; };
+// Teks polos untuk daftar / Excel: tanpa stimulus & tanpa kode format
+function stripRich(t) {
+    return pisahStimulus(t).tanya.replace(PILIH_RE, '').replace(/\[gambar\][\s\S]*?\[\/gambar\]/gi, '[gambar]')
+        .replace(/\[\/?(b|i|u|judul|tengah|sumber|tabel)\]/gi, '').replace(/^#\s+/gm, '').replace(/\*\*/g, '').trim();
+}
+function richInline(s) {
+    s = String(s).replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<b>$1</b>').replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>')
+        .replace(/\[i\]([\s\S]*?)\[\/i\]/gi, '<i>$1</i>').replace(/\[u\]([\s\S]*?)\[\/u\]/gi, '<u>$1</u>');
+    // Lindungi alamat web agar tidak diubah menjadi pangkat/indeks
+    const urls = [];
+    s = s.replace(/https?:\/\/[^\s<>"'\]]+[^\s<>"'\].,;:!?)]/g, m => { urls.push(m); return `\u0001${urls.length - 1}\u0001`; });
+    s = formatMath(s);
+    return s.replace(/\u0001(\d+)\u0001/g, (m, i) => `<span class="st-link">${urls[i]}</span>`);
+}
+function tabelHtml(rows) {
+    const cells = rows.map(r => r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => richInline(c.trim())));
+    const n = Math.max(...cells.map(c => c.length));
+    const pad = r => [...r, ...Array(n - r.length).fill('')];
+    return `<div class="st-tabel-wrap"><table class="st-tabel"><thead><tr>${pad(cells[0]).map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${cells.slice(1).map(r => `<tr>${pad(r).map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+// stim=true: tiap baris jadi paragraf rata kiri-kanan (teks bacaan)
+function richText(text, stim = false) {
+    const lines = String(text ?? '').replace(PILIH_RE, '').replace(/\r\n?/g, '\n').split('\n');
+    const out = []; let para = [];
+    const flush = () => {
+        if (!para.length) return;
+        out.push(stim ? para.map(l => `<p class="st-p${l.ind ? ' st-ind' : ''}">${l.h}</p>`).join('') : `<p>${para.map(l => l.h).join('<br>')}</p>`);
+        para = [];
+    };
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i], L = raw.trim(); let m;
+        if (/^\[tabel\]$/i.test(L)) {
+            const rows = []; i++;
+            while (i < lines.length && !/^\[\/tabel\]$/i.test(lines[i].trim())) { if (lines[i].trim()) rows.push(lines[i]); i++; }
+            flush(); if (rows.length) out.push(tabelHtml(rows)); continue;
+        }
+        if ((m = L.match(/^\[gambar\](.+?)\[\/gambar\]$/i))) { flush(); out.push(`<figure class="st-img">${imgTag(m[1].trim(), 1200)}</figure>`); continue; }
+        if (!L) { flush(); continue; }
+        if ((m = L.match(/^#\s+(.+)$/)) || (m = L.match(/^\[judul\](.+?)\[\/judul\]$/i))) { flush(); out.push(`<p class="st-judul">${richInline(m[1])}</p>`); continue; }
+        if ((m = L.match(/^\[tengah\](.+?)\[\/tengah\]$/i))) { flush(); out.push(`<p class="st-tengah">${richInline(m[1])}</p>`); continue; }
+        if ((m = L.match(/^\[sumber\](.+?)\[\/sumber\]$/i)) || /^[(\[]?\s*(\[i\])?\s*sumber(\s+gambar)?\s*:/i.test(L)) { flush(); out.push(`<p class="st-sumber">${richInline(m ? m[1] : L)}</p>`); continue; }
+        if (/^[-•]\s+\S/.test(L)) {
+            flush(); const items = [];
+            while (i < lines.length && /^[-•]\s+\S/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^[-•]\s+/, '')); i++; }
+            i--; out.push(`<ul class="st-list">${items.map(x => `<li>${richInline(x)}</li>`).join('')}</ul>`); continue;
+        }
+        para.push({ h: richInline(L), ind: /^(\t|\s{2,})/.test(raw) });
+    }
+    flush();
+    return out.join('');
+}
+// Gambar yang disisipkan di dalam teks (untuk dimuat lebih awal)
+const gambarDalamTeks = t => [...String(t || '').matchAll(/\[gambar\](.+?)\[\/gambar\]/gi)].map(m => m[1].trim());
 
 // ---------- Login / logout ----------
 async function prosesLogin() {
@@ -979,6 +1124,51 @@ function cetakDokumen(judul, body, { landscape = false, kop = true } = {}) {
     w.document.close();
 }
 
+
+// ============================================================
+// RUMUS: LaTeX → teks polos (untuk dropdown, daftar soal, Excel)
+// ============================================================
+const SUP_MAP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻', 'n': 'ⁿ', 'x': 'ˣ' };
+const SUB_MAP = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉', '+': '₊', '-': '₋', 'n': 'ₙ', 'x': 'ₓ' };
+const toMap = (t, m) => [...t].every(c => m[c]) ? [...t].map(c => m[c]).join('') : null;
+function latexToPlain(s) {
+    if (typeof s === 'string' && /\[(stimulus|b|i|u|tabel|gambar|pilih|judul|sumber|tengah)\b/i.test(s)) s = stripRich(s);
+    if (typeof s !== 'string' || !s.includes('$')) return s ?? '';
+    return s.replace(/\$\$?([^$]+?)\$\$?/g, (m, t) => {
+        let x = t;
+        for (let i = 0; i < 5; i++) {
+            x = x.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1/$2)')
+                .replace(/\\sqrt\[([^\]]*)\]\{([^{}]*)\}/g, '$1√($2)').replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
+                .replace(/\^\{([^{}]*)\}/g, (_, e) => toMap(e, SUP_MAP) || '^(' + e + ')').replace(/\^(\w)/g, (_, e) => SUP_MAP[e] || '^' + e)
+                .replace(/_\{([^{}]*)\}/g, (_, e) => toMap(e, SUB_MAP) || '_(' + e + ')').replace(/_(\w)/g, (_, e) => SUB_MAP[e] || '_' + e);
+        }
+        const sym = { times: '×', div: '÷', pm: '±', leq: '≤', geq: '≥', le: '≤', ge: '≥', neq: '≠', ne: '≠', approx: '≈', pi: 'π', degree: '°', circ: '°', angle: '∠', Delta: 'Δ', theta: 'θ', alpha: 'α', beta: 'β', infty: '∞', cdot: '·', left: '', right: '', quad: ' ', text: '' };
+        return x.replace(/\\([a-zA-Z]+)/g, (_, k) => sym[k] ?? k).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+    });
+}
+
+// ============================================================
+// GAMBAR: kompres di browser lalu unggah ke server
+// ============================================================
+async function compressImage(blob, max = 1280) {
+    const url = URL.createObjectURL(blob);
+    try {
+        const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('File bukan gambar yang bisa dibaca')); i.src = url; });
+        const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth * sc)); c.height = Math.max(1, Math.round(img.naturalHeight * sc));
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+        let out = c.toDataURL('image/webp', 0.85);
+        if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/jpeg', 0.85);
+        return out;
+    } finally { URL.revokeObjectURL(url); }
+}
+const dataUrlToBlob = d => fetch(d).then(r => r.blob());
+async function uploadGambar(dataUrl) {
+    const r = await api('/admin/media', { body: { data: dataUrl } });
+    if (r.status !== 'success') throw new Error(r.message || 'Gagal mengunggah gambar');
+    return r.url;
+}
+
 </script>
 <script>/* siswa.js */
 // ============================================================
@@ -1066,6 +1256,12 @@ function seeded(str) {
     for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
     return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
 }
+// Soal yang memakai teks bacaan yang sama tetap berurutan saat diacak
+function acakBerkelompok(qs, rnd) {
+    const groups = [], map = new Map();
+    qs.forEach(q => { const st = pisahStimulus(q.tanya).stim, k = st ? 'S:' + st : 'Q:' + q.id; if (!map.has(k)) { map.set(k, []); groups.push(map.get(k)); } map.get(k).push(q); });
+    return shuffle(groups, rnd).flat();
+}
 function shuffle(arr, rnd) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- Identitas perangkat (untuk kunci 1 akun = 1 perangkat) ----------
@@ -1118,13 +1314,15 @@ async function mulaiUjian() {
         if (!data.questions || !data.questions.length) throw new Error('Soal tidak ditemukan.');
         let qs = data.questions;
         const rnd = seeded(activeUser.username + '|' + examInfo.mapel);
-        if (examInfo.acak_soal && qs[0].tipe !== 'GFORM') qs = shuffle(qs, rnd);
+        if (examInfo.acak_soal && qs[0].tipe !== 'GFORM') qs = acakBerkelompok(qs, rnd);
         optOrder = {};
         qs.forEach(q => {
             const n = splitOpsi(q).length, idx = [...Array(n).keys()];
             optOrder[q.id] = (examInfo.acak_opsi && (q.tipe === 'PG' || q.tipe === 'PGK')) ? shuffle(idx, rnd) : idx;
         });
         cbtQuestions = qs;
+        // Muat semua gambar soal di awal agar tetap tampil saat sinyal melemah
+        qs.forEach(q => [q.media_path, ...splitOpsi(q), ...gambarDalamTeks(q.tanya)].filter(isImageUrl).forEach(u => { const im = new Image(); im.src = driveImg(u, 1200).src; }));
         const st = ls.json(K.state()) || {};
         cbtAnswers = st.answers || {}; cbtRagu = st.ragu || {};
         cbtCurrentIndex = Math.min(st.idx || 0, qs.length - 1);
@@ -1195,7 +1393,7 @@ async function kirimPing() {
 }
 
 // ---------- Status jawaban ----------
-function pairCount(q) { return q.pair_count || ((q.tanya || '').split(/\r?\n|<br\s*\/?>/i).filter(l => /^\s*\d+[.)]\s?/.test(l)).length) || 4; }
+function pairCount(q) { return q.pair_count || (pisahStimulus(q.tanya).tanya.split(/\r?\n|<br\s*\/?>/i).filter(l => /^\s*\d+[.)]\s?/.test(l)).length) || 4; }
 function isAnswered(q) {
     const a = cbtAnswers[q.id] || '';
     if (!a) return false;
@@ -1242,8 +1440,28 @@ function showCbtQuestion(index) {
     $('btn-next').className = last ? 'btn btn-ok' : 'btn btn-primary';
     $('btn-ragu').setAttribute('aria-pressed', cbtRagu[q.id] ? 'true' : 'false');
 
-    const mediaUrl = (q.media_path && String(q.media_path).startsWith('http')) ? q.media_path : ((q.gform_url && String(q.gform_url).startsWith('http') && q.tipe !== 'GFORM') ? q.gform_url : '');
-    $('cbt-media-area').innerHTML = mediaUrl && q.tipe !== 'GFORM' ? `<div class="soal-media">${imgTag(mediaUrl, 1200)}</div>` : '';
+    const mediaUrl = hasMedia(q.media_path) ? q.media_path : ((q.gform_url && hasMedia(q.gform_url) && q.tipe !== 'GFORM') ? q.gform_url : '');
+    const mediaHtml = mediaUrl && q.tipe !== 'GFORM' ? `<div class="soal-media">${imgTag(mediaUrl, 1200)}</div>` : '';
+    // Teks bacaan (stimulus): panel kiri di layar lebar, kotak di atas soal di HP
+    const { stim, tanya: tanyaSoal } = q.tipe === 'GFORM' ? { stim: '', tanya: q.tanya } : pisahStimulus(q.tanya);
+    const stimBox = $('cbt-stim');
+    if (stim) {
+        // Nomor-nomor soal yang memakai teks yang sama
+        const nos = cbtQuestions.map((x, i) => pisahStimulus(x.tanya).stim === stim ? i + 1 : 0).filter(Boolean);
+        const label = nos.length > 1 ? `Teks untuk soal nomor ${nos.length === 2 ? nos.join(' dan ') : nos[0] + '–' + nos[nos.length - 1]}` : 'Teks bacaan';
+        const sama = stimBox.dataset.stim === stim;
+        // "untuk menjawab soal nomor 2 dan 3" → nomor sebenarnya di ujian ini (bisa berubah karena diacak/digabung)
+        const stimTampil = nos.length > 1 ? stim.replace(/((?:soal\s+)?(?:nomor|no\.?)\s*)\d{1,3}(\s*(?:dan|sampai|hingga|s\.?\s*d\.?|[-–—])\s*)\d{1,3}/i, (m, a, mid) => a + nos[0] + mid + nos[nos.length - 1]) : stim;
+        stimBox.innerHTML = `<p class="stim-label"><i class="fa fa-book-open"></i>${label}</p>${mediaHtml}<div class="stim-body">${richText(stimTampil, true)}</div>`;
+        if (!sama) stimBox.scrollTop = 0;
+        stimBox.dataset.stim = stim;
+        $('cbt-media-area').innerHTML = '';
+    } else {
+        stimBox.innerHTML = ''; stimBox.dataset.stim = '';
+        $('cbt-media-area').innerHTML = mediaHtml;
+    }
+    stimBox.classList.toggle('hidden', !stim);
+    $('soal-body').classList.toggle('has-stim', !!stim);
 
     const opsi = splitOpsi(q); const order = optOrder[q.id] || opsi.map((_, i) => i);
     let tanyaHtml = '', html = '';
@@ -1253,24 +1471,24 @@ function showCbtQuestion(index) {
         html = `<div class="rounded-2xl overflow-hidden border border-line" style="height:70vh"><iframe src="${esc(q.tanya || q.gform_url)}" class="w-full h-full border-0"></iframe></div>`;
         if (!saved) { cbtAnswers[q.id] = 'COMPLETED'; saveState(); }
     } else if (q.tipe === 'JODOH') {
-        const lines = (q.tanya || '').split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(Boolean);
+        const lines = tanyaSoal.split(/\r?\n|<br\s*\/?>/i).map(l => l.trim()).filter(Boolean);
         const premis = lines.filter(l => /^\d+[.)]\s?/.test(l)), utama = lines.filter(l => !/^\d+[.)]\s?/.test(l));
-        tanyaHtml = formatMath(utama.join('<br>'));
+        tanyaHtml = richText(utama.join('\n'));
         const n = pairCount(q); const sv = saved ? saved.split(',') : [];
         html = `<p class="hint"><i class="fa fa-link"></i>Pilih pasangan yang tepat untuk setiap nomor.</p>`;
         for (let i = 0; i < n; i++) {
             const cur = (sv.find(x => parseInt(x) === i + 1) || '').replace(/[0-9]/g, '');
             html += `<div class="jodoh-row ${cur ? 'is-on' : ''}"><span class="font-semibold">${formatMath(premis[i] || `Pernyataan ${i + 1}`)}</span>
                 <select class="field jodoh-select" data-no="${i + 1}" onchange="cbtSaveJodoh()"><option value="">Pilih pasangan…</option>
-                ${opsi.map((o, k) => `<option value="${ABJAD[k]}" ${cur === ABJAD[k] ? 'selected' : ''}>${ABJAD[k]}. ${esc(o.replace(/<[^>]+>/g, ''))}</option>`).join('')}</select></div>`;
+                ${opsi.map((o, k) => `<option value="${ABJAD[k]}" ${cur === ABJAD[k] ? 'selected' : ''}>${ABJAD[k]}. ${esc(latexToPlain(o).replace(/<[^>]+>/g, ''))}</option>`).join('')}</select></div>`;
         }
     } else {
-        tanyaHtml = formatMath((q.tanya || '').replace(/\n/g, '<br>'));
+        tanyaHtml = richText(tanyaSoal);
         if (q.tipe === 'PG' || q.tipe === 'PGK') {
             const multi = q.tipe === 'PGK'; const sv = saved.split(',').filter(Boolean);
-            const imgMode = opsi.some(isImageUrl);
-            if (multi) html += `<p class="hint"><i class="fa fa-list-check"></i>Pilih semua jawaban yang benar (bisa lebih dari satu).</p>`;
-            html += `<div class="${imgMode ? 'opsi-grid' : ''}" role="${multi ? 'group' : 'radiogroup'}">`;
+            const imgMode = opsi.some(isImageUrl), maks = multi ? maksPilih(q) : 0;
+            if (multi) html += maks ? `<p class="hint"><i class="fa fa-list-check"></i>Pilih tepat <b>${maks} jawaban</b> yang benar.</p>` : `<p class="hint"><i class="fa fa-list-check"></i>Pilih semua jawaban yang benar (bisa lebih dari satu).</p>`;
+            html += `<div class="${imgMode ? 'opsi-grid' : ''}" role="${multi ? 'group' : 'radiogroup'}" data-maks="${maks}">`;
             order.forEach((orig, pos) => {
                 const val = ABJAD[orig], on = sv.includes(val), o = opsi[orig];
                 const content = isImageUrl(o) ? imgTag(o, 600) : `<span class="opsi-text">${formatMath(o)}</span>`;
@@ -1300,7 +1518,7 @@ function showCbtQuestion(index) {
     $('cbt-tanya').innerHTML = tanyaHtml;
     $('cbt-opsi-area').innerHTML = html;
     applyMathRendering($('soal-body'));
-    $('soal-scroll').scrollTop = 0;
+    $('soal-scroll').scrollTop = 0; document.querySelector('#soal-body .soal-main').scrollTop = 0;
     renderCbtGrid();
 }
 
@@ -1309,6 +1527,10 @@ function pilihOpsi(btn, multi) {
     const wrap = btn.parentElement;
     if (!multi) wrap.querySelectorAll('.opsi').forEach(b => { b.classList.remove('is-on'); b.setAttribute('aria-checked', 'false'); });
     const on = multi ? !btn.classList.contains('is-on') : true;
+    const maks = parseInt(wrap.dataset.maks || 0);
+    if (multi && on && maks && wrap.querySelectorAll('.opsi.is-on').length >= maks) {
+        return toast(`Hanya boleh memilih ${maks} jawaban. Batalkan salah satu pilihan dulu.`, 'warning');
+    }
     btn.classList.toggle('is-on', on); btn.setAttribute('aria-checked', on);
     const vals = [...wrap.querySelectorAll('.opsi.is-on')].map(b => b.dataset.val).sort();
     setAnswer(vals.join(','));
@@ -2068,7 +2290,7 @@ function renderPaketList() {
             <div class="paket-body border-t border-line ${isOpen ? '' : 'hidden'}" data-id="${esc(id)}"><div class="overflow-x-auto"><table class="tbl">
                 <thead><tr><th class="w-10">No</th><th>Soal</th><th>Kunci</th><th class="num">Bobot</th><th></th></tr></thead><tbody>
                 ${qs.map(q => `<tr><td class="text-muted tabular-nums">${groups[id].indexOf(q) + 1}</td>
-                    <td class="max-w-[520px]"><span class="chip chip-muted mb-1">${TIPE_LABEL[q.tipe] || esc(q.tipe)}</span>${q.media_path ? ' <i class="fa fa-image text-muted" title="Ada gambar"></i>' : ''}<p class="line-clamp-2 text-sm">${esc((q.tanya || '').slice(0, 220))}</p></td>
+                    <td class="max-w-[520px]"><span class="chip chip-muted mb-1">${TIPE_LABEL[q.tipe] || esc(q.tipe)}</span>${q.media_path ? ' <i class="fa fa-image text-muted" title="Ada gambar"></i>' : ''}${pisahStimulus(q.tanya).stim ? ' <i class="fa fa-book-open text-muted" title="Ada teks bacaan"></i>' : ''}<p class="line-clamp-2 text-sm">${esc(latexToPlain(q.tanya || '').slice(0, 220))}</p></td>
                     <td class="font-bold text-ok whitespace-nowrap">${esc(q.kunci || '—') || '<span class="text-bad">Kosong</span>'}</td>
                     <td class="num">${q.skor || 1}</td>
                     <td class="text-right whitespace-nowrap"><button class="btn btn-xs btn-outline" onclick="editSoal(${q.id})"><i class="fa fa-pen"></i> Ubah</button>${isAdmin() ? ` <button class="icon-btn icon-btn-sm hover:!text-bad" onclick="hapusSoal(${q.id})" title="Hapus soal"><i class="fa fa-trash"></i></button>` : ''}</td></tr>`).join('')}
@@ -2094,15 +2316,18 @@ function renderPreviewSoal(q, no) {
         const heads = q.tipe === 'BS' ? ['Benar', 'Salah'] : q.tipe === 'TS' ? ['Sesuai', 'Tidak sesuai'] : hm ? hm[1].split(',') : q.tipe === 'NK' ? ['Numerik', 'Kategorik'] : ['Komutatif', 'Asosiatif', 'Distributif'];
         body = `<table class="matrix mt-1"><thead><tr><th>Pernyataan</th>${heads.map(h => `<th class="c">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r, i) => `<tr><td>${formatMath(esc(r))}</td>${heads.map((h, k) => `<td class="c">${ks[i] === ABJAD[k] ? '<i class="fa fa-circle-check text-ok text-lg"></i>' : '<i class="fa-regular fa-circle text-[#B6C0D2]"></i>'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     } else if (q.tipe === 'JODOH') {
-        body = `<p class="text-sm text-muted">Pilihan: ${opsi.map((o, i) => `<b>${ABJAD[i]}</b>. ${esc(o)}`).join(' · ')}</p><p class="mt-1 text-sm">Kunci: <b class="text-ok">${esc(kunci)}</b></p>`;
+        body = `<p class="text-sm text-muted">Pilihan: ${opsi.map((o, i) => `<b>${ABJAD[i]}</b>. ${isImageUrl(o) ? '[gambar]' : formatMath(esc(o))}`).join(' · ')}</p><p class="mt-1 text-sm">Kunci: <b class="text-ok">${esc(kunci)}</b></p>`;
     } else if (q.tipe === 'GFORM') {
         body = `<p class="text-sm">Tautan: <a class="text-navy underline" href="${esc(q.tanya || q.gform_url)}" target="_blank" rel="noopener">${esc(q.tanya || q.gform_url)}</a></p>`;
     } else {
         body = `<p class="text-sm">Kata kunci penilaian: <b class="text-ok">${esc(q.kunci || '— (dinilai manual)')}</b></p>`;
     }
-    const media = q.media_path && String(q.media_path).startsWith('http') ? `<div class="soal-media">${imgTag(q.media_path, 800)}</div>` : '';
-    return `<div class="card p-4 soal" style="--soal-size:15px"><div class="flex items-center gap-2 mb-2"><span class="font-extrabold">${no}.</span><span class="chip chip-muted">${TIPE_LABEL[q.tipe] || esc(q.tipe)}</span><span class="text-xs text-muted ml-auto">Bobot ${q.skor || 1}</span></div>
-        ${media}<div class="soal-tanya mb-3">${q.tipe === 'GFORM' ? '' : formatMath(esc(q.tanya || '').replace(/\n/g, '<br>'))}</div>${body}</div>`;
+    const media = hasMedia(q.media_path) ? `<div class="soal-media">${imgTag(q.media_path, 800)}</div>` : '';
+    const { stim, tanya } = q.tipe === 'GFORM' ? { stim: '', tanya: '' } : pisahStimulus(q.tanya);
+    const maks = q.tipe === 'PGK' ? maksPilih(q) : 0;
+    const stimHtml = stim ? `<div class="stim"><p class="stim-label"><i class="fa fa-book-open"></i>Teks bacaan</p>${media}<div class="stim-body">${richText(esc(stim), true)}</div></div>` : '';
+    return `<div class="card p-4 soal" style="--soal-size:15px"><div class="flex items-center gap-2 mb-2"><span class="font-extrabold">${no}.</span><span class="chip chip-muted">${TIPE_LABEL[q.tipe] || esc(q.tipe)}</span>${maks ? `<span class="chip chip-gold">Pilih ${maks}</span>` : ''}<span class="text-xs text-muted ml-auto">Bobot ${q.skor || 1}</span></div>
+        ${stimHtml}${stim ? '' : media}<div class="soal-tanya mb-3">${richText(esc(tanya))}</div>${body}</div>`;
 }
 function previewPaket(id) {
     const qs = (window._bankGroups || {})[id] || [];
@@ -2110,16 +2335,210 @@ function previewPaket(id) {
 }
 
 // --- Editor soal (ubah / baru) ---
+// Toolbar rumus: tombol menyisipkan simbol, atau membuka kotak isian (pecahan, pangkat, dll.)
+const SIMBOL = [['×', 'Kali'], ['÷', 'Bagi'], ['±', 'Plus-minus'], ['−', 'Minus'], ['≤', 'Kurang dari sama dengan'], ['≥', 'Lebih dari sama dengan'], ['≠', 'Tidak sama dengan'], ['≈', 'Kira-kira'], ['π', 'Pi'], ['°', 'Derajat'], ['∠', 'Sudut'], ['Δ', 'Delta / segitiga'], ['θ', 'Theta'], ['∞', 'Tak hingga'], ['√', 'Akar (simbol saja)'], ['∈', 'Anggota'], ['∪', 'Gabungan'], ['∩', 'Irisan']];
+function mathToolbar(target) {
+    const b = (jenis, html, title) => `<button type="button" class="mt-btn" title="${title}" onmousedown="event.preventDefault()" onclick="rumusDialog('${jenis}','${target}')">${html}</button>`;
+    return `<div class="mt-bar" role="toolbar" aria-label="Sisipkan rumus">
+        ${b('pecahan', '<span class="mt-frac"><i>a</i><i>b</i></span>Pecahan', 'Pecahan / pecahan campuran')}
+        ${b('pangkat', 'x<sup>n</sup> Pangkat', 'Pangkat')}
+        ${b('indeks', 'x<sub>n</sub> Indeks', 'Indeks bawah (misal H₂O)')}
+        ${b('akar', '√x Akar', 'Akar kuadrat / akar pangkat n')}
+        <span class="mt-sep"></span>
+        ${SIMBOL.map(([c, t]) => `<button type="button" class="mt-sym" title="${t}" onmousedown="event.preventDefault()" onclick="edInsert('${target}','${c}')">${c}</button>`).join('')}
+        <span class="mt-sep"></span>
+        ${b('lain', '<i class="fa fa-square-root-variable"></i> Rumus lain', 'Tulis rumus bebas (LaTeX)')}
+    </div>`;
+}
+// Toolbar format teks: tebal, miring, garis bawah, judul, sumber, daftar, tabel, gambar di dalam teks
+function teksToolbar(target, full = true) {
+    const b = (fn, html, title) => `<button type="button" class="mt-btn" title="${title}" onmousedown="event.preventDefault()" onclick="${fn}">${html}</button>`;
+    return `<div class="mt-bar mt-bar-teks" role="toolbar" aria-label="Format teks">
+        ${b(`edWrap('${target}','[b]','[/b]')`, '<b>B</b>', 'Tebal (blok teks dulu)')}
+        ${b(`edWrap('${target}','[i]','[/i]')`, '<i class="font-serif">I</i>', 'Miring')}
+        ${b(`edWrap('${target}','[u]','[/u]')`, '<u>U</u>', 'Garis bawah')}
+        <span class="mt-sep"></span>
+        ${full ? b(`edBaris('${target}','# ','Judul teks')`, '<i class="fa fa-heading"></i> Judul', 'Judul di tengah, tebal') : ''}
+        ${b(`edBaris('${target}','Sumber: ','https://…')`, '<i class="fa fa-link"></i> Sumber', 'Baris sumber (huruf kecil, miring)')}
+        ${b(`edBaris('${target}','- ','butir')`, '<i class="fa fa-list-ul"></i> Daftar', 'Daftar berbutir')}
+        ${b(`tabelDialog('${target}')`, '<i class="fa fa-table"></i> Tabel', 'Sisipkan tabel')}
+        <label class="mt-btn cursor-pointer" title="Sisipkan gambar di posisi kursor"><i class="fa fa-image"></i> Gambar<input type="file" accept="image/*" class="sr-only" onchange="edGambarTeks('${target}', this.files[0]); this.value=''"></label>
+    </div>`;
+}
+function edWrap(id, pre, post) {
+    const el = $(id); if (!el) return;
+    const a = el.selectionStart ?? el.value.length, z = el.selectionEnd ?? a, sel = el.value.slice(a, z) || 'teks';
+    el.value = el.value.slice(0, a) + pre + sel + post + el.value.slice(z);
+    el.focus(); el.selectionStart = a + pre.length; el.selectionEnd = a + pre.length + sel.length; edPreview();
+}
+// Sisipkan baris baru berawalan tertentu (judul, sumber, daftar)
+function edBaris(id, prefix, contoh) {
+    const el = $(id); if (!el) return;
+    const a = el.selectionStart ?? el.value.length, z = el.selectionEnd ?? a;
+    const ls = el.value.lastIndexOf('\n', a - 1) + 1, le = el.value.indexOf('\n', z), end = le < 0 ? el.value.length : le;
+    const line = el.value.slice(ls, end);
+    if (line.trim() && !line.startsWith(prefix)) {
+        el.value = el.value.slice(0, ls) + prefix + el.value.slice(ls); el.selectionStart = el.selectionEnd = end + prefix.length;
+    } else if (!line.trim()) {
+        el.value = el.value.slice(0, ls) + prefix + contoh + el.value.slice(end); el.selectionStart = ls + prefix.length; el.selectionEnd = ls + prefix.length + contoh.length;
+    } else { const pre = el.value.slice(0, end) + '\n'; el.value = pre + prefix + contoh + el.value.slice(end); el.selectionStart = pre.length + prefix.length; el.selectionEnd = el.selectionStart + contoh.length; }
+    el.focus(); edPreview();
+}
+async function tabelDialog(target) {
+    const r = await Swal.fire({
+        title: 'Sisipkan tabel', width: 440,
+        html: `<div class="grid grid-cols-2 gap-3 text-left"><div><label class="field-label" for="tb_k">Jumlah kolom</label><input id="tb_k" type="number" min="1" max="8" value="3" class="field"></div><div><label class="field-label" for="tb_b">Jumlah baris isi</label><input id="tb_b" type="number" min="1" max="30" value="3" class="field"></div></div>
+            <p class="text-xs text-muted text-left mt-3">Tabel ditulis sebagai teks: satu baris per baris tabel, kolom dipisah tanda <b>|</b>. Baris pertama menjadi judul kolom. Ganti tulisan "isi" dengan data Anda.</p>`,
+        showCancelButton: true, confirmButtonText: 'Sisipkan', cancelButtonText: 'Batal',
+        preConfirm: () => { const p = Swal.getPopup(); return { k: Math.min(8, Math.max(1, parseInt(p.querySelector('#tb_k').value) || 3)), b: Math.min(30, Math.max(1, parseInt(p.querySelector('#tb_b').value) || 3)) }; },
+    });
+    if (!r.isConfirmed) return;
+    const { k, b } = r.value;
+    const head = Array.from({ length: k }, (_, i) => `Kolom ${i + 1}`).join(' | ');
+    const rows = Array.from({ length: b }, () => Array(k).fill('isi').join(' | ')).join('\n');
+    const el = $(target), pos = el.selectionStart ?? el.value.length, before = el.value.slice(0, pos);
+    edInsert(target, (before && !before.endsWith('\n') ? '\n' : '') + `[tabel]\n${head}\n${rows}\n[/tabel]\n`);
+}
+async function edGambarTeks(target, file) {
+    toast('Mengunggah gambar…', 'info');
+    const url = await edUpload(file); if (!url) return;
+    const el = $(target), pos = el.selectionStart ?? el.value.length, before = el.value.slice(0, pos);
+    edInsert(target, (before && !before.endsWith('\n') ? '\n' : '') + `[gambar]${url}[/gambar]\n`);
+    toast('Gambar disisipkan');
+}
+// Pakai teks bacaan dari soal lain di paket yang sama
+function pilihStimulus() {
+    const kode = ($('man_kode') && $('man_kode').value.trim()) || window._edExam || '';
+    const seen = new Map();
+    allQuestions.filter(q => !kode || q.exam_id === kode).forEach((q, i) => { const st = pisahStimulus(q.tanya).stim; if (st && !seen.has(st)) seen.set(st, q); });
+    window._stimList = [...seen.keys()];
+    if (!seen.size) return toast(kode ? `Belum ada teks bacaan di paket ${kode}` : 'Isi kode paket dulu', 'info');
+    Swal.fire({
+        title: 'Pakai teks bacaan yang sudah ada', width: 640, showConfirmButton: false, showCancelButton: true, cancelButtonText: 'Tutup',
+        html: `<div class="text-left space-y-2 max-h-[60vh] overflow-y-auto">${window._stimList.map((st, i) => {
+            const judul = (st.match(/^#\s+(.+)$/m) || [])[1];
+            return `<button type="button" class="w-full text-left p-3 rounded-xl border border-line hover:border-navy hover:bg-navy-50" onclick="$('ed_stim').value=window._stimList[${i}]; $('ed_stim_box').open=true; Swal.close(); edPreview(); toast('Teks bacaan dipakai')">
+                ${judul ? `<b class="block text-sm">${esc(latexToPlain(judul))}</b>` : ''}<span class="text-xs text-muted line-clamp-2">${esc(stripRich(st.replace(/^#\s+.+$/m, '')).slice(0, 220))}</span></button>`;
+        }).join('')}</div>`,
+    });
+}
 function soalEditorHtml(q = {}) {
     const opsiLines = splitOpsi(q).join('\n');
-    return `<div class="grid sm:grid-cols-3 gap-3">
-        <div><label class="field-label">Tipe soal</label><select id="ed_tipe" class="field" onchange="hintEditor()">${Object.entries(TIPE_LABEL).map(([k, v]) => `<option value="${k}" ${q.tipe === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
-        <div><label class="field-label">Kunci jawaban</label><input id="ed_kunci" class="field font-bold" value="${esc(q.kunci || '')}" oninput="this.value=this.value.toUpperCase()"></div>
-        <div><label class="field-label">Bobot skor</label><input id="ed_skor" type="number" min="0.5" step="0.5" class="field" value="${q.skor || 1}"></div></div>
-        <div class="mt-3"><label class="field-label">Pertanyaan</label><textarea id="ed_tanya" rows="5" class="field">${esc(q.tanya || '')}</textarea>
-        <p class="text-xs text-muted mt-1">Pangkat: <code>x^2</code> · indeks: <code>H_2O</code> · pecahan: <code>(3/4)</code> · rumus LaTeX: <code>$\\sqrt{x}$</code></p></div>
-        <div class="mt-3"><label class="field-label">Pilihan / pernyataan <span class="font-normal text-muted">(satu per baris)</span></label><textarea id="ed_opsi" rows="5" class="field">${esc(opsiLines)}</textarea><p id="ed_hint" class="text-xs text-muted mt-1"></p></div>
-        <div class="mt-3"><label class="field-label">Link gambar <span class="font-normal text-muted">(Google Drive atau URL gambar, opsional)</span></label><input id="ed_media" class="field" value="${esc(q.media_path || '')}" placeholder="https://drive.google.com/file/d/…"></div>`;
+    const media = hasMedia(q.media_path) ? q.media_path : '';
+    const { stim, tanya } = pisahStimulus(q.tanya || '');
+    const maks = maksPilih(q);
+    window._edExam = q.exam_id || '';
+    return `<div class="ed-wrap" onpaste="edPaste(event)"><div class="ed-main">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div class="col-span-2 sm:col-span-1"><label class="field-label">Tipe soal</label><select id="ed_tipe" class="field" onchange="hintEditor(); edPreview()">${Object.entries(TIPE_LABEL).map(([k, v]) => `<option value="${k}" ${q.tipe === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div><label class="field-label">Kunci jawaban</label><input id="ed_kunci" class="field font-bold" value="${esc(q.kunci || '')}" oninput="this.value=this.value.toUpperCase(); edPreview()"></div>
+        <div><label class="field-label">Bobot skor</label><input id="ed_skor" type="number" min="0.5" step="0.5" class="field" value="${q.skor || 1}" oninput="edPreview()"></div></div>
+
+        <details id="ed_stim_box" class="ed-stim mt-4" ${stim ? 'open' : ''}><summary><i class="fa fa-book-open"></i> Teks bacaan / stimulus <span class="font-normal text-muted">(opsional — cerita, artikel, puisi, infografis, tabel data)</span></summary>
+        <div class="mt-2">${teksToolbar('ed_stim')}${mathToolbar('ed_stim')}
+        <textarea id="ed_stim" rows="7" class="field mt-1.5" oninput="edPreview()" placeholder="Contoh:\nBacalah teks berikut!\n# Manajemen Pengelolaan Sampah\nSampah, yang dipandang sebagai barang yang tidak berguna, …\nSumber: https://…">${esc(stim)}</textarea>
+        <div class="flex flex-wrap items-center gap-2 mt-1.5"><button type="button" class="btn btn-xs btn-outline" onclick="pilihStimulus()"><i class="fa fa-copy"></i> Pakai teks dari soal lain</button><p class="text-[11px] text-muted flex-1">Untuk beberapa soal yang memakai teks sama (misal soal no. 2 dan 3), pakai teks yang sama — soal tetap berurutan walau diacak.</p></div></div></details>
+
+        <div class="mt-4"><label class="field-label" for="ed_tanya">Pertanyaan</label>${teksToolbar('ed_tanya', false)}${mathToolbar('ed_tanya')}
+        <textarea id="ed_tanya" rows="4" class="field mt-1.5" oninput="edPreview()" placeholder="Tulis pertanyaan. Gunakan tombol di atas untuk tabel, pecahan, pangkat, akar, dan simbol.">${esc(tanya.replace(PILIH_RE, '').trim())}</textarea>
+        <p class="text-[11px] text-muted mt-1">Kode format seperti <code>[b]…[/b]</code> atau <code>$…$</code> hanya tampil di kotak ini; hasil akhirnya terlihat di <b>Pratinjau</b>.</p></div>
+
+        <div class="mt-4"><p class="field-label">Gambar soal <span class="font-normal text-muted">(opsional)</span></p>
+        <input type="hidden" id="ed_media" value="${esc(media)}">
+        <div id="ed_img_box" class="img-drop" ondragover="event.preventDefault(); this.classList.add('is-over')" ondragleave="this.classList.remove('is-over')" ondrop="edDrop(event)"></div></div>
+
+        <div class="mt-4"><label class="field-label" for="ed_opsi">Pilihan jawaban / pernyataan <span class="font-normal text-muted">(satu per baris)</span></label>${mathToolbar('ed_opsi')}
+        <textarea id="ed_opsi" rows="4" class="field mt-1.5" oninput="edPreview()" placeholder="Satu pilihan per baris, urut A, B, C, …">${esc(opsiLines)}</textarea>
+        <div class="flex flex-wrap items-center gap-2 mt-1.5"><label class="btn btn-xs btn-outline cursor-pointer"><i class="fa fa-image"></i> Tambah pilihan bergambar<input type="file" accept="image/*" class="sr-only" onchange="edGambarOpsi(this.files[0]); this.value=''"></label><p id="ed_hint" class="text-xs text-muted flex-1"></p></div>
+        <label id="ed_maks_box" class="hidden mt-2 flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="ed_maks" class="w-4 h-4 accent-[#14306B]" ${maks ? 'checked' : ''} onchange="edPreview()"> Siswa wajib memilih tepat sejumlah kunci (misal kunci <b>A,C</b> → pilih 2 jawaban)</label></div>
+
+        </div>
+        <div class="ed-side"><p class="field-label">Pratinjau <span class="font-normal text-muted">(seperti yang dilihat siswa, kunci hijau)</span></p><div id="ed_preview"></div></div>
+    </div>`;
+}
+function initEditor() { hintEditor(); edRenderImg(); edPreview(); }
+
+// Sisipkan teks di posisi kursor
+function edInsert(id, text) {
+    const el = $(id); if (!el) return;
+    const a = el.selectionStart ?? el.value.length, b = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0, a) + text + el.value.slice(b);
+    el.focus(); el.selectionStart = el.selectionEnd = a + text.length;
+    edPreview();
+}
+const katexHtml = tex => { try { return katex.renderToString(tex, { throwOnError: false }); } catch (e) { return esc(tex); } };
+async function rumusDialog(jenis, target) {
+    const el = $(target), sel = el ? el.value.slice(el.selectionStart, el.selectionEnd).trim() : '';
+    const F = {
+        pecahan: { judul: 'Pecahan', f: [['bulat', 'Bilangan bulat (untuk pecahan campuran, boleh kosong)', ''], ['atas', 'Pembilang (atas)', (sel.split('/')[0] || '').trim()], ['bawah', 'Penyebut (bawah)', (sel.split('/')[1] || '').trim()]], tex: v => `${v.bulat}\\dfrac{${v.atas || '\\square'}}{${v.bawah || '\\square'}}` },
+        pangkat: { judul: 'Pangkat', f: [['basis', 'Bilangan / huruf', sel.replace(/\^.*/, '')], ['pkt', 'Pangkat', (sel.match(/\^(.+)$/) || [])[1] || '']], tex: v => `${v.basis || '\\square'}^{${v.pkt || '\\square'}}` },
+        indeks: { judul: 'Indeks bawah', f: [['basis', 'Huruf / simbol', sel], ['idx', 'Indeks', ''], ['lanjut', 'Teks sesudahnya (boleh kosong, misal "O" untuk H₂O)', '']], tex: v => { const kimia = /^[A-Z][a-z]?$/.test(v.basis); const b = v.basis || '\\square'; return `${kimia ? `\\mathrm{${b}}` : b}_{${v.idx || '\\square'}}${v.lanjut ? `\\mathrm{${v.lanjut}}` : ''}`; } },
+        akar: { judul: 'Akar', f: [['isi', 'Bilangan di dalam akar', sel], ['n', 'Akar pangkat (kosongkan untuk akar kuadrat, isi 3 untuk akar pangkat tiga)', '']], tex: v => v.n ? `\\sqrt[${v.n}]{${v.isi || '\\square'}}` : `\\sqrt{${v.isi || '\\square'}}` },
+        lain: { judul: 'Rumus bebas (LaTeX)', f: [['tex', 'Tulis rumus', sel.replace(/^\$|\$$/g, '')]], tex: v => v.tex || '\\square', contoh: true },
+    }[jenis];
+    const ids = F.f.map(([k]) => 'rd_' + k);
+    const r = await Swal.fire({
+        title: F.judul, width: 520,
+        html: `<div class="text-left space-y-3">${F.f.map(([k, l, v]) => `<div><label class="field-label" for="rd_${k}">${l}</label><input id="rd_${k}" class="field" value="${esc(v)}" autocomplete="off"></div>`).join('')}
+            ${F.contoh ? `<p class="text-xs text-muted">Contoh: <code>\\frac{1}{2}</code> pecahan · <code>x^{2}</code> pangkat · <code>\\sqrt{9}</code> akar · <code>a \\times b</code> · <code>\\leq</code> · <code>\\pi r^{2}</code></p>` : ''}
+            <div><p class="field-label">Hasil</p><div id="rd_prev" class="rd-prev"></div></div></div>`,
+        showCancelButton: true, confirmButtonText: 'Sisipkan', cancelButtonText: 'Batal',
+        didOpen: pop => {
+            // Ambil elemen dari popup ini saja (dialog sebelumnya bisa masih menutup)
+            const q = id => pop.querySelector('#' + id);
+            const baca = () => { const v = {}; F.f.forEach(([k]) => { v[k] = q('rd_' + k).value.trim(); }); return v; };
+            const upd = () => { q('rd_prev').innerHTML = katexHtml(F.tex(baca())); };
+            ids.forEach(id => q(id).addEventListener('input', upd)); upd();
+            ids.forEach(id => q(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); Swal.clickConfirm(); } }));
+            pop._baca = baca;
+            const first = ids.find(id => !q(id).value) || ids[0]; setTimeout(() => q(first).focus(), 50);
+        },
+        preConfirm: () => Swal.getPopup()._baca(),
+    });
+    if (!r.isConfirmed) return;
+    edInsert(target, '$' + F.tex(r.value).replace(/\\square/g, '') + '$');
+}
+
+// Gambar soal: pilih / seret / tempel → dikompres → diunggah
+function edRenderImg(state) {
+    const box = $('ed_img_box'); if (!box) return;
+    const url = $('ed_media').value;
+    if (state === 'loading') { box.innerHTML = `<div class="img-drop-empty"><i class="fa fa-circle-notch fa-spin"></i><span>Mengunggah gambar…</span></div>`; return; }
+    box.innerHTML = url
+        ? `<div class="img-drop-has">${imgTag(url, 600)}<div class="flex flex-col gap-1.5"><label class="btn btn-xs btn-outline cursor-pointer"><i class="fa fa-arrows-rotate"></i> Ganti<input type="file" accept="image/*" class="sr-only" onchange="edSetGambar(this.files[0]); this.value=''"></label><button type="button" class="btn btn-xs btn-danger" onclick="$('ed_media').value=''; edRenderImg(); edPreview()"><i class="fa fa-trash"></i> Hapus</button></div></div>`
+        : `<label class="img-drop-empty cursor-pointer"><i class="fa fa-image"></i><span><b>Klik untuk memilih gambar</b>, seret file ke sini, atau tempel (Ctrl+V)</span><span class="text-xs text-muted">Bisa menempel gambar yang disalin dari Word atau tangkapan layar · otomatis diperkecil</span><input type="file" accept="image/*" class="sr-only" onchange="edSetGambar(this.files[0]); this.value=''"></label>`;
+}
+async function edUpload(file) {
+    if (!file || !/^image\//.test(file.type)) { toast('Pilih file gambar (JPG, PNG, …)', 'warning'); return null; }
+    try { return await uploadGambar(await compressImage(file)); }
+    catch (e) { Swal.fire({ icon: 'error', title: 'Gagal mengunggah gambar', text: e.message }); return null; }
+}
+async function edSetGambar(file) {
+    const old = $('ed_media').value; edRenderImg('loading');
+    const url = await edUpload(file);
+    $('ed_media').value = url || old; edRenderImg(); edPreview();
+    if (url) toast('Gambar ditambahkan');
+}
+async function edGambarOpsi(file) {
+    const el = $('ed_opsi'); toast('Mengunggah gambar…', 'info');
+    const url = await edUpload(file); if (!url) return;
+    const pos = el.selectionStart ?? el.value.length, before = el.value.slice(0, pos), after = el.value.slice(pos);
+    const pre = before && !before.endsWith('\n') ? '\n' : '', post = after && !after.startsWith('\n') ? '\n' : '';
+    el.value = before + pre + url + post + after; edPreview(); toast('Pilihan bergambar ditambahkan');
+}
+function edDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('is-over'); const f = e.dataTransfer.files[0]; if (f) edSetGambar(f); }
+function edPaste(e) {
+    const item = [...(e.clipboardData || {}).items || []].find(i => i.type.startsWith('image/'));
+    if (!item) return;
+    e.preventDefault();
+    const file = item.getAsFile();
+    const act = document.activeElement && document.activeElement.id;
+    if (act === 'ed_opsi') edGambarOpsi(file); else if (act === 'ed_stim') edGambarTeks('ed_stim', file); else edSetGambar(file);
+}
+let edTimer = null;
+function edPreview() {
+    clearTimeout(edTimer);
+    edTimer = setTimeout(() => { const box = $('ed_preview'); if (!box || !$('ed_tipe')) return; box.innerHTML = renderPreviewSoal({ ...bacaEditor() }, '#'); applyMathRendering(box); }, 250);
 }
 const EDITOR_HINT = {
     PG: 'Kunci: satu huruf, misal <b>B</b>.', PGK: 'Kunci: beberapa huruf dipisah koma, misal <b>A,C</b>.',
@@ -2130,11 +2549,14 @@ const EDITOR_HINT = {
     ISIAN: 'Tanpa pilihan. Kunci = kata kunci jawaban, misal <b>36</b>.', ESAI: 'Tanpa pilihan. Kunci = kata-kata kunci; kosongkan jika dinilai manual.',
     GFORM: 'Tulis link Google Form di kolom pertanyaan.',
 };
-function hintEditor() { const t = $('ed_tipe'); if (t) $('ed_hint').innerHTML = EDITOR_HINT[t.value] || ''; }
+function hintEditor() { const t = $('ed_tipe'); if (!t) return; $('ed_hint').innerHTML = EDITOR_HINT[t.value] || ''; $('ed_maks_box').classList.toggle('hidden', t.value !== 'PGK'); }
 function bacaEditor() {
-    const tipe = $('ed_tipe').value;
+    const tipe = $('ed_tipe').value, kunci = $('ed_kunci').value.trim().toUpperCase().replace(/\s+/g, '');
+    let tanya = $('ed_tanya').value.replace(PILIH_RE, '').trim();
+    const nKunci = kunci.split(',').filter(Boolean).length;
+    if (tipe === 'PGK' && $('ed_maks').checked && nKunci) tanya += ` [pilih ${nKunci}]`;
     return {
-        tipe, tanya: $('ed_tanya').value.trim(), kunci: $('ed_kunci').value.trim().toUpperCase().replace(/\s+/g, ''),
+        tipe, tanya: gabungStimulus($('ed_stim').value, tanya), kunci,
         skor: parseFloat($('ed_skor').value) || 1, media_path: $('ed_media').value.trim(),
         opsi_json: $('ed_opsi').value.split('\n').map(s => s.trim()).filter(Boolean).join('|||'),
     };
@@ -2142,13 +2564,13 @@ function bacaEditor() {
 function editSoal(id) {
     const q = allQuestions.find(x => x.id === id); if (!q) return;
     const guru = !isAdmin();
-    openModal(`<h2 class="font-extrabold text-lg">Ubah soal</h2><p class="text-sm text-muted">${esc(q.exam_id)}</p>`, soalEditorHtml(q) + `<div id="ed_preview" class="mt-4"></div>`, {
-        wide: true, foot: `<button class="btn btn-ghost mr-auto" onclick="$('ed_preview').innerHTML=renderPreviewSoal({...bacaEditor(), exam_id:''}, '#'); applyMathRendering($('ed_preview'))"><i class="fa fa-eye"></i> Pratinjau</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanEditSoal(${id})"><i class="fa fa-floppy-disk"></i> Simpan perubahan</button>`,
+    openModal(`<h2 class="font-extrabold text-lg">Ubah soal</h2><p class="text-sm text-muted">${esc(q.exam_id)}</p>`, soalEditorHtml(q), {
+        wide: true, foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanEditSoal(${id})"><i class="fa fa-floppy-disk"></i> Simpan perubahan</button>`,
     });
-    hintEditor();
+    initEditor();
 }
 async function simpanEditSoal(id) {
-    const v = bacaEditor(); if (!v.tanya) return toast('Pertanyaan tidak boleh kosong', 'warning');
+    const v = bacaEditor(); if (!v.tanya && !v.media_path) return toast('Isi pertanyaan atau tambahkan gambar soal', 'warning');
     const r = await api('/admin/update-soal', { method: 'PUT', body: { id, ...v } });
     if (r.status !== 'success') return Swal.fire({ icon: 'error', title: 'Gagal menyimpan', text: r.message });
     closeModal(); toast('Soal disimpan'); setBankTab('paket');
@@ -2178,12 +2600,12 @@ function renderImportTab() {
             <div class="flex-1"><h3 class="section-title">Excel (.xlsx)</h3><p class="text-sm text-muted">Cara paling andal. Mendukung semua tipe soal.</p></div>
             <button class="btn btn-xs btn-outline" onclick="downloadTemplateSoal()"><i class="fa fa-download"></i> Template</button></div>
             <label class="field-label" for="ex_judul">Kode paket</label><input id="ex_judul" class="field mb-3" placeholder="Contoh: MTK-7A">
-            <label class="dropzone mb-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file Excel</b><br><span class="text-muted" id="ex_name">Kolom: Tipe, Pertanyaan, Opsi_A–E, Kunci, Skor, Link_Gambar</span></span><input type="file" id="ex_file" accept=".xlsx,.xls" class="sr-only" onchange="$('ex_name').textContent=this.files[0]?.name||''"></label>
+            <label class="dropzone mb-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file Excel</b><br><span class="text-muted" id="ex_name">Kolom: Tipe, Pertanyaan, Opsi_A–E, Kunci, Skor, Link_Gambar, Teks_Bacaan, Pilih</span></span><input type="file" id="ex_file" accept=".xlsx,.xls" class="sr-only" onchange="$('ex_name').textContent=this.files[0]?.name||''"></label>
             <button onclick="importExcelSoal()" class="btn btn-ok w-full"><i class="fa fa-file-import"></i> Baca & pratinjau</button>
         </div>
         <div class="card p-5">
             <div class="flex items-start gap-3 mb-4"><span class="w-10 h-10 rounded-xl bg-navy-50 text-navy grid place-items-center"><i class="fa fa-file-word"></i></span>
-            <div class="flex-1"><h3 class="section-title">Word (.docx)</h3><p class="text-sm text-muted">Tabel dengan header yang sama seperti Excel, atau teks bernomor: <i>1. Soal → A. Opsi → Kunci: A</i>.</p></div></div>
+            <div class="flex-1"><h3 class="section-title">Word (.docx)</h3><p class="text-sm text-muted">Naskah soal biasa (seperti naskah asesmen): nomor soal, teks bacaan + <i>Sumber</i>, gambar, tabel Benar/Salah, pilihan A–D atau kotak centang, lalu <i>Kunci: A</i>.</p></div><a class="btn btn-xs btn-outline" href="/Template-Soal-Asesmen.docx" download><i class="fa fa-download"></i> Template</a></div>
             <label class="field-label" for="w_judul">Kode paket</label><input id="w_judul" class="field mb-3" placeholder="Contoh: IPA-8B">
             <label class="dropzone mb-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file Word</b><br><span class="text-muted" id="w_name">Persamaan Word (pecahan, pangkat) dibaca otomatis</span></span><input type="file" id="w_file" accept=".docx" class="sr-only" onchange="$('w_name').textContent=this.files[0]?.name||''"></label>
             <button onclick="importWord()" class="btn btn-primary w-full"><i class="fa fa-file-import"></i> Baca & pratinjau</button>
@@ -2199,34 +2621,46 @@ function downloadTemplateSoal() {
         { Tipe: 'ISIAN', Pertanyaan: 'KPK dari 12 dan 18 adalah …', Opsi_A: '', Opsi_B: '', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: '36', Skor: 1, Link_Gambar: '' },
         { Tipe: 'ESAI', Pertanyaan: 'Jelaskan cara menentukan FPB dengan faktorisasi prima!', Opsi_A: '', Opsi_B: '', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'faktorisasi prima', Skor: 3, Link_Gambar: '' },
     ];
+    // Kolom teks bacaan (stimulus) & jumlah pilihan PGK
+    const stim1 = 'Perhatikan tabel berikut untuk menjawab soal nomor 7 dan 8!\n# Tabungan Kelas IX A\n[tabel]\nBulan | Tabungan\nJanuari | Rp50.000\nFebruari | Rp65.000\nMaret | Rp80.000\n[/tabel]\nSumber: Tim penulis soal, 2026';
+    rows.forEach(r => { r.Teks_Bacaan = ''; r.Pilih = ''; });
+    rows[1].Pilih = 3;
+    rows.push(
+        { Tipe: 'PG', Pertanyaan: 'Kenaikan tabungan setiap bulan adalah …', Opsi_A: 'Rp10.000', Opsi_B: 'Rp15.000', Opsi_C: 'Rp20.000', Opsi_D: 'Rp25.000', Opsi_E: '', Kunci: 'B', Skor: 1, Link_Gambar: '', Teks_Bacaan: stim1, Pilih: '' },
+        { Tipe: 'BS', Pertanyaan: 'Tentukan benar atau salah pernyataan berikut!', Opsi_A: 'Tabungan April diperkirakan Rp95.000', Opsi_B: 'Jumlah tabungan tiga bulan Rp185.000', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'B,S', Skor: 2, Link_Gambar: '', Teks_Bacaan: 'SAMA', Pilih: '' },
+    );
     const guide = [['Tipe', 'Arti', 'Format kunci'], ['PG', 'Pilihan ganda', 'A'], ['PGK', 'PG kompleks', 'A,C'], ['BS', 'Benar/Salah (tabel)', 'B,S,B'], ['TS', 'Sesuai/Tidak sesuai', 'A,B,A'], ['NK', 'Numerik/Kategorik', 'A,B'], ['SIFAT', 'Sifat operasi', 'A,B,C'], ['JODOH', 'Menjodohkan', '1B,2A'], ['ISIAN', 'Isian singkat', 'kata kunci'], ['ESAI', 'Uraian', 'kata kunci / kosong'], ['GFORM', 'Link Google Form', '(tulis link di Pertanyaan)']];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Soal');
+    guide.push([], ['Kolom tambahan', 'Arti', 'Contoh'],
+        ['Teks_Bacaan', 'Teks bacaan / stimulus (cerita, artikel, puisi, tabel data). Tampil di samping soal.', 'Baris "# Judul" = judul tebal di tengah; "Sumber: …" = sumber; [tabel] … [/tabel] = tabel (kolom dipisah |)'],
+        ['Teks_Bacaan = SAMA', 'Memakai teks bacaan baris di atasnya (satu teks untuk beberapa soal)', 'SAMA'],
+        ['Pilih', 'Khusus PGK: siswa wajib memilih tepat sejumlah ini', '2'],
+        ['Format teks', '[b]tebal[/b]  [i]miring[/i]  [u]garis bawah[/u]', 'Tekan Alt+Enter di Excel untuk baris baru dalam sel']);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), 'Panduan');
     XLSX.writeFile(wb, 'TEMPLATE_SOAL_CBT.xlsx');
 }
 
 function renderManualTab() {
-    $('bank-body').innerHTML = `<div class="card p-5 max-w-3xl">
+    $('bank-body').innerHTML = `<div class="card p-5">
         <div class="flex flex-wrap items-end gap-3 mb-4"><div class="flex-1 min-w-[200px]"><label class="field-label" for="man_kode">Kode paket</label><input id="man_kode" class="field" list="man_kode_list" placeholder="Pilih atau ketik kode baru"><datalist id="man_kode_list">${[...new Set(allQuestions.map(q => q.exam_id))].map(e => `<option value="${esc(e)}">`).join('')}</datalist></div>
         <p class="text-sm text-muted pb-3" id="man_count"></p></div>
         ${soalEditorHtml({ tipe: 'PG', skor: 1 })}
-        <div id="ed_preview" class="mt-4"></div>
-        <div class="flex flex-wrap gap-2 mt-5"><button class="btn btn-ghost" onclick="$('ed_preview').innerHTML=renderPreviewSoal({...bacaEditor()}, '#'); applyMathRendering($('ed_preview'))"><i class="fa fa-eye"></i> Pratinjau</button>
-        <button class="btn btn-primary ml-auto" onclick="simpanSoalManual()"><i class="fa fa-plus"></i> Simpan & tulis soal berikutnya</button></div></div>`;
-    hintEditor();
+        <div class="flex flex-wrap gap-2 mt-5"><button class="btn btn-primary ml-auto" onclick="simpanSoalManual()"><i class="fa fa-plus"></i> Simpan & tulis soal berikutnya</button></div></div>`;
+    initEditor();
 }
 async function simpanSoalManual() {
     const kode = $('man_kode').value.trim(); const v = bacaEditor();
     if (!kode) return toast('Isi kode paket dulu', 'warning');
-    if (!v.tanya) return toast('Pertanyaan masih kosong', 'warning');
+    if (!v.tanya && !v.media_path) return toast('Isi pertanyaan atau tambahkan gambar soal', 'warning');
     const r = await api('/admin/add-soal-bulk', { body: { questions: [{ exam_id: kode, ...v, gform_url: '' }] } });
     if (r.status !== 'success') return Swal.fire({ icon: 'error', title: 'Gagal', text: r.message });
     toast('Soal tersimpan ke ' + kode);
     allQuestions.push({ exam_id: kode });
     const n = allQuestions.filter(q => q.exam_id === kode).length;
     $('man_count').textContent = `${kode} sekarang berisi ${n} soal`;
-    ['ed_tanya', 'ed_opsi', 'ed_kunci', 'ed_media'].forEach(id => $(id).value = ''); $('ed_preview').innerHTML = ''; $('ed_tanya').focus();
+    ['ed_tanya', 'ed_opsi', 'ed_kunci', 'ed_media'].forEach(id => $(id).value = ''); edRenderImg(); edPreview(); $('ed_tanya').focus();
+    if ($('ed_stim').value.trim()) toast('Soal tersimpan. Teks bacaan tetap dipertahankan untuk soal berikutnya — kosongkan jika tidak dipakai.', 'success');
 }
 
 // =============================================================
@@ -2329,7 +2763,7 @@ function renderAnalisis(data, mapel) {
             const p = it.skor / it.n, [kl, kc] = kat(p), kunciL = (it.kunci || '').charAt(0);
             const totalPil = Object.values(it.pilihan).reduce((a, b) => a + b, 0);
             const sebaran = it.tipe === 'PG' ? ['A', 'B', 'C', 'D', 'E', 'Kosong'].filter(L => it.pilihan[L]).map(L => `<span class="inline-flex items-center gap-1 mr-2 text-xs ${L === kunciL ? 'font-extrabold text-ok' : 'text-muted'}" title="${L === kunciL ? 'Kunci' : ''}">${L === 'Kosong' ? '∅' : L}<span class="tabular-nums">${Math.round(it.pilihan[L] / totalPil * 100)}%</span></span>`).join('') : '<span class="text-xs text-muted">—</span>';
-            return `<tr><td class="font-bold tabular-nums">${it.no}</td><td class="max-w-[420px]"><span class="chip chip-muted">${TIPE_LABEL[it.tipe] || esc(it.tipe)}</span><p class="text-sm line-clamp-2 mt-1">${esc((it.tanya || '').slice(0, 200))}</p></td>
+            return `<tr><td class="font-bold tabular-nums">${it.no}</td><td class="max-w-[420px]"><span class="chip chip-muted">${TIPE_LABEL[it.tipe] || esc(it.tipe)}</span><p class="text-sm line-clamp-2 mt-1">${esc(latexToPlain(it.tanya || '').slice(0, 200))}</p></td>
                 <td><div class="flex items-center gap-2"><div class="progress flex-1"><i style="width:${p * 100}%;background:${p >= .7 ? 'var(--ok)' : p >= .3 ? 'var(--gold)' : 'var(--bad)'}"></i></div><span class="tabular-nums text-sm font-bold w-10 text-right">${Math.round(p * 100)}%</span></div></td>
                 <td><span class="chip ${kc}">${kl}</span></td><td>${sebaran}</td></tr>`;
         }).join('')}</tbody></table></div></div>`;
@@ -2352,7 +2786,7 @@ function lihatDetail(i) {
     openModal(title, `<div class="space-y-3">${d.map(x => {
         const c = x.status === 'Benar' ? 'chip-ok' : x.status.startsWith('Sebagian') ? 'chip-gold' : x.status === 'Salah' || x.status.startsWith('Salah') ? 'chip-bad' : 'chip-muted';
         return `<div class="card p-4"><div class="flex items-start gap-2 mb-2"><span class="font-extrabold">${x.no}.</span><span class="chip chip-muted">${TIPE_LABEL[x.tipe] || esc(x.tipe)}</span><span class="chip ${c} ml-auto">${esc(x.status)} · ${x.poin}</span></div>
-            <div class="text-sm leading-relaxed mb-3">${formatMath(esc(x.tanya || '').replace(/\n/g, '<br>'))}</div>
+            <div class="text-sm leading-relaxed mb-3 soal-tanya">${richText(esc(pisahStimulus(x.tanya).tanya))}</div>
             <div class="grid sm:grid-cols-2 gap-3 text-sm bg-paper rounded-xl p-3"><div><p class="text-xs text-muted mb-1">Jawaban siswa</p>${colorizeAnswer(x.jawab, x.kunci, x.tipe, x.status)}</div>
             <div><p class="text-xs text-muted mb-1">Kunci</p><span class="font-bold text-ok">${formatMath(esc(x.kunci || '-')).replace(/, | \| /g, '<br>')}</span></div></div></div>`;
     }).join('')}</div>`, { wide: true });
@@ -2377,7 +2811,7 @@ async function exportExcelDetail() {
     const data = window.filteredResultsData; if (!data.length) return toast('Tidak ada data', 'info');
     loading('Menyiapkan file…');
     const maxSoal = Math.max(...data.map(n => parseDetail(n).length), 0);
-    const sp = (t, c) => `<span style="color:${c};font-weight:bold;">${esc(t)}</span>`, B = '#1F8A5B', R = '#B42318';
+    const sp = (t, c) => `<span style="color:${c};font-weight:bold;">${esc(latexToPlain(t))}</span>`, B = '#1F8A5B', R = '#B42318';
     const hdr = ['Nama Siswa', 'Kelas', 'Paket', 'Durasi', 'Benar', 'Salah', 'Nilai'].concat(Array.from({ length: maxSoal }, (_, i) => 'Soal ' + (i + 1)));
     let rows = data.map(n => {
         const d = parseDetail(n);
@@ -2683,18 +3117,76 @@ function cetakDaftarHadir() {
 // format soal guru), hanya penyimpanan & pratinjau yang diperbarui.
 // ============================================================
 
+// ---------- Gambar dari file Word ----------
+const IMG_MARK = /\[\[IMG:([^\]]+)\]\]/g;
+function stripImgMarkers(q) {
+    ['tanya', 'opsi_json', 'gform_url', 'media_path'].forEach(k => { if (typeof q[k] === 'string') q[k] = q[k].replace(IMG_MARK, '').replace(/[ \t]{2,}/g, ' ').trim(); });
+}
+async function resolveWordImages(questions, zip) {
+    const relsXml = await (zip.file('word/_rels/document.xml.rels')?.async('string') || '');
+    const rels = {};
+    (relsXml.match(/<Relationship\b[^>]*>/g) || []).forEach(t => { const id = (t.match(/Id="([^"]+)"/) || [])[1], tg = (t.match(/Target="([^"]+)"/) || [])[1]; if (id && tg) rels[id] = tg.replace(/^\/?(word\/)?/, 'word/'); });
+    const cache = {};
+    window._wordImgSkipped = 0;
+    const ambil = async rid => {
+        if (rid in cache) return cache[rid];
+        const path = rels[rid], f = path && zip.file(path);
+        if (!f || !/\.(png|jpe?g|gif|bmp|webp)$/i.test(path)) { if (path) window._wordImgSkipped++; return cache[rid] = null; } // EMF/WMF tidak bisa ditampilkan browser
+        try { cache[rid] = await compressImage(await f.async('blob'), 1280); } catch (e) { cache[rid] = null; }
+        return cache[rid];
+    };
+    const marks = t => [...String(t || '').matchAll(IMG_MARK)].map(m => m[1]);
+    for (const q of questions) {
+        // Soal dari teks Word: gambar tetap di posisinya di dalam teks
+        if (q._inlineImg) {
+            let t = q.tanya || '';
+            for (const rid of marks(t)) { const d = await ambil(rid); t = t.replace(`[[IMG:${rid}]]`, d ? `[gambar]${d}[/gambar]` : ''); }
+            q.tanya = t.replace(/\n{3,}/g, '\n\n');
+        }
+        // Gambar soal: dari kolom Link_Gambar, atau gambar pertama di kolom pertanyaan
+        const ridSoal = marks(q.media_path)[0] || marks(q.gform_url)[0] || marks(q.tanya)[0];
+        if (ridSoal) { const d = await ambil(ridSoal); if (d) { q.media_path = d; q.gform_url = ''; } }
+        // Pilihan bergambar: sel opsi yang isinya hanya gambar
+        if (q.opsi_json) q.opsi_json = (await Promise.all(q.opsi_json.split('|||').map(async o => {
+            const r = marks(o)[0], teks = o.replace(IMG_MARK, '').trim();
+            if (r && !teks) { const d = await ambil(r); return d || ''; }
+            return teks;
+        }))).filter(Boolean).join('|||');
+    }
+}
+// Unggah semua gambar data: URL (hasil impor) sebelum soal disimpan
+async function unggahGambarImpor(questions) {
+    const all = new Set();
+    questions.forEach(q => { if (String(q.media_path || '').startsWith('data:')) all.add(q.media_path); splitOpsi(q).forEach(o => { if (o.startsWith('data:')) all.add(o); }); gambarDalamTeks(q.tanya).forEach(u => { if (u.startsWith('data:')) all.add(u); }); });
+    if (!all.size) return;
+    const map = {}; let n = 0;
+    for (const d of all) { n++; Swal.update({ title: `Mengunggah gambar ${n} dari ${all.size}…` }); map[d] = await uploadGambar(d); }
+    questions.forEach(q => {
+        if (map[q.media_path]) q.media_path = map[q.media_path];
+        if (q.opsi_json) q.opsi_json = splitOpsi(q).map(o => map[o] || o).join('|||');
+        if (q.tanya) q.tanya = q.tanya.replace(/\[gambar\](.+?)\[\/gambar\]/gi, (m, u) => `[gambar]${map[u.trim()] || u.trim()}[/gambar]`);
+    });
+}
+
 // Pratinjau seluruh soal hasil impor, lalu simpan
 async function konfirmasiSimpanImpor(questions, kodeUjian, onDone) {
     const tipeCounts = {};
     questions.forEach(q => { tipeCounts[q.tipe] = (tipeCounts[q.tipe] || 0) + 1; });
     const tanpaKunci = questions.filter(q => !q.kunci && !['ESAI', 'GFORM'].includes(q.tipe)).length;
+    const jmlGambar = questions.filter(q => hasMedia(q.media_path)).length + questions.reduce((t, q) => t + splitOpsi(q).filter(isImageUrl).length + gambarDalamTeks(q.tanya).length, 0);
+    const jmlStim = new Set(questions.map(q => pisahStimulus(q.tanya).stim).filter(Boolean)).size;
     openModal(`<h2 class="font-extrabold text-lg">${questions.length} soal terbaca</h2><p class="text-sm text-muted">Paket <b>${esc(kodeUjian)}</b> · ${Object.entries(tipeCounts).map(([t, n]) => `${TIPE_LABEL[t] || t} ${n}`).join(', ')}</p>`,
-        (tanpaKunci ? `<div class="rounded-xl bg-gold-50 text-gold-700 text-sm p-3 mb-4"><i class="fa fa-triangle-exclamation"></i> ${tanpaKunci} soal belum memiliki kunci jawaban. Anda bisa melengkapinya nanti lewat tombol <b>Ubah</b>.</div>` : '')
+        (jmlStim ? `<div class="rounded-xl bg-navy-50 text-navy text-sm p-3 mb-3"><i class="fa fa-book-open"></i> ${jmlStim} teks bacaan terdeteksi dan dipisahkan dari pertanyaan. Periksa pratinjau di bawah; bisa diperbaiki lewat tombol <b>Ubah</b> setelah disimpan.</div>` : '')
+        + (jmlGambar ? `<div class="rounded-xl bg-ok-50 text-ok text-sm p-3 mb-3"><i class="fa fa-image"></i> ${jmlGambar} gambar ikut terbaca dan akan diunggah otomatis saat disimpan.</div>` : '')
+        + (window._wordImgSkipped ? `<div class="rounded-xl bg-gold-50 text-gold-700 text-sm p-3 mb-3"><i class="fa fa-triangle-exclamation"></i> ${window._wordImgSkipped} gambar berformat lama (EMF/WMF) tidak bisa dibaca. Simpan ulang gambar itu sebagai PNG/JPG di Word, atau tambahkan lewat tombol <b>Ubah</b>.</div>` : '')
+        + (tanpaKunci ? `<div class="rounded-xl bg-gold-50 text-gold-700 text-sm p-3 mb-4"><i class="fa fa-triangle-exclamation"></i> ${tanpaKunci} soal belum memiliki kunci jawaban. Anda bisa melengkapinya nanti lewat tombol <b>Ubah</b>.</div>` : '')
         + `<div class="space-y-3">${questions.map((q, i) => renderPreviewSoal(q, i + 1)).join('')}</div>`,
         { wide: true, foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" id="btn-simpan-impor"><i class="fa fa-floppy-disk"></i> Simpan ${questions.length} soal</button>` });
     $('btn-simpan-impor').onclick = async () => {
         loading('Menyimpan ke bank soal…');
         try {
+            await unggahGambarImpor(questions);
+            Swal.update({ title: 'Menyimpan ke bank soal…' });
             for (let i = 0; i < questions.length; i += 200) {
                 const r = await api('/admin/add-soal-bulk', { body: { questions: questions.slice(i, i + 200) } });
                 if (r.status !== 'success') throw new Error(r.message);
@@ -2750,6 +3242,10 @@ async function importExcelSoal() {
                 'PILIHAN GANDA KOMPLEKS':'PGK','PILIHAN GANDA':'PG','GOOGLE FORM':'GFORM',
             };
 
+            // Kolom tambahan (dicocokkan persis): teks bacaan & jumlah pilihan PGK
+            const exactKey = (row, ...al) => Object.keys(row).find(k => al.some(a => norm(k) === norm(a))) || null;
+            let stimSebelum = '';
+
             rawData.forEach((row, idx) => {
                 // Ambil tiap field dengan alias yang fleksibel
                 const kTanya  = findKey(row, 'Pertanyaan', 'Soal', 'Tanya', 'Question');
@@ -2766,8 +3262,16 @@ async function importExcelSoal() {
                 const kGambar = findKey(row, 'Link_Gambar', 'LinkGambar', 'Gambar', 'Image', 'Foto', 'Link', 'gform_url');
                 const kOpsiGbg= findKey(row, 'Opsi', 'Pilihan', 'OpsiJson', 'opsi_json'); // kolom gabungan (fallback)
 
-                const tanya = String(row[kTanya] || '').trim();
+                let tanya = String(row[kTanya] || '').trim();
                 if (!tanya) return; // skip baris kosong
+                const kStim = exactKey(row, 'Teks_Bacaan', 'Stimulus', 'Bacaan', 'Wacana', 'Teks');
+                const kPilih = exactKey(row, 'Pilih', 'Jumlah_Pilih', 'Maks_Pilih');
+                let stim = kStim ? String(row[kStim] || '').trim() : '';
+                if (/^(sama|=|idem|sda)$/i.test(stim)) stim = stimSebelum;
+                stimSebelum = stim;
+                const nPilih = kPilih ? parseInt(row[kPilih]) || 0 : 0;
+                if (nPilih > 0) tanya += ` [pilih ${nPilih}]`;
+                tanya = gabungStimulus(stim, tanya);
 
                 // Kumpulkan opsi dari kolom terpisah
                 const opsiArr = [kA, kB, kC, kD, kE, kF, kG]
@@ -2974,16 +3478,20 @@ function importWord() {
 
         try {
             // ── LANGKAH 1: Pre-process XML — perbaiki pecahan & superscript OMML ──
+            let zip = null;
+            if (typeof JSZip !== 'undefined') { try { zip = await JSZip.loadAsync(event.target.result); } catch (e) { zip = null; } }
             const patched = await patchDocxFractions(event.target.result);
 
             let htmlValue = '';
             let rawText   = '';
 
-            if (patched && patched._patchedXml) {
-                // Gunakan patched XML — parse tabel langsung dari XML (tanpa mammoth)
-                // karena ZIP rebuild terlalu kompleks; kita parse tabel dari XML sendiri
-                htmlValue = patchedXmlToHtml(patched._patchedXml);
-                rawText   = patchedXmlToText(patched._patchedXml);
+            let docXml = patched && patched._patchedXml;
+            if (!docXml && zip && zip.file('word/document.xml')) docXml = await zip.file('word/document.xml').async('string');
+            if (docXml) {
+                // Gunakan XML dokumen — tabel dibaca langsung, teks dibaca per paragraf
+                // (penomoran otomatis, tebal/miring, judul, tabel & gambar ikut terbaca)
+                htmlValue = patchedXmlToHtml(docXml);
+                rawText   = await wordKeTeks(docXml, zip);
             } else {
                 // Fallback: langsung pakai mammoth tanpa patch
                 const htmlResult = await mammoth.convertToHtml({ arrayBuffer: event.target.result });
@@ -3000,6 +3508,12 @@ function importWord() {
                 questions = parseWordText(rawText, kodeUjian);
             }
 
+            // ── LANGKAH 4: Ambil gambar yang ada di tabel soal ──
+            if (zip && questions.some(q => JSON.stringify(q).includes('[[IMG:'))) {
+                Swal.update({ title: 'Mengambil gambar dari Word…' });
+                await resolveWordImages(questions, zip);
+            }
+            questions.forEach(q => stripImgMarkers(q));
             handleWordQuestions(questions, kodeUjian, fileInput, htmlValue.substring(0, 600));
 
         } catch(err) {
@@ -3029,17 +3543,154 @@ function patchedXmlToHtml(xmlStr) {
             html += '<tr>';
             const cells = row.querySelectorAll('tc');
             cells.forEach(cell => {
-                // Ambil semua teks dari cell (w:t elements)
-                const texts = cell.querySelectorAll('t');
+                // Teks (w:t) + penanda gambar [[IMG:rIdX]] sesuai urutan di dokumen
                 let cellText = '';
-                texts.forEach(t => { cellText += t.textContent; });
-                html += `<td>${cellText.trim()}</td>`;
+                cell.querySelectorAll('t, blip, imagedata').forEach(el => {
+                    if (el.localName === 't') cellText += el.textContent;
+                    else { const rid = el.getAttribute('r:embed') || el.getAttribute('r:id'); if (rid) cellText += ` [[IMG:${rid}]] `; }
+                });
+                html += `<td>${esc(cellText.trim())}</td>`;
             });
             html += '</tr>';
         });
         html += '</table>';
     });
     return html;
+}
+
+// ── Word → teks per paragraf, mempertahankan struktur soal asesmen ──
+const xKid = (el, n) => el && [...el.children].find(c => c.localName === n);
+const xKids = (el, n) => el ? [...el.children].filter(c => c.localName === n) : [];
+const xVal = el => el ? (el.getAttribute('w:val') ?? el.getAttribute('val')) : null;
+async function bacaPenomoranWord(zip) {
+    const map = {}; const f = zip && zip.file('word/numbering.xml'); if (!f) return map;
+    const doc = new DOMParser().parseFromString(await f.async('string'), 'application/xml');
+    const all = n => [...doc.getElementsByTagName('*')].filter(e => e.localName === n);
+    const abs = {};
+    all('abstractNum').forEach(a => {
+        const id = a.getAttribute('w:abstractNumId'); abs[id] = {};
+        xKids(a, 'lvl').forEach(l => { abs[id][l.getAttribute('w:ilvl')] = { fmt: xVal(xKid(l, 'numFmt')) || 'decimal', text: xVal(xKid(l, 'lvlText')) ?? '%1.', start: parseInt(xVal(xKid(l, 'start')) || '1') }; });
+    });
+    all('num').forEach(n => {
+        const id = n.getAttribute('w:numId'), a = xVal(xKid(n, 'abstractNumId'));
+        const lv = { ...(abs[a] || {}) };
+        xKids(n, 'lvlOverride').forEach(o => { const so = xKid(o, 'startOverride'), il = o.getAttribute('w:ilvl'); if (so) lv[il] = { ...(lv[il] || { fmt: 'decimal', text: '%1.' }), start: parseInt(xVal(so)) || 1 }; });
+        map[id] = { abs: a, lv };
+    });
+    return map;
+}
+const ROMAWI = n => [['M', 1000], ['CM', 900], ['D', 500], ['CD', 400], ['C', 100], ['XC', 90], ['L', 50], ['XL', 40], ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]].reduce((s, [r, v]) => { while (n >= v) { s += r; n -= v; } return s; }, '');
+function fmtNomor(n, fmt) {
+    if (fmt === 'upperLetter') return String.fromCharCode(64 + ((n - 1) % 26) + 1);
+    if (fmt === 'lowerLetter') return String.fromCharCode(96 + ((n - 1) % 26) + 1);
+    if (fmt === 'upperRoman') return ROMAWI(n);
+    if (fmt === 'lowerRoman') return ROMAWI(n).toLowerCase();
+    return String(n);
+}
+const CENTANG = /^f0(a[38]|6f|fe|71|72|6e|a1|fd|a2)$/i;
+// Isi satu paragraf → baris-baris teks dengan kode format [b] [i] [u]
+function wordParagraf(p) {
+    const segs = []; // {t, b, i, u} | {br} | {img}
+    const fmtOf = el => {
+        let r = el; while (r && r.localName !== 'r') r = r.parentElement;
+        const pr = xKid(r, 'rPr'); const on = n => { const e = xKid(pr, n); return !!e && !['0', 'false', 'none'].includes(String(xVal(e)).toLowerCase()); };
+        const va = xVal(xKid(pr, 'vertAlign'));
+        return { b: on('b'), i: on('i'), u: on('u'), v: va === 'superscript' ? '^' : va === 'subscript' ? '_' : '' };
+    };
+    const walk = el => {
+        for (const c of el.children) {
+            const n = c.localName;
+            if (n === 'pPr' || n === 'rPr' || n === 'instrText' || n === 'delText') continue;
+            if (n === 't') { const f = fmtOf(c); let t = c.textContent; if (f.v && t.trim()) t = /^[a-zA-Z0-9]$/.test(t.trim()) ? f.v + t.trim() : `${f.v}(${t.trim()})`; segs.push({ t, b: f.b, i: f.i, u: f.u }); }
+            else if (n === 'tab') segs.push({ t: ' ' });
+            else if (n === 'br' && c.getAttribute('w:type') !== 'page') segs.push({ br: 1 });
+            else if (n === 'sym') { if (CENTANG.test(c.getAttribute('w:char') || '')) segs.push({ t: '☐ ' }); }
+            else if (n === 'blip' || n === 'imagedata') { const rid = c.getAttribute('r:embed') || c.getAttribute('r:id'); if (rid) segs.push({ img: rid }); }
+            else if (n === 'fallback' || n === 'Fallback') continue; // hindari gambar ganda (mc:AlternateContent)
+            else walk(c);
+        }
+    };
+    walk(p);
+    const lines = [[]];
+    segs.forEach(s => { if (s.br) lines.push([]); else if (s.img) { lines.push([{ img: s.img }]); lines.push([]); } else lines[lines.length - 1].push(s); });
+    return lines.map(ln => {
+        if (ln.length === 1 && ln[0].img) return { img: ln[0].img };
+        const txt = ln.map(s => s.t).join('');
+        if (!txt.trim()) return null;
+        const vis = ln.filter(s => s.t.trim());
+        const allB = vis.length && vis.every(s => s.b);
+        let out = '';
+        // gabungkan run berformat sama; tebal penuh satu baris dicatat terpisah (untuk judul)
+        let cur = null;
+        const tutup = () => { if (!cur) return; let t = cur.t; const lead = t.match(/^\s*/)[0], trail = t.match(/\s*$/)[0]; t = t.trim(); if (t) { if (cur.u) t = `[u]${t}[/u]`; if (cur.i) t = `[i]${t}[/i]`; if (cur.b && !allB) t = `[b]${t}[/b]`; } out += lead + t + (t ? trail : ''); cur = null; };
+        ln.forEach(s => { if (cur && cur.b === s.b && cur.i === s.i && cur.u === s.u) cur.t += s.t; else { tutup(); cur = { ...s }; } });
+        tutup();
+        return { t: out.replace(/\s+/g, ' ').trim(), bold: !!allB };
+    }).filter(Boolean);
+}
+async function wordKeTeks(xmlStr, zip) {
+    const num = await bacaPenomoranWord(zip);
+    const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
+    const body = [...doc.getElementsByTagName('*')].find(e => e.localName === 'body'); if (!body) return '';
+    const blocks = [];
+    const walk = el => [...el.children].forEach(c => { if (c.localName === 'p' || c.localName === 'tbl') blocks.push(c); else if (['sdt', 'sdtContent', 'customXml'].includes(c.localName)) walk(c); });
+    walk(body);
+    // Penomoran bisa langsung di paragraf, atau berasal dari gaya paragraf (styles.xml)
+    const gaya = {};
+    const sf = zip && zip.file('word/styles.xml');
+    if (sf) {
+        const sd = new DOMParser().parseFromString(await sf.async('string'), 'application/xml');
+        [...sd.getElementsByTagName('*')].filter(e => e.localName === 'style').forEach(st => {
+            const np = xKid(xKid(st, 'pPr'), 'numPr');
+            gaya[st.getAttribute('w:styleId')] = { base: xVal(xKid(st, 'basedOn')), id: np ? xVal(xKid(np, 'numId')) : null, il: np ? xVal(xKid(np, 'ilvl')) : null };
+        });
+    }
+    const dariGaya = sid => { for (let i = 0; sid && i < 8; i++) { const g = gaya[sid]; if (!g) return null; if (g.id) return g; sid = g.base; } return null; };
+    const numPr = p => {
+        const pPr = xKid(p, 'pPr'), np = xKid(pPr, 'numPr');
+        let id = np ? xVal(xKid(np, 'numId')) : null, il = np ? xVal(xKid(np, 'ilvl')) : null;
+        if (!id) { const g = dariGaya(xVal(xKid(pPr, 'pStyle'))); if (g) { id = g.id; il = il || g.il; } }
+        return id && id !== '0' && num[id] ? { id, il: il || '0' } : null;
+    };
+    // Daftar bernomor utama (nomor soal) = daftar angka level 0 yang paling banyak dipakai
+    const cnt = {};
+    blocks.forEach(b => { const np = b.localName === 'p' && numPr(b); if (np && np.il === '0' && (num[np.id].lv['0'] || {}).fmt === 'decimal') cnt[num[np.id].abs] = (cnt[num[np.id].abs] || 0) + 1; });
+    const utama = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const counter = {};
+    const nomor = np => {
+        const L = num[np.id], isUtama = L.abs === utama && np.il === '0', key = isUtama ? 'U' : 'N' + np.id, il = parseInt(np.il);
+        const lv = L.lv[np.il] || { fmt: 'decimal', text: '%1.', start: 1 };
+        if (lv.fmt === 'bullet') return '- ';
+        if (lv.fmt === 'none') return '';
+        counter[key] = counter[key] || {};
+        counter[key][il] = (counter[key][il] ?? ((lv.start || 1) - 1)) + 1;
+        Object.keys(counter[key]).forEach(k => { if (+k > il) delete counter[key][k]; });
+        if (isUtama) Object.keys(counter).forEach(k => { if (k !== 'U') delete counter[k]; }); // pilihan A–D mulai lagi tiap soal
+        let t = lv.text.replace(/%(\d)/g, (m, d) => { const l = parseInt(d) - 1, lvl = L.lv[String(l)] || lv; return fmtNomor(counter[key][l] ?? (lvl.start || 1), lvl.fmt); });
+        // Daftar angka selain nomor soal (mis. langkah prosedur) diberi penanda tak terlihat agar tidak dianggap soal baru
+        if (!isUtama && /^\d/.test(t)) t = t.replace(/^(\d+)/, '$1​');
+        return t.trim() + ' ';
+    };
+    const out = [];
+    blocks.forEach(b => {
+        if (b.localName === 'tbl') {
+            const rows = xKids(b, 'tr').map(tr => xKids(tr, 'tc').map(tc => xKids(tc, 'p').flatMap(p => wordParagraf(p)).map(x => x.img ? `[[IMG:${x.img}]]` : x.t).join(' ').replace(/\|/g, '/').trim()));
+            if (rows.length) { out.push('[tabel]'); rows.forEach(r => out.push(r.join(' | ') || ' ')); out.push('[/tabel]'); }
+            return;
+        }
+        const np = numPr(b), pre = np ? nomor(np) : '';
+        const jc = xVal(xKid(xKid(b, 'pPr'), 'jc'));
+        wordParagraf(b).forEach((x, i) => {
+            if (x.img) { out.push(`[[IMG:${x.img}]]`); return; }
+            let t = (i === 0 ? pre : '') + x.t;
+            if (!pre && jc === 'center' && x.bold && t.length < 120) t = '# ' + t;
+            else if (x.bold && !pre) t = `[b]${t}[/b]`;
+            else if (x.bold) t = pre + `[b]${x.t}[/b]`;
+            if (!pre && jc === 'center' && !x.bold && !/^[(\[]?\s*sumber/i.test(t) && t.length < 160) t = `[tengah]${t}[/tengah]`;
+            out.push(t);
+        });
+    });
+    return out.join('\n');
 }
 
 // ── Konversi patched XML ke plain text (untuk parseWordText fallback) ──
@@ -3165,59 +3816,128 @@ function parseWordTable(htmlContent, kodeUjian) {
 // ================================================================
 function parseWordText(rawText, kodeUjian) {
     const lines = rawText
-        .replace(/\uFEFF/g,'')
+        .replace(/﻿/g,'')
         .replace(/\r\n|\r/g,'\n')
         .split('\n')
         .map(l => l.trim())
         .filter(l => l.length > 0);
 
     const questions = [];
+    const plain  = l => l.replace(/\[\/?[biu]\]/gi, '').replace(/^#\s+/, '').replace(/^\[tengah\]|\[\/tengah\]$/gi, '').trim();
     const rSoal  = /^(\d{1,3})\s*[.)]\s+(.{2,})/;
     const rOpsi  = /^([A-Ea-e])\s*[.)]\s+(.+)/;
+    const rCek   = /^[☐□❑◻▢☑✓√]\s*(.+)/;
     const rKunci = /^(?:kunci(?:\s*jawaban)?|jawaban(?:\s*benar)?|jwb)\s*[:\-=]?\s*([A-Ea-e,\s]+)\s*$/i;
+    const rKunci2= /^(?:kunci(?:\s*jawaban)?|jwb)\s*[:=]\s*((?:[A-Za-z0-9]{1,3}\s*,\s*)*[A-Za-z0-9]{1,3})\s*$/i;
+    const rKunciBebas = /^(?:kunci(?:\s*jawaban)?|jwb)\s*[:=]\s*(.+)$/i;
     const rTipe  = /^tipe\s*[:\-=]\s*(\w+(?:\s+\w+)?)\s*$/i;
     const rSkor  = /^(?:skor|bobot|nilai|poin)\s*[:\-=]\s*(\d+(?:[.,]\d+)?)\s*$/i;
     const rGbr   = /^(?:gambar|image|foto|link)\s*[:\-=]\s*(https?:\/\/.+)\s*$/i;
+    const isSumber = l => /^[(\[]?\s*sumber(\s+gambar)?\s*:/i.test(plain(l));
 
-    let soal = null, opsi = [], kunci = '', skor = 1, tipe = '', gform_url = '';
+    let soal = null, opsi = [], kunci = '', skor = 1, tipe = '', gform_url = '', pending = [], inTabel = false;
+
+    // Tabel "Pernyataan | Benar | Salah" (kolom jawaban kosong) → soal tabel
+    function tabelKeMatriks(body) {
+        const ti = body.findIndex(l => /^\[tabel\]$/i.test(l)); if (ti < 0) return null;
+        const te = body.findIndex((l, i) => i > ti && /^\[\/tabel\]$/i.test(l)); if (te < 0) return null;
+        const rows = body.slice(ti + 1, te).map(r => r.split('|').map(c => plain(c.trim())));
+        if (rows.length < 2) return null;
+        const head = rows[0], data = rows.slice(1);
+        let k = head.length;
+        while (k > 1 && head[k - 1] && head[k - 1].length <= 25 && data.every(r => !(r[k - 1] || '').replace(/[\s​]/g, ''))) k--;
+        const ans = head.slice(k).map(h => h.trim());
+        if (!ans.length || k === head.length) return null;
+        // kolom pernyataan = kolom dengan teks terpanjang (abaikan kolom No)
+        let si = 0, best = -1;
+        for (let c = 0; c < k; c++) { const len = data.reduce((t, r) => t + (r[c] || '').length, 0); if (!/^no\.?$|^nomor$/i.test(head[c]) && len > best) { best = len; si = c; } }
+        const stmts = body.slice(ti + 2, te).map(r => (r.split('|')[si] || '').trim()).filter(x => plain(x));
+        const low = ans.map(h => h.toLowerCase().replace(/[()]/g, '').trim());
+        let t, op;
+        if (low.length === 2 && /^(benar|b|betul)$/.test(low[0]) && /^(salah|s)$/.test(low[1])) { t = 'BS'; op = stmts; }
+        else if (low.length === 2 && /^(sesuai|s)$/.test(low[0]) && /tidak|^ts$/.test(low[1])) { t = 'TS'; op = stmts; }
+        else if (low.length === 2 && /^fakta$/.test(low[0]) && /^opini$/.test(low[1])) { t = 'SIFAT'; op = [`HEADER[${ans.join(',')}]`, ...stmts]; }
+        else if (low.length === 1) { t = 'PGK'; op = stmts; }
+        else { t = 'SIFAT'; op = [`HEADER[${ans.join(',')}]`, ...stmts]; }
+        return { tipe: t, opsi: op, sisa: [...body.slice(0, ti), ...body.slice(te + 1)] };
+    }
 
     function flush() {
-        if (!soal || !soal.tanya.trim()) return;
-        let t = tipe.toUpperCase().trim();
-        if (!t) {
-            if (opsi.length === 0) t = 'ESAI';
-            else {
-                const kArr = kunci.replace(/\s/g,'').split(',').filter(k=>k);
-                t = kArr.length > 1 ? 'PGK' : 'PG';
-            }
+        if (!soal) return;
+        let body = soal.lines.slice(), stim = soal.stim.slice();
+        // Teks bacaan: semua baris sampai baris "Sumber: …" terakhir yang masih diikuti pertanyaan
+        let lastS = -1;
+        body.forEach((l, i) => { if (isSumber(l) && i < body.length - 1 && body.slice(i + 1).some(x => !/^\[\/?tabel\]$/i.test(x) && !isSumber(x))) lastS = i; });
+        if (lastS >= 1) { stim = [...stim, ...body.slice(0, lastS + 1)]; body = body.slice(lastS + 1); }
+        let t = tipe.toUpperCase().trim(), op = opsi.map(o => o.text);
+        t = { URAIAN: 'ESAI', ESSAY: 'ESAI', 'ISIAN SINGKAT': 'ISIAN', 'BENAR SALAH': 'BS', 'PG KOMPLEKS': 'PGK' }[t] || t;
+        if (!op.length && (!t || ['BS', 'TS', 'NK', 'SIFAT', 'PGK'].includes(t))) {
+            const mx = tabelKeMatriks(body);
+            if (mx) { body = mx.sisa; op = mx.opsi; if (!t) t = mx.tipe; }
         }
-        questions.push({
+        if (!t) {
+            if (op.length === 0) t = 'ESAI';
+            else if (opsi.some(o => o.cek)) t = 'PGK';
+            else { const kArr = kunci.replace(/\s/g,'').split(',').filter(k=>k); t = kArr.length > 1 ? 'PGK' : 'PG'; }
+        }
+        let tanya = body.join('\n').trim();
+        if (!tanya && stim.length) { tanya = stim.pop(); }
+        if (!tanya && !stim.length) { soal = null; return; }
+        const q = {
             exam_id: kodeUjian, tipe: t,
-            tanya: soal.tanya.trim(),
-            opsi_json: opsi.map(o=>o.text).join('|||'),
-            kunci: kunci.trim().toUpperCase().replace(/\s+/g,''),
-            skor: skor, gform_url: gform_url, media_path: gform_url
-        });
+            tanya: gabungStimulus(stim.join('\n'), tanya),
+            opsi_json: op.join('|||'),
+            kunci: ['ISIAN', 'ESAI'].includes(t) ? kunci.trim() : kunci.trim().toUpperCase().replace(/\s+/g,''),
+            skor: skor, gform_url: gform_url, media_path: gform_url,
+        };
+        Object.defineProperty(q, '_no', { value: soal.no, enumerable: false });
+        Object.defineProperty(q, '_inlineImg', { value: true, enumerable: false });
+        questions.push(q);
         soal = null; opsi = []; kunci = ''; skor = 1; tipe = ''; gform_url = '';
     }
 
     for (const line of lines) {
-        const mSoal  = line.match(rSoal);
-        const mOpsi  = line.match(rOpsi);
-        const mKunci = line.match(rKunci);
-        const mTipe  = line.match(rTipe);
-        const mSkor  = line.match(rSkor);
-        const mGbr   = line.match(rGbr);
+        const pl = plain(line);
+        if (/^\[tabel\]$/i.test(line)) inTabel = true;
+        if (inTabel) {
+            if (soal && !opsi.length && !kunci) soal.lines.push(line); else pending.push(line);
+            if (/^\[\/tabel\]$/i.test(line)) inTabel = false;
+            continue;
+        }
+        const mSoal  = pl.match(rSoal);
+        const mOpsi  = pl.match(rOpsi);
+        const mCek   = pl.match(rCek);
+        const bebas  = /^(ISIAN|ESAI|URAIAN)/i.test(tipe);
+        const mKunci = bebas ? pl.match(rKunciBebas) : (pl.match(rKunci) || pl.match(rKunci2));
+        const mTipe  = pl.match(rTipe);
+        const mSkor  = pl.match(rSkor);
+        const mGbr   = pl.match(rGbr);
 
-        if (mSoal)                                     { flush(); soal = { tanya: mSoal[2] }; }
-        else if (mKunci && soal)                         kunci     = mKunci[1];
-        else if (mTipe  && soal)                         tipe      = mTipe[1];
-        else if (mSkor  && soal)                         skor      = parseFloat(mSkor[1].replace(',','.')) || 1;
-        else if (mGbr   && soal)                         gform_url = mGbr[1];
-        else if (mOpsi  && soal && !kunci)               opsi.push({ label: mOpsi[1].toUpperCase(), text: mOpsi[2].trim() });
-        else if (soal && opsi.length===0 && !kunci && !mOpsi) soal.tanya += ' ' + line;
+        if (mSoal) {
+            flush();
+            const isi = line.replace(/^((?:\[[biu]\])*)\s*\d{1,3}\s*[.)]\s*/, '$1');
+            soal = { no: parseInt(mSoal[1]), lines: [isi], stim: pending }; pending = [];
+        }
+        else if (!soal)                                  continue; // teks sebelum soal nomor 1 (sampul, petunjuk) diabaikan
+        else if (mKunci)                                 kunci     = mKunci[1];
+        else if (mTipe)                                  tipe      = mTipe[1];
+        else if (mSkor)                                  skor      = parseFloat(mSkor[1].replace(',','.')) || 1;
+        else if (mGbr)                                   gform_url = mGbr[1];
+        else if (mOpsi && !kunci)                        opsi.push({ label: mOpsi[1].toUpperCase(), text: mOpsi[2].trim() });
+        else if (mCek && !kunci)                         opsi.push({ label: ABJAD[opsi.length] || '', text: mCek[1].trim(), cek: true });
+        else if (opsi.length === 0 && !kunci)            soal.lines.push(line);
+        else                                             pending.push(line); // teks sesudah pilihan → teks bacaan soal berikutnya
     }
     flush();
+
+    // Teks untuk beberapa soal: "… untuk menjawab soal nomor 2 dan 3" / "nomor 4–6"
+    questions.forEach(q => {
+        const st = pisahStimulus(q.tanya).stim; if (!st) return;
+        const m = latexToPlain(st).match(/(?:soal\s+)?(?:nomor|no\.?)\s*(\d{1,3})\s*(?:dan|sampai|hingga|s\.?\s*d\.?|[-–—])\s*(\d{1,3})/i);
+        if (!m) return;
+        const a = parseInt(m[1]), z = parseInt(m[2]);
+        questions.forEach(o => { if (o !== q && o._no >= a && o._no <= z && o._no > q._no && !pisahStimulus(o.tanya).stim) o.tanya = gabungStimulus(st, o.tanya); });
+    });
     return questions;
 }
 
