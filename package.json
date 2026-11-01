@@ -4,10 +4,6 @@
   "private": true,
   "description": "CBT Online SMP Negeri 2 Soyo Jaya",
   "main": "server.js",
-  "scripts": {
-    "build": "node scripts/build.js",
-    "dev": "node dev-server.js"
-  },
   "engines": {
     "node": ">=18"
   },
@@ -19,8 +15,5 @@
     "mammoth": "^1.6.0",
     "multer": "^2.5.0",
     "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "tailwindcss": "^3.4.16"
   }
 }
