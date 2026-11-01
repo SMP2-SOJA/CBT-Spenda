@@ -34,10 +34,11 @@
     --paper: #F3F5F9; --line: #DCE2EC; --muted: #5B6B86;
     --ok: #1F8A5B; --ok-50: #E8F5EE; --bad: #B42318; --bad-50: #FDECEA;
     --graphite: radial-gradient(circle at 34% 30%, #42506e 0%, #1b2742 55%, #0E1E3D 100%);
-    --soal-size: 17px;
+    --soal-size: 15px;
 }
 html { -webkit-tap-highlight-color: transparent; }
-body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-feature-settings: "tnum" 0; }
+html { font-size: 15px; }
+body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-feature-settings: "tnum" 0; line-height: 1.5; }
 .tabular-nums, .timer, .pin-input, .stat-num { font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -45,22 +46,22 @@ body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-feature-set
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
 /* ---------- Form ---------- */
-.field-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-.field { width: 100%; height: 46px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; font-size: 15px; transition: border-color .15s, box-shadow .15s; }
-textarea.field { height: auto; padding: 10px 14px; line-height: 1.55; }
+.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.field { width: 100%; height: 40px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; font-size: 14px; transition: border-color .15s, box-shadow .15s; }
+textarea.field { height: auto; padding: 8px 12px; line-height: 1.55; }
 .field:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 4px rgba(20,48,107,.12); }
-.field-sm { height: 38px; font-size: 14px; border-radius: 10px; padding: 0 10px; }
+.field-sm { height: 34px; font-size: 13px; border-radius: 9px; padding: 0 10px; }
 select.field { padding-right: 32px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B6B86' stroke-width='1.8'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-.pin-input { width: 100%; height: 68px; text-align: center; font-size: 34px; font-weight: 800; letter-spacing: .35em; padding-left: .35em; border: 2px solid var(--line); border-radius: 16px; background: var(--paper); }
+.pin-input { width: 100%; height: 54px; text-align: center; font-size: 26px; font-weight: 800; letter-spacing: .35em; padding-left: .35em; border: 2px solid var(--line); border-radius: 16px; background: var(--paper); }
 .pin-input:focus { outline: none; border-color: var(--navy); background: #fff; }
 .pin-input::placeholder { color: #c3cbd9; }
 
 /* ---------- Tombol ---------- */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 12px; font-weight: 700; font-size: 14px; transition: background .15s, color .15s, transform .08s, box-shadow .15s; white-space: nowrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 10px; font-weight: 700; font-size: 13.5px; transition: background .15s, color .15s, transform .08s, box-shadow .15s; white-space: nowrap; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn-sm { height: 34px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
-.btn-xs { height: 28px; padding: 0 10px; font-size: 12px; border-radius: 8px; gap: 6px; }
+.btn-sm { height: 32px; padding: 0 11px; font-size: 12.5px; border-radius: 9px; }
+.btn-xs { height: 26px; padding: 0 9px; font-size: 11.5px; border-radius: 7px; gap: 5px; }
 .btn-primary { background: var(--navy); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--navy-600); }
 .btn-gold { background: var(--gold); color: var(--ink); }
@@ -74,21 +75,21 @@ select.field { padding-right: 32px; appearance: none; background-image: url("dat
 .btn-danger { background: var(--bad-50); color: var(--bad); }
 .btn-danger:hover { background: var(--bad); color: #fff; }
 .btn-danger-solid { background: var(--bad); color: #fff; }
-.icon-btn { width: 40px; height: 40px; display: inline-grid; place-items: center; border-radius: 10px; color: var(--muted); transition: background .15s; }
+.icon-btn { width: 36px; height: 36px; display: inline-grid; place-items: center; border-radius: 10px; color: var(--muted); transition: background .15s; }
 .icon-btn:hover { background: rgba(20,48,107,.07); color: var(--ink); }
-.icon-btn-sm { width: 34px; height: 34px; }
+.icon-btn-sm { width: 30px; height: 30px; }
 
 /* ---------- Kartu & chip ---------- */
-.card { background: #fff; border: 1px solid var(--line); border-radius: 18px; }
-.chip { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #EEF2FA; color: var(--navy); white-space: nowrap; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 21px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #EEF2FA; color: var(--navy); white-space: nowrap; }
 .chip-gold { background: var(--gold-50); color: var(--gold-700); }
 .chip-ok { background: var(--ok-50); color: var(--ok); }
 .chip-bad { background: var(--bad-50); color: var(--bad); }
 .chip-muted { background: #EDF0F5; color: var(--muted); }
 
 /* ---------- Login ---------- */
-.login-brand::after { content: ""; position: absolute; right: -120px; bottom: -120px; width: 420px; height: 420px; border-radius: 50%; border: 56px solid rgba(217,162,27,.13); pointer-events: none; }
-.ljk-demo { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid rgba(255,255,255,.35); color: rgba(255,255,255,.75); }
+.login-brand::after { content: ""; position: absolute; right: -90px; bottom: -90px; width: 260px; height: 260px; border-radius: 50%; border: 28px solid rgba(217,162,27,.09); pointer-events: none; }
+.ljk-demo { width: 38px; height: 38px; font-size: 13px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid rgba(255,255,255,.35); color: rgba(255,255,255,.75); }
 .ljk-demo.is-on { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 
 /* ---------- Ruang ujian ---------- */
@@ -96,10 +97,10 @@ select.field { padding-right: 32px; appearance: none; background-image: url("dat
 .anti-copas input, .anti-copas textarea { user-select: text; -webkit-user-select: text; }
 body.exam-active img { pointer-events: none; }
 @media print { body.exam-active { display: none !important; } }
-.exam-bar { background: var(--navy); color: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top)); flex-shrink: 0; }
+.exam-bar { background: var(--navy); color: #fff; display: flex; align-items: center; gap: 8px; padding: 7px 12px; padding-top: max(10px, env(safe-area-inset-top)); flex-shrink: 0; }
 .net-pill { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: rgba(31,138,91,.9); color: #fff; vertical-align: 1px; }
 .net-pill.is-off { background: var(--bad); }
-.timer { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 10px; background: rgba(255,255,255,.12); font-weight: 800; font-size: 16px; }
+.timer { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; background: rgba(255,255,255,.12); font-weight: 800; font-size: 14px; }
 .timer.is-warn { background: var(--gold); color: var(--ink); }
 .timer.is-crit { background: var(--bad); color: #fff; animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .7; } }
@@ -107,7 +108,7 @@ body.exam-active img { pointer-events: none; }
 .nav-badge:empty { display: none; }
 
 .soal { font-size: var(--soal-size); }
-.soal-tanya { line-height: 1.7; color: var(--ink); overflow-wrap: anywhere; }
+.soal-tanya { line-height: 1.6; color: var(--ink); overflow-wrap: anywhere; }
 .soal-tanya p + p { margin-top: .6em; }
 .soal-media img { max-height: 46vh; width: auto; max-width: 100%; margin: 0 auto 1.1em; border-radius: 12px; border: 1px solid var(--line); display: block; }
 .soal sup { font-size: .72em; vertical-align: super; line-height: 0; }
@@ -118,11 +119,11 @@ body.exam-active img { pointer-events: none; }
 .hint { font-size: .82em; color: var(--muted); margin-bottom: .8em; display: flex; gap: 6px; align-items: center; }
 
 /* Opsi jawaban berbentuk bulatan LJK */
-.opsi { display: flex; align-items: flex-start; gap: 14px; width: 100%; text-align: left; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer; transition: border-color .12s, background .12s; }
-.opsi + .opsi { margin-top: 10px; }
+.opsi { display: flex; align-items: flex-start; gap: 11px; width: 100%; text-align: left; padding: 8px 11px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff; cursor: pointer; transition: border-color .12s, background .12s; }
+.opsi + .opsi { margin-top: 7px; }
 .opsi:hover { border-color: #aab6cc; }
-.opsi .bubble { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #8C99B1; display: grid; place-items: center; font-weight: 800; font-size: .82em; color: var(--muted); transition: background .15s, color .15s, border-color .15s, transform .15s; }
-.opsi .opsi-text { padding-top: 6px; line-height: 1.55; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.opsi .bubble { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #8C99B1; display: grid; place-items: center; font-weight: 800; font-size: .82em; color: var(--muted); transition: background .15s, color .15s, border-color .15s, transform .15s; }
+.opsi .opsi-text { padding-top: 3px; line-height: 1.55; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .opsi.is-on { border-color: var(--navy); background: #F2F5FB; }
 .opsi.is-on .bubble { background: var(--graphite); border-color: var(--ink); color: #fff; transform: scale(1.04); }
 .opsi.is-square .bubble { border-radius: 10px; }
@@ -132,23 +133,23 @@ body.exam-active img { pointer-events: none; }
 
 /* Matriks (B/S, TS, NK, SIFAT) */
 .matrix { width: 100%; border-collapse: separate; border-spacing: 0; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; font-size: .92em; }
-.matrix th { background: var(--paper); font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 1.5px solid var(--line); font-size: .9em; }
+.matrix th { background: var(--paper); font-weight: 700; padding: 8px 10px; text-align: left; border-bottom: 1.5px solid var(--line); font-size: .9em; }
 .matrix th.c { text-align: center; min-width: 76px; }
-.matrix td { padding: 12px; border-top: 1px solid var(--line); vertical-align: middle; line-height: 1.5; }
+.matrix td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: middle; line-height: 1.5; }
 .matrix tr:first-child td { border-top: 0; }
 .matrix td.c { text-align: center; }
-.mx-radio { appearance: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #8C99B1; cursor: pointer; display: inline-block; vertical-align: middle; transition: background .15s; }
+.mx-radio { appearance: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #8C99B1; cursor: pointer; display: inline-block; vertical-align: middle; transition: background .15s; }
 .mx-radio:checked { background: var(--graphite); border-color: var(--ink); }
 .mx-wrap { overflow-x: auto; border-radius: 14px; }
 
-.jodoh-row { display: grid; gap: 8px; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; }
-.jodoh-row + .jodoh-row { margin-top: 10px; }
+.jodoh-row { display: grid; gap: 6px; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 14px; }
+.jodoh-row + .jodoh-row { margin-top: 7px; }
 .jodoh-row.is-on { border-color: var(--navy); background: #F2F5FB; }
 @media (min-width: 640px) { .jodoh-row { grid-template-columns: 1fr 1fr; align-items: center; } }
 
-.exam-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: #fff; }
+.exam-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: #fff; }
 .btn-ragu { background: #fff; border: 1.5px solid var(--line); color: var(--ink); }
-.btn-ragu .ragu-box { width: 18px; height: 18px; border-radius: 5px; border: 2px solid #8C99B1; display: inline-grid; place-items: center; }
+.btn-ragu .ragu-box { width: 16px; height: 16px; border-radius: 5px; border: 2px solid #8C99B1; display: inline-grid; place-items: center; }
 .btn-ragu[aria-pressed="true"] { background: var(--gold-50); border-color: var(--gold); color: var(--gold-700); }
 .btn-ragu[aria-pressed="true"] .ragu-box { background: var(--gold); border-color: var(--gold); }
 .btn-ragu[aria-pressed="true"] .ragu-box::after { content: "✓"; color: var(--ink); font-size: 12px; font-weight: 900; line-height: 1; }
@@ -156,9 +157,9 @@ body.exam-active img { pointer-events: none; }
 /* Panel navigasi: lembar LJK */
 .nav-panel { position: fixed; inset: 0 0 0 auto; width: min(320px, 88vw); background: #fff; z-index: 40; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease, visibility .25s; visibility: hidden; }
 .nav-panel.is-open { transform: none; visibility: visible; box-shadow: -10px 0 40px rgba(14,30,61,.2); }
-@media (min-width: 1024px) { .nav-panel { position: relative; transform: none; visibility: visible; box-shadow: none; margin: 16px; border: 1px solid var(--line); border-radius: 18px; width: 300px; } }
-.ljk-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 8px; }
-.ljk-cell { aspect-ratio: 1; max-width: 46px; width: 100%; justify-self: center; border-radius: 50%; border: 2px solid #8C99B1; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: var(--muted); background: #fff; position: relative; transition: transform .1s; }
+@media (min-width: 1024px) { .nav-panel { position: relative; transform: none; visibility: visible; box-shadow: none; margin: 12px; border: 1px solid var(--line); border-radius: 14px; width: 270px; } }
+.ljk-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px 5px; }
+.ljk-cell { aspect-ratio: 1; max-width: 36px; width: 100%; justify-self: center; border-radius: 50%; border: 2px solid #8C99B1; display: grid; place-items: center; font-weight: 800; font-size: 11.5px; color: var(--muted); background: #fff; position: relative; transition: transform .1s; }
 .ljk-cell:hover { transform: scale(1.06); }
 .ljk-cell.is-filled { background: var(--graphite); border-color: var(--ink); color: #fff; }
 .ljk-cell.is-ragu { background: var(--gold); border-color: var(--gold-700); color: var(--ink); }
@@ -168,44 +169,44 @@ body.exam-active img { pointer-events: none; }
 .bubble-mini.is-filled { background: var(--graphite); border-color: var(--ink); }
 .bubble-mini.is-ragu { background: var(--gold); border-color: var(--gold-700); }
 
-.rules { counter-reset: r; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; }
+.rules { counter-reset: r; display: grid; gap: 8px; font-size: 13px; line-height: 1.55; }
 .rules li { counter-increment: r; position: relative; padding-left: 34px; min-height: 24px; }
 .rules li::before { content: counter(r); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--navy); color: var(--navy); font-size: 12px; font-weight: 800; display: grid; place-items: center; }
 
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .summary-grid > div { border-radius: 14px; padding: 12px; text-align: center; background: var(--paper); }
-.summary-grid b { display: block; font-size: 26px; font-weight: 800; line-height: 1.1; }
+.summary-grid b { display: block; font-size: 21px; font-weight: 800; line-height: 1.1; }
 
-.score-ring { width: 168px; height: 168px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center; background: conic-gradient(var(--gold) calc(var(--p) * 1%), #E4E9F2 0); position: relative; }
-.score-ring::before { content: ""; position: absolute; inset: 14px; border-radius: 50%; background: var(--paper); }
+.score-ring { width: 136px; height: 136px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center; background: conic-gradient(var(--gold) calc(var(--p) * 1%), #E4E9F2 0); position: relative; }
+.score-ring::before { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: var(--paper); }
 .score-ring > div { position: relative; }
 
 /* ---------- Admin ---------- */
-.sidebar { position: fixed; inset: 0 auto 0 0; width: 252px; background: var(--ink); display: flex; flex-direction: column; z-index: 40; transform: translateX(-100%); transition: transform .25s ease; }
+.sidebar { position: fixed; inset: 0 auto 0 0; width: 228px; background: var(--ink); display: flex; flex-direction: column; z-index: 40; transform: translateX(-100%); transition: transform .25s ease; }
 .sidebar.is-open { transform: none; }
 @media (min-width: 1024px) { .sidebar { position: relative; transform: none; } }
-.nav-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: rgba(255,255,255,.72); font-size: 14px; font-weight: 600; text-align: left; transition: background .12s, color .12s; }
+.nav-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 600; text-align: left; transition: background .12s, color .12s; }
 .nav-item i { width: 18px; text-align: center; opacity: .85; }
 .nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
 .nav-item.is-active { background: rgba(217,162,27,.16); color: #fff; box-shadow: inset 3px 0 0 var(--gold); }
 
-.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 18px; }
-.page-head h2 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
-.page-head p { color: var(--muted); font-size: 14px; margin-top: 2px; }
-.section-title { font-weight: 800; font-size: 16px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+.page-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.page-head p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.section-title { font-weight: 800; font-size: 14.5px; }
 
-.stat-strip { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
-.stat-strip > div { padding: 14px 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stat-strip { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.stat-strip > div { padding: 10px 14px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 @media (min-width: 768px) { .stat-strip { grid-template-columns: repeat(var(--n, 6), minmax(0,1fr)); } .stat-strip > div { border-bottom: 0; } .stat-strip > div:last-child { border-right: 0; } }
-.stat-num { font-size: 26px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
-.stat-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.stat-num { font-size: 20px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
+.stat-label { font-size: 11.5px; color: var(--muted); font-weight: 600; }
 
-.pin-card { background: var(--navy); color: #fff; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
-.pin-card .pin { font-size: 28px; font-weight: 800; letter-spacing: .14em; font-variant-numeric: tabular-nums; color: var(--gold); line-height: 1; }
+.pin-card { background: var(--navy); color: #fff; border-radius: 13px; padding: 11px 13px; display: flex; align-items: center; gap: 12px; }
+.pin-card .pin { font-size: 21px; font-weight: 800; letter-spacing: .14em; font-variant-numeric: tabular-nums; color: var(--gold); line-height: 1; }
 
-.tbl { width: 100%; font-size: 14px; border-collapse: separate; border-spacing: 0; }
-.tbl th { text-align: left; font-size: 12px; font-weight: 700; color: var(--muted); padding: 10px 14px; background: #F8FAFC; border-bottom: 1px solid var(--line); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
-.tbl td { padding: 11px 14px; border-bottom: 1px solid #EDF0F5; vertical-align: middle; }
+.tbl { width: 100%; font-size: 13px; border-collapse: separate; border-spacing: 0; }
+.tbl th { text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); padding: 8px 12px; background: #F8FAFC; border-bottom: 1px solid var(--line); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+.tbl td { padding: 7px 12px; border-bottom: 1px solid #EDF0F5; vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl tbody tr:hover td { background: #FAFBFD; }
 .tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -215,7 +216,7 @@ body.exam-active img { pointer-events: none; }
 .progress { height: 6px; border-radius: 3px; background: #E4E9F2; overflow: hidden; min-width: 70px; }
 .progress > i { display: block; height: 100%; background: var(--navy); border-radius: 3px; }
 
-.group-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.group-head { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--line); }
 .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .live-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
 .live-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3BD68C; box-shadow: 0 0 0 0 rgba(59,214,140,.7); animation: ping 1.8s infinite; }
@@ -230,29 +231,29 @@ body.exam-active img { pointer-events: none; }
 .switch input:focus-visible + span { outline: 3px solid var(--gold); outline-offset: 2px; }
 
 .tabs { display: inline-flex; gap: 4px; padding: 4px; background: #E7EBF2; border-radius: 12px; overflow-x: auto; max-width: 100%; }
-.tab { height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 700; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.tab { height: 30px; padding: 0 12px; border-radius: 8px; font-weight: 700; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
 .tab.is-active { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(14,30,61,.08); }
 
-.histo { display: flex; align-items: flex-end; gap: 10px; height: 140px; }
+.histo { display: flex; align-items: flex-end; gap: 8px; height: 110px; }
 .histo > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
 .histo .bar { width: 100%; max-width: 56px; background: var(--navy); border-radius: 8px 8px 3px 3px; min-height: 3px; }
 .histo .bar.is-low { background: #C9D2E3; }
 .histo small { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
 
-.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty { text-align: center; padding: 28px 16px; color: var(--muted); }
 .empty i { font-size: 28px; color: #B6C0D2; margin-bottom: 10px; display: block; }
 
-.modal-panel { background: #fff; width: 100%; max-width: 760px; max-height: 92dvh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(14,30,61,.35); }
+.modal-panel { background: #fff; width: 100%; max-width: 720px; max-height: 92dvh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(14,30,61,.35); }
 @media (min-width: 640px) { .modal-panel { border-radius: 20px; max-height: 88vh; } }
 .modal-panel.is-wide { max-width: 1040px; }
 
-.dropzone { display: flex; align-items: center; gap: 12px; border: 1.5px dashed #B7C2D6; border-radius: 14px; padding: 14px; background: #FAFBFD; cursor: pointer; transition: border-color .15s, background .15s; }
+.dropzone { display: flex; align-items: center; gap: 10px; border: 1.5px dashed #B7C2D6; border-radius: 11px; padding: 10px 12px; background: #FAFBFD; cursor: pointer; transition: border-color .15s, background .15s; }
 .dropzone:hover { border-color: var(--navy); background: #F2F5FB; }
 
 /* SweetAlert2 menyesuaikan identitas */
 .swal2-popup { font-family: "Plus Jakarta Sans", system-ui, sans-serif !important; border-radius: 20px !important; }
-.swal2-title { font-size: 20px !important; font-weight: 800 !important; color: var(--ink) !important; }
-.swal2-html-container { font-size: 15px !important; color: #33415C !important; }
+.swal2-title { font-size: 18px !important; font-weight: 800 !important; color: var(--ink) !important; }
+.swal2-html-container { font-size: 14px !important; color: #33415C !important; }
 .swal2-styled { border-radius: 12px !important; font-weight: 700 !important; padding: 10px 20px !important; }
 .swal2-styled.swal2-confirm { background: var(--navy) !important; }
 .swal2-styled.swal2-cancel { background: #E7EBF2 !important; color: var(--ink) !important; }
@@ -339,16 +340,34 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
 .kop-preview .k3 { font-size: 10.5px; } .kop-preview .k4 { font-size: 11px; font-weight: bold; }
 .login-brand > * { position: relative; z-index: 1; }
 
+/* ---------- Token pengawas ---------- */
+.pin-card .pin.tok { color: #fff; letter-spacing: .12em; }
+.tok-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
+.tok-bar i { display: block; height: 100%; background: var(--gold); transition: width 1s linear; }
+.token-input { letter-spacing: .3em; font-size: 22px; height: 48px; }
+#token-layar { position: fixed; inset: 0; z-index: 60; background: var(--ink); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+#token-layar.hidden { display: none; }
+#token-layar .tl-paket { font-size: clamp(16px, 2.4vw, 28px); color: rgba(255,255,255,.7); font-weight: 700; }
+#token-layar .tl-grid { display: grid; grid-template-columns: auto auto; gap: clamp(24px, 6vw, 96px); margin: 18px 0 26px; }
+#token-layar .tl-label { font-size: clamp(13px, 1.6vw, 20px); color: rgba(255,255,255,.55); font-weight: 700; }
+#token-layar .tl-pin, #token-layar .tl-token { font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .12em; line-height: 1; }
+#token-layar .tl-pin { font-size: clamp(40px, 8vw, 120px); color: rgba(255,255,255,.85); }
+#token-layar .tl-token { font-size: clamp(48px, 11vw, 170px); color: var(--gold); }
+#token-layar .tl-bar { width: min(560px, 80vw); height: 8px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; }
+#token-layar .tl-bar i { display: block; height: 100%; background: var(--gold); transition: width 1s linear; }
+#token-layar .tl-left { margin-top: 10px; font-size: clamp(14px, 1.8vw, 22px); color: rgba(255,255,255,.7); font-variant-numeric: tabular-nums; }
+#token-layar .tl-note { margin-top: 28px; font-size: clamp(12px, 1.4vw, 17px); color: rgba(255,255,255,.5); max-width: 640px; }
+
 </style>
     <style>/* tailwind.css */
-*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Plus Jakarta Sans,system-ui,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}.visible{visibility:visible}.collapse{visibility:collapse}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.inset-y-0{top:0;bottom:0}.right-0{right:0}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-3{margin-top:.75rem;margin-bottom:.75rem}.-ml-2{margin-left:-.5rem}.-mr-2{margin-right:-.5rem}.-mt-1{margin-top:-.25rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mb-7{margin-bottom:1.75rem}.ml-0{margin-left:0}.ml-2{margin-left:.5rem}.ml-auto{margin-left:auto}.mr-1{margin-right:.25rem}.mr-2{margin-right:.5rem}.mr-auto{margin-right:auto}.mt-0\.5{margin-top:.125rem}.mt-1{margin-top:.25rem}.mt-10{margin-top:2.5rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}.mt-7{margin-top:1.75rem}.mt-8{margin-top:2rem}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.hidden{display:none}.h-1{height:.25rem}.h-10{height:2.5rem}.h-12{height:3rem}.h-14{height:3.5rem}.h-20{height:5rem}.h-28{height:7rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-7{height:1.75rem}.h-9{height:2.25rem}.h-\[100dvh\]{height:100dvh}.h-full{height:100%}.max-h-28{max-height:7rem}.max-h-52{max-height:13rem}.max-h-\[60vh\]{max-height:60vh}.max-h-\[70vh\]{max-height:70vh}.max-h-full{max-height:100%}.min-h-\[100dvh\]{min-height:100dvh}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-20{width:5rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-7{width:1.75rem}.w-9{width:2.25rem}.w-auto{width:auto}.w-full{width:100%}.min-w-0{min-width:0}.min-w-\[150px\]{min-width:150px}.min-w-\[170px\]{min-width:170px}.min-w-\[180px\]{min-width:180px}.min-w-\[200px\]{min-width:200px}.min-w-\[220px\]{min-width:220px}.max-w-3xl{max-width:48rem}.max-w-7xl{max-width:80rem}.max-w-\[420px\]{max-width:420px}.max-w-\[520px\]{max-width:520px}.max-w-full{max-width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.border-collapse{border-collapse:collapse}.rotate-90{--tw-rotate:90deg}.rotate-90,.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;-moz-user-select:none;user-select:none}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.place-items-center{place-items:center}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-2\.5{gap:.625rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-x-4{-moz-column-gap:1rem;column-gap:1rem}.gap-x-6{-moz-column-gap:1.5rem;column-gap:1.5rem}.gap-y-1\.5{row-gap:.375rem}.gap-y-2{row-gap:.5rem}.gap-y-3{row-gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.space-y-5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem*var(--tw-space-y-reverse))}.divide-y>:not([hidden])~:not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px*(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px*var(--tw-divide-y-reverse))}.divide-line>:not([hidden])~:not([hidden]){--tw-divide-opacity:1;border-color:rgb(220 226 236/var(--tw-divide-opacity,1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis}.truncate,.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-0{border-width:0}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-\[\#8C99B1\]{--tw-border-opacity:1;border-color:rgb(140 153 177/var(--tw-border-opacity,1))}.border-bad\/30{border-color:rgba(180,35,24,.3)}.border-gold\/50{border-color:rgba(217,162,27,.5)}.border-line{--tw-border-opacity:1;border-color:rgb(220 226 236/var(--tw-border-opacity,1))}.border-white\/10{border-color:hsla(0,0%,100%,.1)}.bg-bad-50{--tw-bg-opacity:1;background-color:rgb(253 236 234/var(--tw-bg-opacity,1))}.bg-gold{--tw-bg-opacity:1;background-color:rgb(217 162 27/var(--tw-bg-opacity,1))}.bg-gold-50{--tw-bg-opacity:1;background-color:rgb(253 247 230/var(--tw-bg-opacity,1))}.bg-ink\/50{background-color:rgba(14,30,61,.5)}.bg-ink\/60{background-color:rgba(14,30,61,.6)}.bg-navy{--tw-bg-opacity:1;background-color:rgb(20 48 107/var(--tw-bg-opacity,1))}.bg-navy-50{--tw-bg-opacity:1;background-color:rgb(238 242 250/var(--tw-bg-opacity,1))}.bg-navy-900\/10{background-color:rgba(14,30,61,.1)}.bg-ok{--tw-bg-opacity:1;background-color:rgb(31 138 91/var(--tw-bg-opacity,1))}.bg-ok-50{--tw-bg-opacity:1;background-color:rgb(232 245 238/var(--tw-bg-opacity,1))}.bg-paper{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.bg-white\/10{background-color:hsla(0,0%,100%,.1)}.object-contain{-o-object-fit:contain;object-fit:contain}.p-0\.5{padding:.125rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-10{padding-bottom:2.5rem}.pb-3{padding-bottom:.75rem}.pb-8{padding-bottom:2rem}.pr-12{padding-right:3rem}.pt-0\.5{padding-top:.125rem}.pt-1{padding-top:.25rem}.pt-10{padding-top:2.5rem}.pt-2{padding-top:.5rem}.pt-5{padding-top:1.25rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[15px\]{font-size:15px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.lowercase{text-transform:lowercase}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)}.leading-\[1\.08\]{line-height:1.08}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-\[\.14em\]{letter-spacing:.14em}.tracking-\[\.2em\]{letter-spacing:.2em}.tracking-tight{letter-spacing:-.025em}.text-\[\#B6C0D2\]{--tw-text-opacity:1;color:rgb(182 192 210/var(--tw-text-opacity,1))}.text-bad{--tw-text-opacity:1;color:rgb(180 35 24/var(--tw-text-opacity,1))}.text-gold{--tw-text-opacity:1;color:rgb(217 162 27/var(--tw-text-opacity,1))}.text-gold-700{--tw-text-opacity:1;color:rgb(143 102 9/var(--tw-text-opacity,1))}.text-ink{--tw-text-opacity:1;color:rgb(14 30 61/var(--tw-text-opacity,1))}.text-ink\/80{color:rgba(14,30,61,.8)}.text-muted{--tw-text-opacity:1;color:rgb(91 107 134/var(--tw-text-opacity,1))}.text-navy{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.text-ok{--tw-text-opacity:1;color:rgb(31 138 91/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.text-white\/45{color:hsla(0,0%,100%,.45)}.text-white\/50{color:hsla(0,0%,100%,.5)}.text-white\/60{color:hsla(0,0%,100%,.6)}.text-white\/70{color:hsla(0,0%,100%,.7)}.text-white\/75{color:hsla(0,0%,100%,.75)}.text-white\/80{color:hsla(0,0%,100%,.8)}.underline{text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-\[\#14306B\]{accent-color:#14306b}.opacity-75{opacity:.75}.outline-none{outline:2px solid transparent;outline-offset:2px}.blur{--tw-blur:blur(8px)}.blur,.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-300{transition-duration:.3s}.hover\:bg-paper:hover{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.hover\:bg-white\/10:hover{background-color:hsla(0,0%,100%,.1)}.hover\:bg-white\/20:hover{background-color:hsla(0,0%,100%,.2)}.hover\:\!text-bad:hover{--tw-text-opacity:1!important;color:rgb(180 35 24/var(--tw-text-opacity,1))!important}.hover\:text-navy:hover{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}@media (min-width:640px){.sm\:col-span-2{grid-column:span 2/span 2}.sm\:ml-2{margin-left:.5rem}.sm\:ml-auto{margin-left:auto}.sm\:mt-10{margin-top:2.5rem}.sm\:inline{display:inline}.sm\:w-44{width:11rem}.sm\:w-48{width:12rem}.sm\:w-60{width:15rem}.sm\:w-72{width:18rem}.sm\:w-auto{width:auto}.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:p-4{padding:1rem}.sm\:p-5{padding:1.25rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}}@media (min-width:1024px){.lg\:m-4{margin:1rem}.lg\:mb-auto{margin-bottom:auto}.lg\:mr-0{margin-right:0}.lg\:mt-5{margin-top:1.25rem}.lg\:mt-auto{margin-top:auto}.lg\:block{display:block}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:h-14{height:3.5rem}.lg\:w-14{width:3.5rem}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-\[1\.05fr_1fr\]{grid-template-columns:1.05fr 1fr}.lg\:grid-cols-\[1fr_340px\]{grid-template-columns:1fr 340px}.lg\:grid-cols-\[380px_1fr\]{grid-template-columns:380px 1fr}.lg\:items-center{align-items:center}.lg\:rounded-2xl{border-radius:1rem}.lg\:border{border-width:1px}.lg\:p-10{padding:2.5rem}.lg\:p-14{padding:3.5rem}.lg\:p-8{padding:2rem}.lg\:px-6{padding-left:1.5rem;padding-right:1.5rem}.lg\:px-8{padding-left:2rem;padding-right:2rem}.lg\:py-7{padding-top:1.75rem;padding-bottom:1.75rem}.lg\:text-5xl{font-size:3rem;line-height:1}.lg\:text-lg{font-size:1.125rem;line-height:1.75rem}}@media (min-width:1280px){.xl\:sticky{position:sticky}.xl\:top-0{top:0}.xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.xl\:grid-cols-\[1fr_520px\]{grid-template-columns:1fr 520px}}
+*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Plus Jakarta Sans,system-ui,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}.pointer-events-none{pointer-events:none}.visible{visibility:visible}.collapse{visibility:collapse}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.inset-y-0{top:0;bottom:0}.right-0{right:0}.right-4{right:1rem}.top-4{top:1rem}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-3{margin-top:.75rem;margin-bottom:.75rem}.-ml-2{margin-left:-.5rem}.-mr-2{margin-right:-.5rem}.-mt-1{margin-top:-.25rem}.-mt-2{margin-top:-.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.ml-0{margin-left:0}.ml-2{margin-left:.5rem}.ml-auto{margin-left:auto}.mr-1{margin-right:.25rem}.mr-2{margin-right:.5rem}.mr-auto{margin-right:auto}.mt-0\.5{margin-top:.125rem}.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}.mt-7{margin-top:1.75rem}.mt-8{margin-top:2rem}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.hidden{display:none}.h-1{height:.25rem}.h-10{height:2.5rem}.h-11{height:2.75rem}.h-12{height:3rem}.h-16{height:4rem}.h-20{height:5rem}.h-28{height:7rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-7{height:1.75rem}.h-9{height:2.25rem}.h-\[100dvh\]{height:100dvh}.h-full{height:100%}.max-h-28{max-height:7rem}.max-h-52{max-height:13rem}.max-h-\[60vh\]{max-height:60vh}.max-h-\[70vh\]{max-height:70vh}.max-h-full{max-height:100%}.min-h-\[100dvh\]{min-height:100dvh}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-16{width:4rem}.w-20{width:5rem}.w-3\.5{width:.875rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-7{width:1.75rem}.w-9{width:2.25rem}.w-auto{width:auto}.w-full{width:100%}.min-w-0{min-width:0}.min-w-\[150px\]{min-width:150px}.min-w-\[170px\]{min-width:170px}.min-w-\[180px\]{min-width:180px}.min-w-\[190px\]{min-width:190px}.min-w-\[200px\]{min-width:200px}.min-w-\[220px\]{min-width:220px}.max-w-3xl{max-width:48rem}.max-w-7xl{max-width:80rem}.max-w-\[230px\]{max-width:230px}.max-w-\[420px\]{max-width:420px}.max-w-\[520px\]{max-width:520px}.max-w-full{max-width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.border-collapse{border-collapse:collapse}.rotate-90{--tw-rotate:90deg}.rotate-90,.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;-moz-user-select:none;user-select:none}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.place-items-center{place-items:center}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-2\.5{gap:.625rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-x-3{-moz-column-gap:.75rem;column-gap:.75rem}.gap-x-4{-moz-column-gap:1rem;column-gap:1rem}.gap-x-6{-moz-column-gap:1.5rem;column-gap:1.5rem}.gap-y-1{row-gap:.25rem}.gap-y-2{row-gap:.5rem}.gap-y-3{row-gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.space-y-5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem*var(--tw-space-y-reverse))}.divide-y>:not([hidden])~:not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px*(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px*var(--tw-divide-y-reverse))}.divide-line>:not([hidden])~:not([hidden]){--tw-divide-opacity:1;border-color:rgb(220 226 236/var(--tw-divide-opacity,1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis}.truncate,.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-0{border-width:0}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-\[\#8C99B1\]{--tw-border-opacity:1;border-color:rgb(140 153 177/var(--tw-border-opacity,1))}.border-bad\/30{border-color:rgba(180,35,24,.3)}.border-gold{--tw-border-opacity:1;border-color:rgb(217 162 27/var(--tw-border-opacity,1))}.border-gold\/50{border-color:rgba(217,162,27,.5)}.border-line{--tw-border-opacity:1;border-color:rgb(220 226 236/var(--tw-border-opacity,1))}.border-navy\/20{border-color:rgba(20,48,107,.2)}.border-white\/10{border-color:hsla(0,0%,100%,.1)}.bg-bad-50{--tw-bg-opacity:1;background-color:rgb(253 236 234/var(--tw-bg-opacity,1))}.bg-gold{--tw-bg-opacity:1;background-color:rgb(217 162 27/var(--tw-bg-opacity,1))}.bg-gold-50{--tw-bg-opacity:1;background-color:rgb(253 247 230/var(--tw-bg-opacity,1))}.bg-ink\/50{background-color:rgba(14,30,61,.5)}.bg-ink\/60{background-color:rgba(14,30,61,.6)}.bg-navy{--tw-bg-opacity:1;background-color:rgb(20 48 107/var(--tw-bg-opacity,1))}.bg-navy-50{--tw-bg-opacity:1;background-color:rgb(238 242 250/var(--tw-bg-opacity,1))}.bg-navy-900\/10{background-color:rgba(14,30,61,.1)}.bg-ok{--tw-bg-opacity:1;background-color:rgb(31 138 91/var(--tw-bg-opacity,1))}.bg-ok-50{--tw-bg-opacity:1;background-color:rgb(232 245 238/var(--tw-bg-opacity,1))}.bg-paper{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.bg-white\/10{background-color:hsla(0,0%,100%,.1)}.object-contain{-o-object-fit:contain;object-fit:contain}.p-0\.5{padding:.125rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-10{padding-bottom:2.5rem}.pb-2{padding-bottom:.5rem}.pb-3{padding-bottom:.75rem}.pb-6{padding-bottom:1.5rem}.pr-12{padding-right:3rem}.pt-0\.5{padding-top:.125rem}.pt-1{padding-top:.25rem}.pt-3{padding-top:.75rem}.pt-4{padding-top:1rem}.pt-7{padding-top:1.75rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.lowercase{text-transform:lowercase}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)}.leading-\[1\.1\]{line-height:1.1}.leading-relaxed{line-height:1.625}.leading-snug{line-height:1.375}.leading-tight{line-height:1.25}.tracking-\[\.14em\]{letter-spacing:.14em}.tracking-\[\.2em\]{letter-spacing:.2em}.tracking-tight{letter-spacing:-.025em}.text-\[\#B6C0D2\]{--tw-text-opacity:1;color:rgb(182 192 210/var(--tw-text-opacity,1))}.text-bad{--tw-text-opacity:1;color:rgb(180 35 24/var(--tw-text-opacity,1))}.text-gold{--tw-text-opacity:1;color:rgb(217 162 27/var(--tw-text-opacity,1))}.text-gold-700{--tw-text-opacity:1;color:rgb(143 102 9/var(--tw-text-opacity,1))}.text-ink{--tw-text-opacity:1;color:rgb(14 30 61/var(--tw-text-opacity,1))}.text-ink\/80{color:rgba(14,30,61,.8)}.text-muted{--tw-text-opacity:1;color:rgb(91 107 134/var(--tw-text-opacity,1))}.text-navy{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.text-ok{--tw-text-opacity:1;color:rgb(31 138 91/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.text-white\/45{color:hsla(0,0%,100%,.45)}.text-white\/50{color:hsla(0,0%,100%,.5)}.text-white\/60{color:hsla(0,0%,100%,.6)}.text-white\/70{color:hsla(0,0%,100%,.7)}.text-white\/75{color:hsla(0,0%,100%,.75)}.text-white\/80{color:hsla(0,0%,100%,.8)}.underline{text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-\[\#14306B\]{accent-color:#14306b}.opacity-50{opacity:.5}.opacity-75{opacity:.75}.outline-none{outline:2px solid transparent;outline-offset:2px}.blur{--tw-blur:blur(8px)}.blur,.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-300{transition-duration:.3s}.hover\:bg-paper:hover{--tw-bg-opacity:1;background-color:rgb(243 245 249/var(--tw-bg-opacity,1))}.hover\:bg-white\/10:hover{background-color:hsla(0,0%,100%,.1)}.hover\:bg-white\/20:hover{background-color:hsla(0,0%,100%,.2)}.hover\:\!text-bad:hover{--tw-text-opacity:1!important;color:rgb(180 35 24/var(--tw-text-opacity,1))!important}.hover\:text-navy:hover{--tw-text-opacity:1;color:rgb(20 48 107/var(--tw-text-opacity,1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}@media (min-width:640px){.sm\:col-span-2{grid-column:span 2/span 2}.sm\:ml-2{margin-left:.5rem}.sm\:ml-auto{margin-left:auto}.sm\:mt-10{margin-top:2.5rem}.sm\:inline{display:inline}.sm\:w-44{width:11rem}.sm\:w-48{width:12rem}.sm\:w-60{width:15rem}.sm\:w-72{width:18rem}.sm\:w-auto{width:auto}.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:p-4{padding:1rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}}@media (min-width:1024px){.lg\:m-3{margin:.75rem}.lg\:mb-auto{margin-bottom:auto}.lg\:mr-0{margin-right:0}.lg\:mt-4{margin-top:1rem}.lg\:mt-auto{margin-top:auto}.lg\:block{display:block}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:h-14{height:3.5rem}.lg\:w-14{width:3.5rem}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-\[1\.05fr_1fr\]{grid-template-columns:1.05fr 1fr}.lg\:grid-cols-\[1fr_340px\]{grid-template-columns:1fr 340px}.lg\:grid-cols-\[380px_1fr\]{grid-template-columns:380px 1fr}.lg\:items-center{align-items:center}.lg\:rounded-xl{border-radius:.75rem}.lg\:border{border-width:1px}.lg\:p-10{padding:2.5rem}.lg\:p-12{padding:3rem}.lg\:p-6{padding:1.5rem}.lg\:px-5{padding-left:1.25rem;padding-right:1.25rem}.lg\:px-6{padding-left:1.5rem;padding-right:1.5rem}.lg\:px-7{padding-left:1.75rem;padding-right:1.75rem}.lg\:py-5{padding-top:1.25rem;padding-bottom:1.25rem}.lg\:py-7{padding-top:1.75rem;padding-bottom:1.75rem}.lg\:text-4xl{font-size:2.25rem;line-height:2.5rem}.lg\:text-base{font-size:1rem;line-height:1.5rem}}@media (min-width:1280px){.xl\:sticky{position:sticky}.xl\:top-0{top:0}.xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.xl\:grid-cols-\[1fr_520px\]{grid-template-columns:1fr 520px}}
 </style>
 </head>
 <body class="bg-paper text-ink antialiased">
 
 <!-- ================= LOGIN ================= -->
 <section id="view-login" class="view min-h-screen grid lg:grid-cols-[1.05fr_1fr]">
-    <div class="login-brand relative overflow-hidden bg-navy text-white px-6 pt-10 pb-8 lg:p-14 flex flex-col">
+    <div class="login-brand relative overflow-hidden bg-navy text-white px-5 pt-7 pb-6 lg:p-12 flex flex-col">
         <div class="flex items-center gap-3">
             <img src="/logo-sekolah.png" data-logo alt="Logo sekolah" class="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white p-0.5">
             <div>
@@ -356,10 +375,10 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 <p class="text-sm text-white/70" data-sk="wilayah">Morowali Utara, Sulawesi Tengah</p>
             </div>
         </div>
-        <div class="mt-10 lg:mt-auto lg:mb-auto max-w-md">
-            <h1 class="text-3xl lg:text-5xl font-extrabold tracking-tight leading-[1.08]">Ujian berbasis komputer</h1>
-            <p class="mt-3 lg:mt-5 text-white/75 text-[15px] lg:text-lg leading-relaxed">Kerjakan dengan tenang. Jawabanmu tersimpan otomatis setiap kali kamu memilih.</p>
-            <div class="hidden lg:flex gap-3 mt-10" aria-hidden="true">
+        <div class="mt-6 lg:mt-auto lg:mb-auto max-w-md">
+            <h1 class="text-2xl lg:text-4xl font-extrabold tracking-tight leading-[1.1]">Ujian berbasis komputer</h1>
+            <p class="mt-2 lg:mt-4 text-white/75 text-sm lg:text-base leading-relaxed">Kerjakan dengan tenang. Jawabanmu tersimpan otomatis setiap kali kamu memilih.</p>
+            <div class="hidden lg:flex gap-2 mt-8" aria-hidden="true">
                 <span class="ljk-demo">A</span><span class="ljk-demo">B</span><span class="ljk-demo is-on">C</span><span class="ljk-demo">D</span><span class="ljk-demo">E</span>
             </div>
         </div>
@@ -368,8 +387,8 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
 
     <div class="flex items-start lg:items-center justify-center px-5 py-8 lg:p-10">
         <form id="form-login" class="w-full max-w-sm" autocomplete="on" onsubmit="event.preventDefault(); prosesLogin();">
-            <h2 class="text-2xl font-extrabold tracking-tight">Masuk</h2>
-            <p class="text-muted mt-1 mb-7">Gunakan username dan password dari panitia ujian.</p>
+            <h2 class="text-xl font-extrabold tracking-tight">Masuk</h2>
+            <p class="text-muted text-sm mt-1 mb-5">Gunakan username dan password dari panitia ujian.</p>
             <label class="field-label" for="login-user">Username</label>
             <input id="login-user" class="field" autocomplete="username" autocapitalize="none" spellcheck="false" required>
             <label class="field-label mt-4" for="login-pass">Password</label>
@@ -377,7 +396,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 <input id="login-pass" type="password" class="field pr-12" autocomplete="current-password" required>
                 <button type="button" onclick="togglePass('login-pass', this)" class="absolute inset-y-0 right-0 w-12 grid place-items-center text-muted hover:text-navy" aria-label="Tampilkan password"><i class="fa fa-eye"></i></button>
             </div>
-            <button id="btn-login" type="submit" class="btn btn-primary w-full mt-6 h-12 text-base">Masuk</button>
+            <button id="btn-login" type="submit" class="btn btn-primary w-full mt-5 h-11">Masuk</button>
             <button type="button" data-live-btn onclick="showPublicScore()" class="btn btn-ghost w-full mt-3"><i class="fa fa-ranking-star"></i> Lihat papan skor langsung</button>
             <p class="text-xs text-muted mt-8 text-center">Lupa password? Hubungi wali kelas atau operator sekolah.</p>
         </form>
@@ -423,7 +442,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
     <main class="flex-1 px-5 pb-10 max-w-xl w-full mx-auto">
         <div class="mt-4 sm:mt-10">
             <p class="text-muted">Selamat datang,</p>
-            <h1 id="nama-siswa-welcome" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Siswa</h1>
+            <h1 id="nama-siswa-welcome" class="text-xl sm:text-2xl font-extrabold tracking-tight">Siswa</h1>
             <p id="kelas-siswa-welcome" class="text-muted mt-0.5"></p>
         </div>
         <div id="resume-banner" class="hidden mt-6 rounded-2xl border border-gold/50 bg-gold-50 p-4 flex gap-3">
@@ -435,24 +454,24 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
             <div class="text-sm flex-1"><p class="font-bold text-bad">Jawaban belum terkirim</p><p class="text-ink/80 mt-0.5">Ujian sebelumnya tersimpan di perangkat ini dan belum sampai ke server.</p>
             <button onclick="checkPendingSubmit(true)" class="btn btn-primary btn-sm mt-3">Kirim sekarang</button></div>
         </div>
-        <form class="mt-8 card p-6" onsubmit="event.preventDefault(); cekPin();">
+        <form class="mt-6 card p-5" onsubmit="event.preventDefault(); cekPin();">
             <label for="input-pin" class="font-bold block">PIN ujian</label>
             <p class="text-sm text-muted mb-4">Pengawas akan menuliskan PIN di papan tulis.</p>
             <input type="text" id="input-pin" inputmode="numeric" maxlength="8" autocomplete="off" class="pin-input" placeholder="••••" aria-label="PIN ujian">
-            <button id="btn-cek-pin" type="submit" class="btn btn-primary w-full h-12 mt-5 text-base">Lanjut</button>
+            <button id="btn-cek-pin" type="submit" class="btn btn-primary w-full h-11 mt-4">Lanjut</button>
         </form>
     </main>
 </section>
 
 <!-- ================= SISWA: KONFIRMASI ================= -->
-<section id="view-siswa-konfirmasi" class="view hidden min-h-screen px-5 py-8">
+<section id="view-siswa-konfirmasi" class="view hidden min-h-screen px-4 py-6">
     <div class="max-w-xl mx-auto">
         <button onclick="batalKonfirmasi()" class="btn btn-ghost btn-sm -ml-2"><i class="fa fa-arrow-left"></i> Ganti PIN</button>
-        <h1 class="text-2xl font-extrabold tracking-tight mt-4">Periksa data ujianmu</h1>
+        <h1 class="text-xl font-extrabold tracking-tight mt-3">Periksa data ujianmu</h1>
         <p class="text-muted mt-1">Pastikan semuanya benar sebelum mulai. Jika ada yang salah, lapor ke pengawas.</p>
-        <dl id="konfirmasi-data" class="card mt-6 divide-y divide-line"></dl>
-        <div class="card mt-4 p-5">
-            <h2 class="font-bold mb-3">Tata tertib</h2>
+        <dl id="konfirmasi-data" class="card mt-4 divide-y divide-line text-sm"></dl>
+        <div class="card mt-3 p-4">
+            <h2 class="font-bold mb-2">Tata tertib</h2>
             <ul class="rules">
                 <li>Layar akan masuk mode penuh. Jangan keluar, membuka tab lain, atau berpindah aplikasi.</li>
                 <li>Setiap pelanggaran dicatat. Peringatan ke-4 mengunci akunmu sampai dibuka pengawas.</li>
@@ -460,11 +479,20 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 <li>Tandai <b>Ragu-ragu</b> pada soal yang ingin kamu periksa lagi.</li>
             </ul>
         </div>
+        <div id="token-box" class="card mt-3 p-4 hidden">
+            <label for="input-token" class="font-bold block">Token dari pengawas</label>
+            <p class="text-sm text-muted mb-3">Token tampil di layar pengawas dan berganti setiap beberapa menit.</p>
+            <input id="input-token" class="pin-input token-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="••••••" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" aria-label="Token ujian">
+        </div>
+        <div id="lokasi-box" class="hidden mt-4 rounded-2xl border border-navy/20 bg-navy-50 p-4 flex gap-3 text-sm">
+            <i class="fa fa-location-dot text-navy mt-0.5"></i>
+            <p><b>Ujian ini hanya bisa dikerjakan di sekolah.</b> Saat menekan tombol mulai, izinkan akses lokasi (GPS) di perangkatmu.</p>
+        </div>
         <label class="flex items-start gap-3 mt-5 cursor-pointer select-none">
             <input id="setuju-tatib" type="checkbox" class="w-5 h-5 mt-0.5 accent-[#14306B]" onchange="document.getElementById('btn-mulai').disabled=!this.checked">
             <span class="text-sm">Saya sudah membaca tata tertib dan siap mengerjakan dengan jujur.</span>
         </label>
-        <button id="btn-mulai" onclick="mulaiUjian()" disabled class="btn btn-gold w-full h-12 mt-5 text-base">Mulai mengerjakan</button>
+        <button id="btn-mulai" onclick="mulaiUjian()" disabled class="btn btn-gold w-full h-11 mt-4">Mulai mengerjakan</button>
     </div>
 </section>
 
@@ -472,7 +500,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
 <section id="view-siswa-ujian" class="view hidden h-[100dvh] flex flex-col anti-copas">
     <header class="exam-bar">
         <div class="min-w-0 flex-1">
-            <h1 id="ujian-mapel-title" class="font-bold truncate text-[15px]">Mapel</h1>
+            <h1 id="ujian-mapel-title" class="font-bold truncate text-sm">Mapel</h1>
             <p class="text-xs text-white/70 truncate"><span id="ujian-nama-siswa"></span> <span id="network-status" class="net-pill">Online</span></p>
         </div>
         <div id="timer-box" class="timer" role="timer" aria-live="off"><i class="fa fa-clock"></i><span id="exam-countdown">00:00:00</span></div>
@@ -483,11 +511,11 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
     <div class="h-1 bg-navy-900/10"><div id="exam-progress" class="h-full bg-gold transition-all duration-300" style="width:0%"></div></div>
 
     <div class="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto">
-        <main class="flex-1 flex flex-col min-w-0 lg:m-4 lg:mr-0 bg-white lg:rounded-2xl lg:border border-line overflow-hidden">
+        <main class="flex-1 flex flex-col min-w-0 lg:m-3 lg:mr-0 bg-white lg:rounded-xl lg:border border-line overflow-hidden">
             <div id="offline-pending-alert" class="hidden bg-bad-50 text-bad text-sm px-4 py-2 flex items-center justify-between gap-2">
                 <span><i class="fa fa-wifi"></i> Koneksi terputus — jawaban tetap tersimpan di perangkat.</span>
             </div>
-            <div class="flex items-center gap-2 px-4 lg:px-6 py-3 border-b border-line">
+            <div class="flex items-center gap-2 px-4 lg:px-6 py-2 border-b border-line text-sm">
                 <p class="font-bold">Soal <span id="cbt-no-soal" class="tabular-nums">1</span> <span class="text-muted font-medium">dari <span id="cbt-total-soal">1</span></span></p>
                 <span id="cbt-tipe-soal" class="chip">PG</span>
                 <div class="ml-auto flex items-center gap-1" role="group" aria-label="Ukuran huruf">
@@ -496,10 +524,10 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 </div>
             </div>
             <div id="soal-scroll" class="flex-1 overflow-y-auto">
-                <article id="soal-body" class="soal px-4 lg:px-8 py-5 lg:py-7 max-w-3xl">
+                <article id="soal-body" class="soal px-4 lg:px-7 py-4 lg:py-5 max-w-3xl">
                     <div id="cbt-media-area"></div>
                     <div id="cbt-tanya" class="soal-tanya"></div>
-                    <div id="cbt-opsi-area" class="mt-5"></div>
+                    <div id="cbt-opsi-area" class="mt-4"></div>
                 </article>
             </div>
             <footer class="exam-foot">
@@ -511,18 +539,18 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
 
         <div id="cbt-nav-overlay" onclick="toggleCbtNav()" class="fixed inset-0 bg-ink/50 z-30 hidden lg:hidden"></div>
         <aside id="cbt-nav-panel" class="nav-panel" aria-label="Lembar jawaban">
-            <div class="flex items-center justify-between px-5 pt-5">
-                <h2 class="font-bold">Lembar jawaban</h2>
+            <div class="flex items-center justify-between px-4 pt-4">
+                <h2 class="font-bold text-sm">Lembar jawaban</h2>
                 <button onclick="toggleCbtNav()" class="lg:hidden icon-btn" aria-label="Tutup"><i class="fa fa-xmark"></i></button>
             </div>
-            <p id="nav-summary" class="px-5 text-sm text-muted mt-1"></p>
-            <div class="flex-1 overflow-y-auto px-5 py-4"><div id="cbt-grid" class="ljk-grid"></div></div>
-            <div class="px-5 pb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted">
+            <p id="nav-summary" class="px-4 text-xs text-muted mt-0.5"></p>
+            <div class="flex-1 overflow-y-auto px-4 py-3"><div id="cbt-grid" class="ljk-grid"></div></div>
+            <div class="px-4 pb-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted">
                 <span class="legend"><i class="bubble-mini is-filled"></i>Dijawab</span>
                 <span class="legend"><i class="bubble-mini is-ragu"></i>Ragu-ragu</span>
                 <span class="legend"><i class="bubble-mini"></i>Belum</span>
             </div>
-            <div class="p-5 pt-2 border-t border-line"><button id="btn-submit-ujian" onclick="bukaRingkasan()" class="btn btn-ok w-full h-12">Selesai &amp; kumpulkan</button></div>
+            <div class="p-4 pt-3 border-t border-line"><button id="btn-submit-ujian" onclick="bukaRingkasan()" class="btn btn-ok w-full">Selesai &amp; kumpulkan</button></div>
         </aside>
     </div>
 </section>
@@ -536,7 +564,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
 <section id="view-admin" class="view hidden h-[100dvh] flex overflow-hidden">
     <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-ink/50 z-30 hidden lg:hidden"></div>
     <aside id="admin-sidebar" class="sidebar">
-        <div class="flex items-center gap-3 px-5 py-5">
+        <div class="flex items-center gap-3 px-4 py-4">
             <img src="/logo-sekolah.png" data-logo class="w-10 h-10 rounded-full bg-white p-0.5 object-contain" alt="">
             <div class="min-w-0"><p class="font-bold text-sm leading-tight text-white" data-sk="nama">SMP Negeri 2 Soyo Jaya</p><p class="text-xs text-white/60">Panel CBT</p></div>
         </div>
@@ -557,14 +585,14 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0">
-        <header class="h-14 bg-white border-b border-line flex items-center gap-2 px-3 lg:px-6 flex-shrink-0">
+        <header class="h-12 bg-white border-b border-line flex items-center gap-2 px-3 lg:px-5 flex-shrink-0">
             <button onclick="toggleAdminSidebar()" class="lg:hidden icon-btn" aria-label="Menu"><i class="fa fa-bars"></i></button>
-            <h1 id="page-title" class="font-bold text-[15px]">Pemantauan</h1>
+            <h1 id="page-title" class="font-bold text-sm">Pemantauan</h1>
             <span id="role-badge" class="chip chip-gold hidden"></span>
             <div class="ml-auto flex items-center gap-2"><span id="sync-indicator" class="text-xs text-muted hidden sm:inline"></span></div>
         </header>
         <div class="flex-1 overflow-y-auto" id="content">
-            <div class="max-w-7xl mx-auto p-3 sm:p-5 lg:p-8">
+            <div class="max-w-7xl mx-auto p-3 sm:p-4 lg:p-6">
                 <div id="page-dashboard" class="page-content"></div>
                 <div id="page-jadwal" class="page-content hidden"></div>
                 <div id="page-banksoal" class="page-content hidden"></div>
@@ -953,6 +981,9 @@ function tampilKonfirmasi() {
     const resume = !!ls.json(K.state()) || examInfo.resume;
     $('btn-mulai').textContent = resume ? 'Lanjutkan mengerjakan' : 'Mulai mengerjakan';
     $('setuju-tatib').checked = false; $('btn-mulai').disabled = true;
+    $('token-box').classList.toggle('hidden', !examInfo.wajib_token);
+    $('lokasi-box').classList.toggle('hidden', !examInfo.wajib_lokasi);
+    $('input-token').value = '';
     showView('view-siswa-konfirmasi');
 }
 function batalKonfirmasi() { examInfo = null; examTicket = null; bukaHalamanPin(); }
@@ -965,12 +996,53 @@ function seeded(str) {
 }
 function shuffle(arr, rnd) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+// ---------- Identitas perangkat (untuk kunci 1 akun = 1 perangkat) ----------
+function deviceId() {
+    let id = ls.get('cbt_device_id');
+    if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); ls.set('cbt_device_id', id); }
+    return id;
+}
+function deviceInfo() {
+    const ua = navigator.userAgent;
+    const os = /Android/i.test(ua) ? 'Android' : /iPhone|iPad/i.test(ua) ? 'iOS' : /Windows/i.test(ua) ? 'Windows' : /Mac OS/i.test(ua) ? 'macOS' : /Linux/i.test(ua) ? 'Linux' : 'Lainnya';
+    const br = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox/.test(ua) ? 'Firefox' : /Chrome/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : 'Browser lain';
+    const hp = /Mobi|Android|iPhone/i.test(ua);
+    const model = (ua.match(/Android [\d.]+; ([^;)]+)/) || [])[1];
+    return `${hp ? 'HP' : 'Komputer'} · ${os}${model && model !== 'K' ? ' ' + model.trim() : ''} · ${br}`;
+}
+function ambilLokasi() {
+    return new Promise(ok => {
+        if (!navigator.geolocation) return ok(null);
+        navigator.geolocation.getCurrentPosition(p => ok({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }), () => ok(null), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    });
+}
+
 // ---------- Mulai ujian ----------
 async function mulaiUjian() {
-    const btn = $('btn-mulai'); btn.disabled = true; btn.innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Menyiapkan soal…';
+    const btn = $('btn-mulai'), label = btn.textContent;
+    const token = $('input-token').value.trim();
+    if (examInfo.wajib_token && token.length < 6) { toast('Masukkan 6 karakter token dari pengawas', 'warning'); $('input-token').focus(); return; }
+    btn.disabled = true;
+    let lokasi = null;
+    if (examInfo.wajib_lokasi) {
+        btn.innerHTML = '<i class="fa fa-location-crosshairs fa-spin"></i> Memeriksa lokasi…';
+        lokasi = await ambilLokasi();
+        if (!lokasi) {
+            btn.disabled = false; btn.textContent = label;
+            return Swal.fire({ icon: 'warning', title: 'Lokasi tidak bisa dibaca', html: 'Aktifkan <b>GPS/Lokasi</b> di perangkat, lalu izinkan browser mengakses lokasi.<br><br><span class="text-sm text-muted">Di Chrome: ketuk ikon di samping alamat situs → Izin → Lokasi → Izinkan.</span>' });
+        }
+    }
+    btn.innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Menyiapkan soal…';
     try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
     try {
-        const data = await api('/siswa/get-soal', { body: { ticket: examTicket } });
+        const data = await api('/siswa/get-soal', { body: { ticket: examTicket, token, device_id: deviceId(), device_info: deviceInfo(), lokasi } });
+        if (data.status !== 'success') {
+            try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+            btn.disabled = false; btn.textContent = label;
+            const judul = { token: 'Token tidak berlaku', lokasi: 'Di luar area sekolah', device: 'Akun dipakai di perangkat lain', closed: 'Ujian ditutup' }[data.code] || 'Gagal memulai';
+            if (data.code === 'token') { $('input-token').value = ''; }
+            return Swal.fire({ icon: data.code === 'device' ? 'error' : 'warning', title: judul, text: data.message });
+        }
         if (!data.questions || !data.questions.length) throw new Error('Soal tidak ditemukan.');
         let qs = data.questions;
         const rnd = seeded(activeUser.username + '|' + examInfo.mapel);
@@ -1005,7 +1077,7 @@ async function mulaiUjian() {
         updateNetwork();
     } catch (e) {
         Swal.fire({ icon: 'error', title: 'Gagal memuat soal', text: e.message || 'Periksa koneksi lalu coba lagi.' });
-        btn.disabled = false; btn.textContent = 'Mulai mengerjakan';
+        btn.disabled = false; btn.textContent = label;
     }
 }
 
@@ -1041,7 +1113,8 @@ function startTimer() {
 async function kirimPing() {
     if (!isExamActive || !navigator.onLine) return;
     try {
-        const r = await api('/siswa/ping', { body: { ticket: examTicket, answers: cbtAnswers, elapsed: elapsedSec() }, quiet: true });
+        const r = await api('/siswa/ping', { body: { ticket: examTicket, answers: cbtAnswers, elapsed: elapsedSec(), device_id: deviceId() }, quiet: true });
+        if (r && r.status === 'device_locked') { stopUjian(); tampilPerangkatLain(); return; }
         if (r && r.status === 'protected') {
             if ((r.state || '').includes('Terkunci')) { stopUjian(); tampilTerkunci(); }
             else if (r.state === 'Selesai') { stopUjian(); bersihkanLokal(); tampilSelesai({ show_score: false }); }
@@ -1082,8 +1155,8 @@ function toggleCbtNav(force) {
 }
 
 // ---------- Ukuran huruf ----------
-function applyFont() { const s = parseInt(ls.get('cbt_font') || 17); document.documentElement.style.setProperty('--soal-size', s + 'px'); }
-function ubahFont(d) { const s = Math.min(24, Math.max(14, parseInt(ls.get('cbt_font') || 17) + d * 2)); ls.set('cbt_font', s); applyFont(); }
+function applyFont() { const s = parseInt(ls.get('cbt_font2') || 15); document.documentElement.style.setProperty('--soal-size', s + 'px'); }
+function ubahFont(d) { const s = Math.min(22, Math.max(13, parseInt(ls.get('cbt_font2') || 15) + d)); ls.set('cbt_font2', s); applyFont(); }
 
 // ---------- Tampilkan soal ----------
 function showCbtQuestion(index) {
@@ -1230,12 +1303,13 @@ function stopUjian() {
 function bersihkanLokal() { [K.state(), K.end(), K.start(), K.active()].forEach(k => ls.del(k)); }
 
 async function kirimJawaban(isCurang = false) {
-    const payload = { ticket: examTicket, answers: cbtAnswers, elapsed: elapsedSec(), is_curang: isCurang, mapel: examInfo.mapel };
+    const payload = { ticket: examTicket, answers: cbtAnswers, elapsed: elapsedSec(), is_curang: isCurang, mapel: examInfo.mapel, device_id: deviceId() };
     stopUjian(); saveState();
     if (!navigator.onLine) return simpanPending(payload);
     loading('Mengirim jawaban…');
     try {
         const r = await api('/siswa/submit', { body: payload });
+        if (r.code === 'device') { Swal.close(); bersihkanLokal(); return tampilPerangkatLain(); }
         if (r.status !== 'success') throw new Error(r.message);
         Swal.close(); bersihkanLokal(); tampilSelesai(r);
     } catch (e) { simpanPending(payload); }
@@ -1256,6 +1330,7 @@ async function checkPendingSubmit(feedback) {
     if (feedback) loading('Mengirim jawaban…');
     try {
         const r = await api('/siswa/submit', { body: p });
+        if (r.code === 'device') { ls.del(K.pending()); Swal.close(); return tampilPerangkatLain(); }
         if (r.status !== 'success') throw new Error(r.message);
         ls.del(K.pending());
         try { Object.keys(localStorage).filter(k => k.includes(activeUser.username) && (k.startsWith('cbt4_state_') || k.startsWith('cbt_time_') || k.startsWith('cbt_start_') || k.startsWith('cbt4_active_')) && (!p.mapel || k.includes(p.mapel))).forEach(k => localStorage.removeItem(k)); } catch (e) {}
@@ -1269,9 +1344,16 @@ function tampilSelesai(r) {
     $('selesai-content').innerHTML = `
         ${nilai !== null ? `<div class="score-ring" style="--p:${nilai}"><div><p class="text-sm text-muted font-semibold">Nilai</p><p class="text-5xl font-extrabold tabular-nums">${nilai}</p></div></div>`
             : `<div class="w-20 h-20 rounded-full bg-ok-50 text-ok grid place-items-center mx-auto text-3xl"><i class="fa fa-check"></i></div>`}
-        <h1 class="text-2xl font-extrabold mt-7">Jawaban terkirim</h1>
+        <h1 class="text-xl font-extrabold mt-5">Jawaban terkirim</h1>
         <p class="text-muted mt-2">Terima kasih, ${esc(activeUser.name.split(' ')[0])}. ${r && r.total ? `Kamu menjawab ${r.terjawab} dari ${r.total} soal. ` : ''}Hasil lengkap akan diumumkan oleh guru.</p>
-        <button onclick="logout()" class="btn btn-primary w-full h-12 mt-8">Keluar</button>`;
+        <button onclick="logout()" class="btn btn-primary w-full mt-6">Keluar</button>`;
+}
+function tampilPerangkatLain() {
+    showView('view-siswa-selesai');
+    $('selesai-content').innerHTML = `<div class="w-16 h-16 rounded-full bg-bad-50 text-bad grid place-items-center mx-auto text-2xl"><i class="fa fa-mobile-screen"></i></div>
+        <h1 class="text-xl font-extrabold mt-5">Ujian dipindahkan ke perangkat lain</h1>
+        <p class="text-muted mt-2">Pengawas telah mereset perangkat untuk akun ini, atau akun dipakai di perangkat lain. Jawaban di perangkat ini tidak bisa dikirim lagi.</p>
+        <button onclick="logout()" class="btn btn-primary w-full mt-6">Keluar</button>`;
 }
 function tampilTerkunci(msg) {
     showView('view-siswa-selesai');
@@ -1540,13 +1622,22 @@ function initDashboard() {
 
 async function refreshDashboard(silent) {
     try {
-        const [stats, sch, act] = await Promise.all([api('/admin/stats'), api('/admin/schedules'), api('/admin/recent-activity')]);
-        allSchedules = sch || []; allActivityData = act || [];
+        const [stats, sch, act, tok] = await Promise.all([api('/admin/stats'), api('/admin/schedules'), api('/admin/recent-activity?v=2'), api('/admin/tokens').catch(() => null)]);
+        allSchedules = sch || [];
+        allActivityData = Array.isArray(act) ? act : (act.rows || []);
+        window._sesiAktif = !Array.isArray(act) && act.sesi_aktif;
+        setTokenData(tok);
         $('dash-stats').dataset.base = JSON.stringify(stats);
         const aktif = allSchedules.filter(s => s.status === 'Aktif');
-        $('dash-pins').innerHTML = aktif.map(s => `<div class="pin-card">
-            <div class="flex-1 min-w-0"><p class="text-sm text-white/70 truncate" title="${esc(s.mapel)}">${esc(s.mapel)}</p><p class="pin mt-1">${esc(s.pin)}</p></div>
-            <button class="icon-btn text-white/80 hover:bg-white/10 hover:text-white" onclick="copyText('${jsq(s.pin)}')" aria-label="Salin PIN"><i class="fa fa-copy"></i></button></div>`).join('')
+        $('dash-pins').innerHTML = aktif.map(s => {
+            const t = (tokenData.tokens || []).find(x => x.id === s.id);
+            return `<div class="pin-card flex-col items-stretch gap-2">
+            <div class="flex items-center gap-3"><div class="flex-1 min-w-0"><p class="text-xs text-white/70 truncate" title="${esc(s.mapel)}">${esc(s.mapel)}</p><p class="text-[11px] text-white/50 mt-1">PIN</p><p class="pin">${esc(s.pin)}</p></div>
+            ${t ? `<div class="text-right"><p class="text-[11px] text-white/50">Token</p><p class="pin tok" data-tok="${s.id}">${esc(t.token)}</p></div>` : ''}</div>
+            ${t ? `<div class="tok-bar"><i data-tokbar></i></div><div class="flex items-center gap-2"><span class="text-[11px] text-white/60 flex-1" data-tokleft>…</span>
+                <button class="btn btn-xs bg-white/10 text-white hover:bg-white/20" onclick="layarToken(${s.id})"><i class="fa fa-expand"></i> Tampilkan di layar</button></div>`
+                : `<div class="flex items-center gap-2"><span class="text-[11px] text-white/50 flex-1">Tanpa token pengawas</span><button class="icon-btn icon-btn-sm text-white/80 hover:bg-white/10 hover:text-white" onclick="copyText('${jsq(s.pin)}')" aria-label="Salin PIN"><i class="fa fa-copy"></i></button></div>`}
+            </div>`; }).join('')
             || (isAdmin() ? `<div class="card px-5 py-4 sm:col-span-2 text-sm text-muted flex items-center gap-3"><i class="fa fa-circle-info"></i>Belum ada ujian aktif. <button class="btn btn-xs btn-outline ml-auto" onclick="showPage('jadwal')">Buat jadwal</button></div>` : '');
         fillSelect('filter-mapel', allActivityData.map(a => a.exam_name), 'Semua paket');
         fillSelect('filter-kelas', allActivityData.map(a => a.kelas).filter(k => k && k !== '-'), 'Semua kelas');
@@ -1554,6 +1645,68 @@ async function refreshDashboard(silent) {
         $('sync-indicator').textContent = 'Diperbarui ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         $('sync-indicator').classList.remove('hidden');
     } catch (e) { if (!silent) toast('Gagal memuat data pemantauan', 'error'); }
+}
+
+// ---------- Token pengawas (berganti otomatis) ----------
+let tokenData = { tokens: [] }, tokenOffset = 0, tokenTick = null;
+function setTokenData(t) {
+    if (!t) return;
+    tokenData = t; tokenOffset = t.server_now - Date.now();
+    clearInterval(tokenTick); tokenTick = setInterval(updateTokenClock, 1000); updateTokenClock();
+}
+function updateTokenClock() {
+    if (!tokenData.berakhir) return;
+    const left = Math.max(0, Math.round((tokenData.berakhir - (Date.now() + tokenOffset)) / 1000));
+    const txt = `Berganti dalam ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+    const pct = left / (tokenData.menit * 60) * 100;
+    document.querySelectorAll('[data-tokleft]').forEach(el => { el.textContent = txt; });
+    document.querySelectorAll('[data-tokbar]').forEach(el => { el.style.width = pct + '%'; });
+    if (left <= 0 && !updateTokenClock.busy) {
+        updateTokenClock.busy = true;
+        api('/admin/tokens').then(t => { setTokenData(t); (t.tokens || []).forEach(x => document.querySelectorAll(`[data-tok="${x.id}"]`).forEach(el => { el.textContent = x.token; })); }).finally(() => { setTimeout(() => { updateTokenClock.busy = false; }, 3000); });
+    }
+}
+// Tampilan token layar penuh untuk proyektor
+function layarToken(id) {
+    const t = (tokenData.tokens || []).find(x => x.id === id); if (!t) return;
+    let el = $('token-layar');
+    if (!el) { el = document.createElement('div'); el.id = 'token-layar'; document.body.appendChild(el); }
+    el.innerHTML = `<button class="icon-btn text-white/70 hover:text-white hover:bg-white/10 absolute top-4 right-4" onclick="tutupLayarToken()" aria-label="Tutup"><i class="fa fa-xmark text-xl"></i></button>
+        <p class="tl-paket">${esc(t.mapel)}</p>
+        <div class="tl-grid"><div><p class="tl-label">PIN</p><p class="tl-pin">${esc(t.pin)}</p></div><div><p class="tl-label">Token</p><p class="tl-token" data-tok="${t.id}">${esc(t.token)}</p></div></div>
+        <div class="tl-bar"><i data-tokbar></i></div><p class="tl-left" data-tokleft></p>
+        <p class="tl-note">Masukkan PIN, lalu ketik token saat diminta. Token berganti otomatis setiap ${tokenData.menit} menit.</p>`;
+    el.classList.remove('hidden');
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {});
+    updateTokenClock();
+}
+function tutupLayarToken() { const el = $('token-layar'); if (el) el.classList.add('hidden'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') tutupLayarToken(); });
+
+// ---------- Info perangkat & lokasi ----------
+const fmtJarak = m => m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(m) + ' m';
+function perangkatCell(a, ipUtama) {
+    const s = a.sesi;
+    if (!s) return `<span class="text-xs text-muted">${window._sesiAktif === false ? 'Jalankan migrasi' : '—'}</span>`;
+    const hp = /^HP/.test(s.device_info || '');
+    let lok = '';
+    if (s.lokasi) {
+        const L = s.lokasi, radius = parseFloat(SEKOLAH.radius_m) || 300;
+        if (L.jarak === null || L.jarak === undefined) lok = `<span class="chip chip-muted">Lokasi tercatat</span>`;
+        else { const ok = L.jarak - (L.akurasi || 0) <= radius; lok = `<span class="chip ${ok ? 'chip-ok' : 'chip-bad'}" title="Akurasi GPS ±${fmtJarak(L.akurasi || 0)}"><i class="fa fa-location-dot"></i>${ok ? 'Di sekolah' : 'Di luar'} · ${fmtJarak(L.jarak)}</span>`; }
+    }
+    const beda = ipUtama && s.ip && s.ip !== ipUtama;
+    return `<div class="text-xs leading-snug min-w-[190px]"><p class="font-semibold text-ink truncate max-w-[230px]" title="${esc(s.device_info)}"><i class="fa ${hp ? 'fa-mobile-screen' : 'fa-desktop'} text-muted w-3.5"></i> ${esc((s.device_info || '?').replace(/^(HP|Komputer) · /, ''))}</p>
+        <p class="text-muted mt-0.5">IP ${esc(s.ip || '-')}${beda ? ' <span class="chip chip-gold" title="Berbeda dari jaringan sebagian besar peserta">Jaringan lain</span>' : ''}</p>${lok ? `<div class="mt-1">${lok}</div>` : ''}
+        ${s.percobaan ? `<p class="text-bad font-semibold mt-1"><i class="fa fa-triangle-exclamation"></i> ${s.percobaan}× dicoba dari perangkat lain</p><p class="text-muted">${esc(s.percobaan_info)}</p>` : ''}</div>`;
+}
+// IP yang dipakai mayoritas peserta (≥ 50%) per paket — penanda "jaringan lain"
+function ipMayoritas(list) {
+    const per = {};
+    list.forEach(a => { if (!a.sesi || !a.sesi.ip) return; const m = per[a.exam_name] = per[a.exam_name] || {}; m[a.sesi.ip] = (m[a.sesi.ip] || 0) + 1; });
+    const out = {};
+    Object.entries(per).forEach(([ex, m]) => { const tot = Object.values(m).reduce((x, y) => x + y, 0); const [ip, n] = Object.entries(m).sort((x, y) => y[1] - x[1])[0]; if (tot >= 3 && n / tot >= .5) out[ex] = ip; });
+    return out;
 }
 
 function bolehBuka(exam) {
@@ -1569,7 +1722,9 @@ function renderActivityTable() {
     const k = $('filter-kelas').value, m = $('filter-mapel').value, q = ($('mon-search').value || '').toLowerCase();
     const list = allActivityData.filter(a => (!k || a.kelas === k) && (!m || a.exam_name === m) && (!q || (a.student_name || '').toLowerCase().includes(q)));
     const groups = { act: [], work: [], done: [] };
-    list.forEach(a => { const s = statusInfo(a.status).key; (s === 'locked' || s === 'warned' ? groups.act : s === 'done' ? groups.done : groups.work).push(a); });
+    const curiga = a => a.sesi && a.sesi.percobaan > 0 && statusInfo(a.status).key !== 'done';
+    list.forEach(a => { const s = statusInfo(a.status).key; (s === 'locked' || s === 'warned' || curiga(a) ? groups.act : s === 'done' ? groups.done : groups.work).push(a); });
+    const ipUtama = ipMayoritas(list);
     groups.work.sort((a, b) => (parseProgress(b.last_seen)?.done || 0) - (parseProgress(a.last_seen)?.done || 0));
     groups.done.sort((a, b) => scoreNum(b.score) - scoreNum(a.score));
     groups.act.sort((a, b) => statusInfo(a.status).key === 'locked' ? -1 : 1);
@@ -1586,19 +1741,21 @@ function renderActivityTable() {
         const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
         let aksi = '';
         if (st.key === 'locked' || st.key === 'warned') aksi += bolehBuka(a.exam_name) ? `<button class="btn btn-xs btn-primary" onclick="resetSiswa('${jsq(a.student_name)}','${jsq(a.exam_name)}')"><i class="fa fa-lock-open"></i> Buka akses</button>` : '';
-        if (isAdmin()) aksi += `<button class="icon-btn icon-btn-sm" title="Opsi lain" onclick="menuAktivitas(${a.id}, '${jsq(a.student_name)}','${jsq(a.exam_name)}')"><i class="fa fa-ellipsis"></i></button>`;
+        aksi += `<button class="icon-btn icon-btn-sm" title="Tindakan lain" onclick="menuAktivitas(${a.id}, '${jsq(a.student_name)}','${jsq(a.exam_name)}')"><i class="fa fa-ellipsis"></i></button>`;
         return `<tr>
             <td class="min-w-[170px]"><p class="font-semibold">${esc(a.student_name)}</p><p class="text-xs text-muted">${esc(a.kelas || '-')} · ${esc(a.exam_name)}</p></td>
-            <td><span class="chip ${st.chip}">${st.label}</span></td>
+            <td><span class="chip ${st.chip}">${st.label}</span>${a.sesi && a.sesi.percobaan ? '<br><span class="chip chip-bad mt-1"><i class="fa fa-mobile-screen"></i> Perangkat lain</span>' : ''}</td>
             <td class="min-w-[150px]">${p.total ? `<div class="flex items-center gap-2"><div class="progress flex-1"><i style="width:${pct}%"></i></div><span class="text-xs tabular-nums text-muted w-12">${p.done}/${p.total}</span></div>` : '<span class="text-xs text-muted">Baru mulai</span>'}</td>
+            <td>${perangkatCell(a, ipUtama[a.exam_name])}</td>
             <td class="num font-bold text-base">${st.key === 'work' ? `<span class="text-muted font-semibold text-sm">${esc(String(a.score ?? '-'))}</span>` : esc(String(a.score ?? '-').split('|')[0])}</td>
             <td class="text-xs text-muted whitespace-nowrap">${esc(p.durasi || '-')}<br>${esc(p.jam || '')}</td>
             <td class="text-right whitespace-nowrap">${aksi}</td></tr>`;
     };
     const group = (title, dot, arr, note) => arr.length ? `<div class="card overflow-hidden">
         <div class="group-head"><span class="dot" style="background:${dot}"></span><h3 class="font-bold">${title}</h3><span class="chip chip-muted">${arr.length}</span><span class="text-xs text-muted ml-auto hidden sm:inline">${note}</span></div>
-        <div class="overflow-x-auto max-h-[60vh]"><table class="tbl"><thead><tr><th>Peserta</th><th>Status</th><th>Progres</th><th class="num">Skor</th><th>Durasi · update</th><th></th></tr></thead><tbody>${arr.map(row).join('')}</tbody></table></div></div>` : '';
-    $('mon-groups').innerHTML = group('Perlu tindakan', 'var(--bad)', groups.act, 'Peserta yang keluar dari layar ujian')
+        <div class="overflow-x-auto max-h-[60vh]"><table class="tbl"><thead><tr><th>Peserta</th><th>Status</th><th>Progres</th><th>Perangkat & lokasi</th><th class="num">Skor</th><th>Durasi · update</th><th></th></tr></thead><tbody>${arr.map(row).join('')}</tbody></table></div></div>` : '';
+    $('mon-groups').innerHTML = (window._sesiAktif === false ? `<div class="card p-4 text-sm flex gap-3 items-start border-gold"><i class="fa fa-triangle-exclamation text-gold-700 mt-0.5"></i><p><b>Kunci perangkat belum aktif.</b> Jalankan file <code>supabase-migration.sql</code> di Supabase (SQL Editor) agar satu akun hanya bisa dipakai di satu perangkat.</p></div>` : '')
+        + group('Perlu tindakan', 'var(--bad)', groups.act, 'Keluar dari layar ujian atau dicoba dari perangkat lain')
         + group('Sedang mengerjakan', 'var(--navy)', groups.work, 'Skor sementara dihitung dari jawaban terakhir')
         + group('Selesai', 'var(--ok)', groups.done, 'Diurutkan dari skor tertinggi')
         || `<div class="card">${emptyBox('fa-filter', 'Tidak ada peserta yang cocok dengan filter.')}</div>`;
@@ -1615,19 +1772,29 @@ async function resetSiswa(nama, mapel) {
     await api('/admin/reset-siswa', { body: { student_name: nama, mapel } });
     toast('Akses dibuka'); refreshDashboard();
 }
-async function menuAktivitas(id, nama, mapel) {
-    const r = await Swal.fire({
-        title: esc(nama), html: `<p class="text-sm text-muted mb-1">${esc(mapel)}</p>`, showDenyButton: true, showCancelButton: true,
-        confirmButtonText: '<i class="fa fa-rotate-left"></i> Izinkan ulang dari awal', denyButtonText: '<i class="fa fa-trash"></i> Hapus dari daftar', cancelButtonText: 'Tutup',
-    });
-    if (r.isConfirmed) {
-        if (!await confirmDanger('Ulang ujian?', `Nilai dan status <b>${esc(nama)}</b> untuk <b>${esc(mapel)}</b> akan dihapus. Peserta mengerjakan dari awal.`)) return;
-        await api('/admin/ulang-ujian', { body: { student_name: nama, mapel } }); toast('Peserta bisa mengulang ujian');
-    } else if (r.isDenied) {
-        await api('/admin/remove-activity/' + id, { method: 'DELETE' }); toast('Dihapus dari daftar');
+function menuAktivitas(id, nama, mapel) {
+    const a = allActivityData.find(x => x.id === id) || {};
+    const st = statusInfo(a.status).key, boleh = bolehBuka(mapel);
+    const item = (icon, judul, ket, fn, cls = '') => `<button class="w-full text-left flex gap-3 items-start p-3 rounded-xl hover:bg-paper ${cls}" onclick="closeModal(); ${fn}"><i class="fa ${icon} mt-1 w-5 text-center"></i><span><b class="block">${judul}</b><span class="text-sm text-muted">${ket}</span></span></button>`;
+    let html = '';
+    if ((st === 'locked' || st === 'warned') && boleh) html += item('fa-lock-open', 'Buka akses', 'Peserta bisa masuk lagi dan melanjutkan dari jawaban terakhir.', `resetSiswa('${jsq(nama)}','${jsq(mapel)}')`);
+    if (boleh) html += item('fa-mobile-screen', 'Reset perangkat', 'Izinkan peserta melanjutkan dari perangkat lain (misal HP rusak/baterai habis). Perangkat lama tidak bisa mengirim jawaban lagi.', `resetPerangkat('${jsq(nama)}','${jsq(mapel)}')`);
+    if (isAdmin()) {
+        html += item('fa-rotate-left', 'Izinkan ulang dari awal', 'Nilai & status dihapus, peserta mengerjakan dari awal.', `ulangUjian('${jsq(nama)}','${jsq(mapel)}')`);
+        html += item('fa-trash', 'Hapus dari daftar', 'Hanya menghapus baris pemantauan ini.', `hapusAktivitas(${id})`, 'text-bad');
     }
-    refreshDashboard();
+    openModal(`<h2 class="font-extrabold text-lg">${esc(nama)}</h2><p class="text-sm text-muted">${esc(mapel)}</p>`, html || '<p class="text-muted">Tidak ada tindakan yang tersedia untuk akun Anda.</p>');
 }
+async function resetPerangkat(nama, mapel) {
+    const r = await Swal.fire({ icon: 'question', title: 'Reset perangkat?', html: `Pastikan <b>${esc(nama)}</b> benar-benar ada di ruangan. Setelah direset, ia bisa masuk dari perangkat baru dengan PIN${tokenData.tokens && tokenData.tokens.length ? ' & token terbaru' : ''}.`, showCancelButton: true, confirmButtonText: 'Reset perangkat', cancelButtonText: 'Batal' });
+    if (!r.isConfirmed) return;
+    await api('/admin/reset-perangkat', { body: { student_name: nama, mapel } }); toast('Perangkat direset'); refreshDashboard();
+}
+async function ulangUjian(nama, mapel) {
+    if (!await confirmDanger('Ulang ujian?', `Nilai dan status <b>${esc(nama)}</b> untuk <b>${esc(mapel)}</b> akan dihapus. Peserta mengerjakan dari awal.`)) return;
+    await api('/admin/ulang-ujian', { body: { student_name: nama, mapel } }); toast('Peserta bisa mengulang ujian'); refreshDashboard();
+}
+async function hapusAktivitas(id) { await api('/admin/remove-activity/' + id, { method: 'DELETE' }); toast('Dihapus dari daftar'); refreshDashboard(); }
 async function clearMonitoring() {
     if (!await confirmDanger('Bersihkan pemantauan?', 'Semua status peserta di layar pemantauan dihapus. Nilai yang sudah masuk <b>tidak</b> ikut terhapus.')) return;
     await api('/admin/clear-monitoring', { method: 'DELETE' }); toast('Pemantauan dibersihkan'); refreshDashboard();
@@ -1650,6 +1817,8 @@ async function loadJadwal() {
                 <div><label class="field-label" for="j_durasi">Durasi (menit)</label><input type="number" id="j_durasi" class="field" value="90" min="5" max="600"></div>
                 <div class="space-y-3 pt-1">
                     <label class="flex items-center justify-between gap-3"><span><b class="text-sm">Acak urutan soal</b><br><span class="text-xs text-muted">Setiap siswa mendapat urutan berbeda</span></span><span class="switch"><input type="checkbox" id="j_acak_soal" checked><span></span></span></label>
+                    <label class="flex items-center justify-between gap-3"><span><b class="text-sm">Wajib token pengawas</b><br><span class="text-xs text-muted">Token berganti tiap 15 menit, tampil di layar pengawas</span></span><span class="switch"><input type="checkbox" id="j_wajib_token" checked><span></span></span></label>
+                    <label class="flex items-center justify-between gap-3"><span><b class="text-sm">Wajib berada di sekolah</b><br><span class="text-xs text-muted" id="j_lokasi_ket">Dicek lewat GPS saat mulai ujian</span></span><span class="switch"><input type="checkbox" id="j_wajib_lokasi"><span></span></span></label>
                     <label class="flex items-center justify-between gap-3"><span><b class="text-sm">Acak pilihan jawaban</b><br><span class="text-xs text-muted">Hanya untuk PG & PG kompleks</span></span><span class="switch"><input type="checkbox" id="j_acak_opsi"><span></span></span></label>
                 </div>
                 <button class="btn btn-primary w-full"><i class="fa fa-key"></i> Buat jadwal & PIN</button>
@@ -1671,7 +1840,7 @@ async function loadJadwal() {
         return `<div class="card p-4 flex flex-col sm:flex-row sm:items-center gap-4 ${on ? '' : 'opacity-75'}">
             <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap gap-1.5 mb-2">${paket.map(m => `<span class="chip">${esc(m)}</span>`).join('')}</div>
-                <p class="text-sm text-muted"><i class="fa fa-calendar mr-1"></i>${esc(tglTxt)}${jam ? ', ' + esc(jam) : ''} · ${j.durasi} menit · ${total} soal${j.acak_soal ? ' · <i class="fa fa-shuffle" title="Soal diacak"></i>' : ''}</p>
+                <p class="text-sm text-muted"><i class="fa fa-calendar mr-1"></i>${esc(tglTxt)}${jam ? ', ' + esc(jam) : ''} · ${j.durasi} menit · ${total} soal${j.acak_soal ? ' · <i class="fa fa-shuffle" title="Soal diacak"></i>' : ''}${j.wajib_token ? ' · <i class="fa fa-key" title="Wajib token pengawas"></i>' : ''}${j.wajib_lokasi ? ' · <i class="fa fa-location-dot" title="Wajib di sekolah"></i>' : ''}</p>
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-center"><p class="text-xs text-muted font-semibold">PIN</p><p class="text-2xl font-extrabold tracking-[.14em] tabular-nums ${on ? 'text-navy' : 'text-muted'}">${esc(j.pin)}</p></div>
@@ -1693,7 +1862,11 @@ async function saveJadwal() {
     if (!mapel.length) return toast('Pilih minimal satu paket soal', 'warning');
     const tgl = $('j_tgl').value, jam = $('j_jam').value, durasi = $('j_durasi').value;
     if (!tgl || !jam || !durasi) return toast('Lengkapi tanggal, jam, dan durasi', 'warning');
-    const r = await api('/admin/add-schedule', { body: { mapel: mapel.join(', '), tanggal: `${tgl}|${jam}`, durasi, acak_soal: $('j_acak_soal').checked, acak_opsi: $('j_acak_opsi').checked } });
+    if ($('j_wajib_lokasi').checked && !(SEKOLAH.lat && SEKOLAH.lng)) {
+        const k = await Swal.fire({ icon: 'warning', title: 'Koordinat sekolah belum diisi', html: 'Agar <b>Wajib berada di sekolah</b> bisa menolak peserta di luar sekolah, isi lokasi di menu <b>Profil sekolah</b>. Tanpa itu, lokasi peserta hanya dicatat.', showCancelButton: true, confirmButtonText: 'Tetap buat jadwal', cancelButtonText: 'Batal' });
+        if (!k.isConfirmed) return;
+    }
+    const r = await api('/admin/add-schedule', { body: { mapel: mapel.join(', '), tanggal: `${tgl}|${jam}`, durasi, wajib_token: $('j_wajib_token').checked, wajib_lokasi: $('j_wajib_lokasi').checked, acak_soal: $('j_acak_soal').checked, acak_opsi: $('j_acak_opsi').checked } });
     if (r.status !== 'success') return Swal.fire({ icon: 'error', title: 'Gagal', text: r.message });
     await Swal.fire({ icon: 'success', title: 'Jadwal dibuat', html: `PIN ujian:<p class="text-4xl font-extrabold tracking-[.2em] text-navy my-3">${esc(r.pin)}</p>${r.warning ? `<p class="text-sm text-gold-700">${esc(r.warning)}</p>` : ''}` });
     loadJadwal();
@@ -1713,9 +1886,11 @@ async function editJadwal(id) {
             <div class="grid grid-cols-2 gap-3"><div><label class="field-label">Tanggal</label><input type="date" id="e_tgl" class="field" value="${esc(tgl || '')}"></div><div><label class="field-label">Jam</label><input type="time" id="e_jam" class="field" value="${esc(jam || '')}"></div></div>
             <div><label class="field-label">Durasi (menit)</label><input type="number" id="e_dur" class="field" value="${j.durasi}"></div>
             <label class="flex items-center justify-between"><span class="text-sm font-semibold">Acak urutan soal</span><span class="switch"><input type="checkbox" id="e_as" ${j.acak_soal ? 'checked' : ''}><span></span></span></label>
+            <label class="flex items-center justify-between"><span class="text-sm font-semibold">Wajib token pengawas</span><span class="switch"><input type="checkbox" id="e_wt" ${j.wajib_token ? 'checked' : ''}><span></span></span></label>
+            <label class="flex items-center justify-between"><span class="text-sm font-semibold">Wajib berada di sekolah</span><span class="switch"><input type="checkbox" id="e_wl" ${j.wajib_lokasi ? 'checked' : ''}><span></span></span></label>
             <label class="flex items-center justify-between"><span class="text-sm font-semibold">Acak pilihan jawaban</span><span class="switch"><input type="checkbox" id="e_ao" ${j.acak_opsi ? 'checked' : ''}><span></span></span></label></div>`,
         showCancelButton: true, confirmButtonText: 'Simpan', cancelButtonText: 'Batal',
-        preConfirm: () => ({ id: j.id, mapel: j.mapel, status: j.status, tanggal: $('e_tgl').value + '|' + $('e_jam').value, durasi: $('e_dur').value, acak_soal: $('e_as').checked, acak_opsi: $('e_ao').checked }),
+        preConfirm: () => ({ id: j.id, mapel: j.mapel, status: j.status, tanggal: $('e_tgl').value + '|' + $('e_jam').value, durasi: $('e_dur').value, wajib_token: $('e_wt').checked, wajib_lokasi: $('e_wl').checked, acak_soal: $('e_as').checked, acak_opsi: $('e_ao').checked }),
     });
     if (!r.isConfirmed) return;
     const d = await api('/admin/update-schedule', { method: 'PUT', body: r.value });
@@ -2295,6 +2470,7 @@ const SK_GROUPS = [
     ['Identitas sekolah', [['nama_sekolah', 'Nama sekolah', 'SMP Negeri 2 Soyo Jaya', 2], ['singkatan', 'Nama singkat aplikasi', 'Spenda'], ['npsn', 'NPSN', '4020xxxx'], ['tahun_pelajaran', 'Tahun pelajaran', '2026/2027']]],
     ['Baris instansi di kop', [['instansi_1', 'Baris 1', 'PEMERINTAH KABUPATEN …', 2], ['instansi_2', 'Baris 2', 'DINAS PENDIDIKAN DAN KEBUDAYAAN', 2]]],
     ['Alamat & kontak', [['alamat', 'Jalan / desa', 'Jl. …, Desa …', 2], ['kecamatan', 'Kecamatan'], ['kabupaten', 'Kabupaten / kota'], ['provinsi', 'Provinsi'], ['kode_pos', 'Kode pos'], ['telepon', 'Telepon'], ['email', 'Email'], ['website', 'Website', '', 2]]],
+    ['Lokasi sekolah', [['lat', 'Garis lintang (latitude)', '-1.98…'], ['lng', 'Garis bujur (longitude)', '121.3…'], ['radius_m', 'Radius area sekolah (meter)', '300']]],
     ['Penandatangan dokumen', [['kepala_sekolah', 'Nama kepala sekolah', 'Nama lengkap & gelar', 2], ['nip_kepala', 'NIP kepala sekolah'], ['tempat_ttd', 'Tempat tanda tangan', 'Contoh: Soyo Jaya']]],
 ];
 
@@ -2309,14 +2485,24 @@ async function renderSekolah() {
     $('page-sekolah').innerHTML = pageHead('Profil sekolah', 'Data ini dipakai di seluruh aplikasi dan sebagai kop surat pada dokumen cetak (rekap nilai, daftar hadir, kartu peserta).',
         `<div class="flex gap-2"><button class="btn btn-sm btn-outline" onclick="contohKop()"><i class="fa fa-print"></i> Cetak contoh</button><button class="btn btn-sm btn-primary" id="sk_simpan" onclick="simpanSekolah()"><i class="fa fa-floppy-disk"></i> Simpan</button></div>`)
         + `<div class="grid xl:grid-cols-[1fr_520px] gap-5 items-start">
-            <div class="space-y-4">${SK_GROUPS.map(([t, fs]) => `<div class="card p-5"><h3 class="section-title mb-3">${t}</h3><div class="grid sm:grid-cols-2 gap-3">${fs.map(field).join('')}</div></div>`).join('')}</div>
+            <div class="space-y-4">${SK_GROUPS.map(([t, fs]) => `<div class="card p-5"><h3 class="section-title mb-3">${t}</h3>${t === 'Lokasi sekolah' ? '<p class="text-sm text-muted -mt-2 mb-3">Dipakai untuk jadwal yang mengaktifkan <b>Wajib berada di sekolah</b>. Cara termudah: buka halaman ini dari HP di halaman sekolah, lalu tekan tombol di bawah.</p>' : ''}<div class="grid sm:grid-cols-2 gap-3">${fs.map(field).join('')}</div>${t === 'Lokasi sekolah' ? `<div class="flex flex-wrap gap-2 mt-3"><button class="btn btn-sm btn-outline" onclick="pakaiLokasiSaya()"><i class="fa fa-location-crosshairs"></i> Pakai lokasi perangkat ini</button><a class="btn btn-sm btn-ghost" id="sk_maps" target="_blank" rel="noopener"><i class="fa fa-map"></i> Lihat di peta</a></div>` : ''}</div>`).join('')}</div>
             <div class="space-y-4 xl:sticky xl:top-0">
                 <div class="grid sm:grid-cols-2 gap-4">${logoBox('sekolah', 'Logo sekolah', 'Tampil di aplikasi & kanan kop. PNG transparan, persegi.')}${logoBox('pemda', 'Logo pemda (opsional)', 'Tampil di kiri kop surat.')}</div>
                 <div class="card p-4"><p class="font-bold mb-3">Pratinjau kop surat</p><div class="kop-preview" id="sk_preview"></div></div>
             </div></div>`;
-    skPreview();
+    skPreview(); skUpdateMaps();
+    ['sk_lat', 'sk_lng'].forEach(id => $(id).addEventListener('input', skUpdateMaps));
 }
 function skInput(k, v) { skDraft[k] = v; skPreview(); }
+function pakaiLokasiSaya() {
+    if (!navigator.geolocation) return toast('Perangkat tidak mendukung lokasi', 'error');
+    toast('Membaca lokasi…', 'info');
+    navigator.geolocation.getCurrentPosition(p => {
+        $('sk_lat').value = p.coords.latitude.toFixed(6); $('sk_lng').value = p.coords.longitude.toFixed(6);
+        skUpdateMaps(); toast(`Lokasi terbaca (akurasi ±${Math.round(p.coords.accuracy)} m). Klik Simpan.`);
+    }, () => toast('Izin lokasi ditolak / GPS mati', 'error'), { enableHighAccuracy: true, timeout: 15000 });
+}
+function skUpdateMaps() { const a = $('sk_maps'); if (!a) return; const la = $('sk_lat').value, ln = $('sk_lng').value; a.href = la && ln ? `https://www.google.com/maps?q=${encodeURIComponent(la)},${encodeURIComponent(ln)}` : '#'; a.classList.toggle('pointer-events-none', !(la && ln)); a.classList.toggle('opacity-50', !(la && ln)); }
 function skLogoSrc(jenis) {
     const d = skDraft['_logo_' + jenis];
     if (d !== undefined) return d || (jenis === 'sekolah' ? '/logo-sekolah.png' : '');

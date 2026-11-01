@@ -276,6 +276,55 @@ app.get('/api/me', auth(), (req, res) => {
 // ============================================================
 // 2. SISWA: CEK PIN, AMBIL SOAL, PING, SUBMIT
 // ============================================================
+// ============================================================
+// ANTI JOKI: kunci perangkat, token pengawas, lokasi
+// ============================================================
+const clientIp = req => String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress || '').split(',')[0].trim();
+
+// Token pengawas: 6 karakter, berganti tiap TOKEN_MENIT menit, dihitung dari
+// rahasia server + PIN (tidak perlu disimpan di database).
+const TOKEN_MENIT = Math.max(2, parseInt(process.env.TOKEN_MENIT || '15'));
+const TOKEN_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const tokenWindow = () => Math.floor(Date.now() / (TOKEN_MENIT * 60000));
+function tokenFor(sch, w) {
+    const h = crypto.createHmac('sha256', APP_SECRET).update(`tok|${sch.id}|${sch.pin}|${w}`).digest();
+    let t = ''; for (let i = 0; i < 6; i++) t += TOKEN_CHARS[h[i] % TOKEN_CHARS.length];
+    return t;
+}
+function cekToken(schs, input) {
+    const v = String(input || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const w = tokenWindow();
+    return schs.some(s => tokenFor(s, w) === v || tokenFor(s, w - 1) === v); // token sebelumnya masih diterima (toleransi pergantian)
+}
+function jarakMeter(lat1, lng1, lat2, lng2) {
+    const R = 6371000, r = d => d * Math.PI / 180;
+    const a = Math.sin(r(lat2 - lat1) / 2) ** 2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(r(lng2 - lng1) / 2) ** 2;
+    return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+}
+// Sesi perangkat per siswa per paket (tabel exam_sessions, lihat supabase-migration.sql)
+let SESI_AKTIF = true;
+async function getSesi(studentName, mapel) {
+    if (!SESI_AKTIF) return null;
+    const { data, error } = await supabase.from('exam_sessions').select('*').eq('student_name', studentName).eq('mapel', mapel).maybeSingle();
+    if (error) { if (/exam_sessions/.test(error.message || '')) SESI_AKTIF = false; return null; }
+    return data;
+}
+async function cekPerangkat(req, mapel) {
+    // null = boleh; objek = ditolak
+    const sesi = await getSesi(req.user.name, mapel);
+    const dev = String(req.body.device_id || '');
+    if (!sesi || !dev || sesi.device_id === dev) return { ok: true, sesi };
+    return { ok: false, sesi };
+}
+
+async function catatPercobaan(req, mapel, ket) {
+    if (!SESI_AKTIF) return;
+    const sesi = await getSesi(req.user.name, mapel);
+    if (!sesi) return;
+    const log = `${nowTime()} — ${ket}`;
+    await supabase.from('exam_sessions').update({ percobaan: (sesi.percobaan || 0) + 1, percobaan_info: log }).eq('id', sesi.id);
+}
+
 function kelasCocokan(examCode, studentKelas) {
     // MTK-7A → hanya 7A | MTK-7 → semua kelas 7 | IPA → semua kelas
     const e = examCode.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -322,14 +371,58 @@ app.post('/api/siswa/cek-pin', SISWA, wrap(async (req, res) => {
     const acakSoal = data.some(d => d.acak_soal === true);
     const acakOpsi = data.some(d => d.acak_opsi === true);
     const tanggal = (data[0].tanggal || '').split('|');
-    const exam = { mapel, durasi, jumlah_soal: questions.length, acak_soal: acakSoal, acak_opsi: acakOpsi, tanggal: tanggal[0] || '', jam: tanggal[1] || '', resume: !!(actData && actData.length) };
-    const ticket = sign({ t: 'exam', u: req.user.username, mapel, durasi, acakSoal, acakOpsi }, (durasi + 24 * 60) * 60);
+    const wajibToken = data.some(d => d.wajib_token === true);
+    const wajibLokasi = data.some(d => d.wajib_lokasi === true);
+    const exam = { mapel, durasi, jumlah_soal: questions.length, acak_soal: acakSoal, acak_opsi: acakOpsi, wajib_token: wajibToken, wajib_lokasi: wajibLokasi, tanggal: tanggal[0] || '', jam: tanggal[1] || '', resume: !!(actData && actData.length) };
+    const ticket = sign({ t: 'exam', u: req.user.username, mapel, durasi, acakSoal, acakOpsi, sids: data.map(d => d.id) }, (durasi + 24 * 60) * 60);
     res.json({ status: 'success', exam, ticket });
 }));
 
 app.post('/api/siswa/get-soal', SISWA, wrap(async (req, res) => {
     const tk = readTicket(req);
     if (!tk) return res.status(403).json({ status: 'error', message: 'Tiket ujian tidak valid. Masukkan PIN kembali.' });
+    // Tiket lama (sebelum pembaruan) tidak membawa id jadwal → lewati pemeriksaan token/lokasi
+    const { data: schs } = tk.sids ? await supabase.from('schedules').select('*').in('id', tk.sids) : { data: null };
+    const aktif = (schs || []).filter(s => s.status === 'Aktif');
+    if (tk.sids && !aktif.length) return res.json({ status: 'error', code: 'closed', message: 'Ujian sudah ditutup oleh pengawas.' });
+
+    // 1) Token pengawas
+    if (aktif.some(s => s.wajib_token === true) && !cekToken(aktif.filter(s => s.wajib_token === true), req.body.token)) {
+        return res.json({ status: 'error', code: 'token', message: 'Token salah atau sudah kedaluwarsa. Lihat token terbaru di layar pengawas.' });
+    }
+
+    // 2) Lokasi (jika diwajibkan dan koordinat sekolah sudah diisi)
+    let lokasi = null;
+    if (aktif.some(s => s.wajib_lokasi === true)) {
+        const sk = await getSekolah();
+        const L = req.body.lokasi || {};
+        if (!isFinite(L.lat) || !isFinite(L.lng)) return res.json({ status: 'error', code: 'lokasi', message: 'Ujian ini hanya bisa dikerjakan di sekolah. Izinkan akses lokasi (GPS) lalu coba lagi.' });
+        const sLat = parseFloat(sk.lat), sLng = parseFloat(sk.lng), radius = parseFloat(sk.radius_m) || 300;
+        const akurasi = Math.round(Math.max(0, parseFloat(L.acc) || 0));
+        if (isFinite(sLat) && isFinite(sLng)) {
+            const jarak = jarakMeter(sLat, sLng, +L.lat, +L.lng);
+            lokasi = { lat: +L.lat, lng: +L.lng, jarak, akurasi };
+            // Ditolak hanya bila yakin berada di luar radius (jarak dikurangi ketidakpastian GPS)
+            if (jarak - akurasi > radius) {
+                const km = jarak >= 1000 ? (jarak / 1000).toFixed(1).replace('.', ',') + ' km' : jarak + ' m';
+                await catatPercobaan(req, tk.mapel, `Lokasi di luar sekolah (${km})`);
+                return res.json({ status: 'error', code: 'lokasi', message: `Kamu terdeteksi berada ${km} dari sekolah. Ujian ini hanya bisa dikerjakan di sekolah.` });
+            }
+        } else lokasi = { lat: +L.lat, lng: +L.lng, jarak: null, akurasi };
+    }
+
+    // 3) Satu akun satu perangkat
+    const dev = String(req.body.device_id || '').slice(0, 64);
+    const cek = await cekPerangkat(req, tk.mapel);
+    if (!cek.ok) {
+        await catatPercobaan(req, tk.mapel, `Perangkat lain (${String(req.body.device_info || '?').slice(0, 60)}, IP ${clientIp(req)})`);
+        return res.json({ status: 'error', code: 'device', message: 'Akun ini sedang dipakai di perangkat lain untuk ujian ini. Jika perangkatmu rusak/berganti, minta pengawas menekan "Reset perangkat".' });
+    }
+    if (SESI_AKTIF && dev) {
+        const row = { student_name: req.user.name, username: req.user.username, kelas: req.user.kelas || '-', mapel: tk.mapel, device_id: dev, device_info: String(req.body.device_info || '').slice(0, 120), ip: clientIp(req), lokasi: lokasi ? JSON.stringify(lokasi) : null, updated_at: new Date().toISOString() };
+        if (cek.sesi) await supabase.from('exam_sessions').update(row).eq('id', cek.sesi.id);
+        else { const { error } = await supabase.from('exam_sessions').insert([row]); if (error && /exam_sessions/.test(error.message || '')) SESI_AKTIF = false; }
+    }
     const questions = await getQuestions(tk.mapel);
     res.json({ status: 'success', questions: questions.map(sanitizeQuestion) });
 }));
@@ -337,6 +430,7 @@ app.post('/api/siswa/get-soal', SISWA, wrap(async (req, res) => {
 app.post('/api/siswa/ping', SISWA, wrap(async (req, res) => {
     const tk = readTicket(req);
     if (!tk) return res.status(403).json({ status: 'error' });
+    if (!(await cekPerangkat(req, tk.mapel)).ok) return res.json({ status: 'device_locked' });
     const name = req.user.name;
     const { data: cur } = await supabase.from('activity').select('status').eq('student_name', name).eq('exam_name', tk.mapel).maybeSingle();
     const curStatus = (cur && cur.status) || '';
@@ -355,6 +449,10 @@ app.post('/api/siswa/ping', SISWA, wrap(async (req, res) => {
 app.post('/api/siswa/submit', SISWA, wrap(async (req, res) => {
     const tk = readTicket(req);
     if (!tk) return res.status(403).json({ status: 'error', message: 'Tiket ujian tidak valid.' });
+    if (!(await cekPerangkat(req, tk.mapel)).ok) {
+        await catatPercobaan(req, tk.mapel, `Perangkat lain mencoba mengumpulkan (IP ${clientIp(req)})`);
+        return res.json({ status: 'error', code: 'device', message: 'Jawaban ditolak: akun ini terdaftar di perangkat lain untuk ujian ini. Hubungi pengawas.' });
+    }
     const name = req.user.name;
     const isCurang = req.body.is_curang === true || req.body.is_curang === 'true';
     const questions = await getQuestions(tk.mapel);
@@ -412,7 +510,7 @@ const SEKOLAH_DEFAULT = {
     nama_sekolah: 'SMP Negeri 2 Soyo Jaya', singkatan: 'Spenda', npsn: '',
     instansi_1: 'PEMERINTAH KABUPATEN MOROWALI UTARA', instansi_2: 'DINAS PENDIDIKAN DAN KEBUDAYAAN',
     alamat: '', kecamatan: 'Soyo Jaya', kabupaten: 'Morowali Utara', provinsi: 'Sulawesi Tengah', kode_pos: '',
-    telepon: '', email: '', website: '', kepala_sekolah: '', nip_kepala: '', tahun_pelajaran: '', tempat_ttd: '',
+    telepon: '', email: '', website: '', kepala_sekolah: '', nip_kepala: '', tahun_pelajaran: '', tempat_ttd: '', lat: '', lng: '', radius_m: '300',
     logo_sekolah: '', logo_pemda: '', updated_at: 0,
 };
 const SEKOLAH_FIELDS = Object.keys(SEKOLAH_DEFAULT).filter(k => !['logo_sekolah', 'logo_pemda', 'updated_at'].includes(k));
@@ -501,6 +599,13 @@ app.get('/api/admin/stats', STAFF, wrap(async (req, res) => {
 
 app.get('/api/admin/recent-activity', STAFF, wrap(async (req, res) => {
     const { data } = await supabase.from('activity').select('*').order('last_seen', { ascending: false });
+    let sesiMap = {};
+    if (SESI_AKTIF) {
+        const { data: ss, error } = await supabase.from('exam_sessions').select('*');
+        if (error && /exam_sessions/.test(error.message || '')) SESI_AKTIF = false;
+        (ss || []).forEach(x => { sesiMap[x.student_name + '|' + x.mapel] = { device_info: x.device_info, ip: x.ip, lokasi: x.lokasi ? JSON.parse(x.lokasi) : null, percobaan: x.percobaan || 0, percobaan_info: x.percobaan_info || '' }; });
+    }
+    if (req.query.v === '2') return res.json({ sesi_aktif: SESI_AKTIF, rows: (data || []).map(a => ({ ...a, sesi: sesiMap[a.student_name + '|' + a.exam_name] || null })) });
     res.json(data || []);
 }));
 
@@ -555,15 +660,33 @@ app.post('/api/admin/reset-siswa', STAFF, wrap(async (req, res) => {
     res.json({ status: 'success' });
 }));
 
+// Izinkan siswa masuk dari perangkat baru (HP rusak/berganti)
+app.post('/api/admin/reset-perangkat', STAFF, wrap(async (req, res) => {
+    if (SESI_AKTIF) await supabase.from('exam_sessions').delete().eq('student_name', req.body.student_name).eq('mapel', req.body.mapel);
+    res.json({ status: 'success' });
+}));
+
+// Token pengawas untuk jadwal aktif
+app.get('/api/admin/tokens', STAFF, wrap(async (req, res) => {
+    const { data } = await supabase.from('schedules').select('*').eq('status', 'Aktif');
+    const w = tokenWindow(), berakhir = (w + 1) * TOKEN_MENIT * 60000;
+    res.json({ menit: TOKEN_MENIT, berakhir, server_now: Date.now(), tokens: (data || []).filter(s => s.wajib_token === true).map(s => ({ id: s.id, mapel: s.mapel, pin: s.pin, token: tokenFor(s, w) })) });
+}));
+
 // Izinkan siswa mengulang ujian dari awal (hapus aktivitas + nilai)
 app.post('/api/admin/ulang-ujian', ADMIN, wrap(async (req, res) => {
     await supabase.from('activity').delete().eq('student_name', req.body.student_name).eq('exam_name', req.body.mapel);
     await supabase.from('results').delete().eq('student_name', req.body.student_name).eq('mapel', req.body.mapel);
+    if (SESI_AKTIF) await supabase.from('exam_sessions').delete().eq('student_name', req.body.student_name).eq('mapel', req.body.mapel);
     res.json({ status: 'success' });
 }));
 
 app.delete('/api/admin/remove-activity/:id', ADMIN, wrap(async (req, res) => { await supabase.from('activity').delete().eq('id', req.params.id); res.json({ status: 'success' }); }));
-app.delete('/api/admin/clear-monitoring', ADMIN, wrap(async (req, res) => { await supabase.from('activity').delete().neq('id', 0); res.json({ status: 'success' }); }));
+app.delete('/api/admin/clear-monitoring', ADMIN, wrap(async (req, res) => {
+    await supabase.from('activity').delete().neq('id', 0);
+    if (SESI_AKTIF) await supabase.from('exam_sessions').delete().neq('id', 0);
+    res.json({ status: 'success' });
+}));
 app.delete('/api/admin/clear-results', ADMIN, wrap(async (req, res) => { await supabase.from('results').delete().neq('id', 0); res.json({ status: 'success' }); }));
 app.delete('/api/admin/delete-result/:id', ADMIN, wrap(async (req, res) => { await supabase.from('results').delete().eq('id', req.params.id); res.json({ status: 'success' }); }));
 
@@ -577,18 +700,20 @@ app.get('/api/admin/schedules', STAFF, wrap(async (req, res) => {
     res.json(data || []);
 }));
 app.post('/api/admin/add-schedule', ADMIN, wrap(async (req, res) => {
-    const row = { mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: parseInt(req.body.durasi) || 60, pin: genPin(), status: 'Aktif', acak_soal: !!req.body.acak_soal, acak_opsi: !!req.body.acak_opsi };
-    const { error, droppedCols } = await withOptionalCols(p => supabase.from('schedules').insert([p]), row, ['acak_soal', 'acak_opsi']);
+    const row = { mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: parseInt(req.body.durasi) || 60, pin: genPin(), status: 'Aktif', acak_soal: !!req.body.acak_soal, acak_opsi: !!req.body.acak_opsi, wajib_token: !!req.body.wajib_token, wajib_lokasi: !!req.body.wajib_lokasi };
+    const { error, droppedCols } = await withOptionalCols(p => supabase.from('schedules').insert([p]), row, ['acak_soal', 'acak_opsi', 'wajib_token', 'wajib_lokasi']);
     if (error) return res.json({ status: 'error', message: error.message });
-    res.json({ status: 'success', pin: row.pin, warning: droppedCols && (row.acak_soal || row.acak_opsi) ? 'Fitur acak belum aktif: jalankan file migrasi SQL (supabase-migration.sql) di Supabase.' : null });
+    res.json({ status: 'success', pin: row.pin, warning: droppedCols ? 'Acak soal, token pengawas & wajib lokasi belum aktif: jalankan file supabase-migration.sql di Supabase.' : null });
 }));
 app.put('/api/admin/update-schedule', ADMIN, wrap(async (req, res) => {
     const row = { mapel: req.body.mapel, tanggal: req.body.tanggal, durasi: parseInt(req.body.durasi) || 60, status: req.body.status };
     if (req.body.acak_soal !== undefined) row.acak_soal = !!req.body.acak_soal;
     if (req.body.acak_opsi !== undefined) row.acak_opsi = !!req.body.acak_opsi;
-    const { error, droppedCols } = await withOptionalCols(p => supabase.from('schedules').update(p).eq('id', req.body.id), row, ['acak_soal', 'acak_opsi']);
+    if (req.body.wajib_token !== undefined) row.wajib_token = !!req.body.wajib_token;
+    if (req.body.wajib_lokasi !== undefined) row.wajib_lokasi = !!req.body.wajib_lokasi;
+    const { error, droppedCols } = await withOptionalCols(p => supabase.from('schedules').update(p).eq('id', req.body.id), row, ['acak_soal', 'acak_opsi', 'wajib_token', 'wajib_lokasi']);
     if (error) return res.json({ status: 'error', message: error.message });
-    res.json({ status: 'success', warning: droppedCols && (row.acak_soal || row.acak_opsi) ? 'Fitur acak belum aktif: jalankan supabase-migration.sql.' : null });
+    res.json({ status: 'success', warning: droppedCols ? 'Acak soal, token & lokasi belum aktif: jalankan supabase-migration.sql.' : null });
 }));
 app.post('/api/admin/schedule-status', ADMIN, wrap(async (req, res) => {
     await supabase.from('schedules').update({ status: req.body.status === 'Aktif' ? 'Aktif' : 'Ditutup' }).eq('id', req.body.id);
