@@ -3,8 +3,6 @@
   "builds": [
     { "src": "server.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
-    { "src": "js/*.js", "use": "@vercel/static" },
-    { "src": "css/*.css", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
     { "src": "manifest.json", "use": "@vercel/static" },
     { "src": "sw.js", "use": "@vercel/static" }
@@ -12,8 +10,7 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/server.js" },
     { "src": "/sw.js", "headers": { "Cache-Control": "no-cache", "Service-Worker-Allowed": "/" }, "dest": "/sw.js" },
-    { "src": "/(js|css)/(.*)", "headers": { "Cache-Control": "no-cache" }, "dest": "/$1/$2" },
     { "src": "/(manifest\\.json|[^/]+\\.png)", "dest": "/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "headers": { "Cache-Control": "no-cache" }, "dest": "/index.html" }
   ]
 }

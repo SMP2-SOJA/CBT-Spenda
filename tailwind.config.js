@@ -1,7 +1,7 @@
-// Konfigurasi Tailwind — jalankan `npm run build:css` setiap kali
-// menambah/mengubah class Tailwind di index.html atau js/*.js
+// Konfigurasi Tailwind — jalankan `npm run build` setiap kali
+// menambah/mengubah class Tailwind di src/index.html atau src/js/*.js
 module.exports = {
-    content: ['./index.html', './js/**/*.js'],
+    content: ['./src/index.html', './src/js/**/*.js'],
     theme: { extend: {
         fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
         colors: {

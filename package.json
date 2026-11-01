@@ -5,8 +5,8 @@
   "description": "CBT Online SMP Negeri 2 Soyo Jaya",
   "main": "server.js",
   "scripts": {
-    "dev": "node dev-server.js",
-    "build:css": "tailwindcss -i css/tailwind.src.css -o css/tailwind.css --minify"
+    "build": "node scripts/build.js",
+    "dev": "node dev-server.js"
   },
   "engines": {
     "node": ">=18"

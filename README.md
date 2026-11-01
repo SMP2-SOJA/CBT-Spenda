@@ -57,7 +57,8 @@ Versi 4 adalah pengembangan dari "CBT-Ujian-Sekolah" dengan **database yang sama
 
 ### Teknis
 - `package.json` diperbaiki (di arsip lama berukuran 0 byte).
-- Tailwind dibangun sekali (`css/tailwind.css`, 17 KB) — tidak lagi memakai Tailwind CDN yang mengompilasi CSS di HP siswa.
+- Tailwind dibangun sekali (17 KB), tidak lagi memakai Tailwind CDN yang mengompilasi CSS di HP siswa.
+- Tampilan & server masing-masing jadi **satu file** (`index.html`, `server.js`), jadi deploy tidak bergantung pada subfolder.
 - Logo dikecilkan 437 KB → 55 KB; ikon PWA 192/512.
 - Service worker *network-first*: pembaruan langsung sampai ke siswa (versi lama *cache-first* dan tidak terdaftar).
 - Jam aktivitas memakai zona WITA (dulu UTC di server Vercel).
@@ -68,8 +69,22 @@ Versi 4 adalah pengembangan dari "CBT-Ujian-Sekolah" dengan **database yang sama
 
 ## Cara deploy (Vercel)
 
-1. Ganti isi repositori lama dengan isi folder ini (hapus `app.js` lama di root, folder `uploads/` dan `database.sqlite` tidak dipakai).
-2. Push ke GitHub → Vercel akan deploy otomatis seperti biasa.
+File yang **wajib** ada di halaman utama repositori GitHub (semuanya file, tanpa subfolder):
+
+```
+index.html      ← seluruh tampilan (CSS + JavaScript sudah digabung di dalamnya)
+server.js       ← seluruh server + mesin penilaian
+vercel.json
+package.json
+manifest.json
+sw.js
+logo-sekolah.png   icon-192.png   icon-512.png
+```
+
+Folder `src/`, `scripts/`, `dev/` dan file `tailwind.config.js` **tidak wajib** untuk deploy. Folder itu hanya dipakai kalau Anda ingin mengubah kode (lihat "Mengubah tampilan").
+
+1. Di GitHub: **Add file → Upload files** → pilih file-file di atas → **Commit changes**. File lama dengan nama sama otomatis tertimpa. File `app.js` lama boleh dihapus.
+2. Vercel akan deploy ulang otomatis. Setelah selesai, tekan **Ctrl + Shift + R** di laptop. Di HP: ikon gembok → *Setelan situs* → *Hapus & reset*.
 3. **Environment Variables** (Vercel → Project → Settings → Environment Variables), semuanya opsional:
 
 | Nama | Fungsi |
@@ -80,7 +95,7 @@ Versi 4 adalah pengembangan dari "CBT-Ujian-Sekolah" dengan **database yang sama
 | `SHOW_SCORE` | Isi `0` jika nilai tidak boleh ditampilkan ke siswa setelah selesai. |
 | `PUBLIC_SCORE` | Papan skor: `on` (bawaan), `final` (skor tampil setelah selesai), `off` (dimatikan). |
 
-4. **Opsional — migrasi database**: buka Supabase → SQL Editor → jalankan `supabase-migration.sql`. Ini mengaktifkan fitur acak soal/opsi dan kolom kelas pada nilai. Tanpa migrasi pun aplikasi tetap berjalan (fitur acak saja yang belum aktif).
+4. **Migrasi database** (sekali saja): Supabase → SQL Editor → tempel isi `supabase-migration.sql` → Run. Ini mengaktifkan fitur acak soal/opsi, kolom kelas pada nilai, dan tabel `config` untuk Profil sekolah.
 
 > Setelah deploy, siswa/guru yang sedang login cukup login ulang sekali.
 
@@ -106,26 +121,35 @@ MOCK_DB=1 npm run dev     # Windows PowerShell: $env:MOCK_DB=1; npm run dev
 Buka http://localhost:3000 — data contoh ada di `dev/seed.json`:
 admin `admin`/`123` · guru `guru1`/`guru1` · siswa `7a03`…`7b16` / `1234` · PIN `4821`.
 
-## Mengubah tampilan
-Jika menambah/mengubah class Tailwind di `index.html` atau `js/*.js`, jalankan:
-```bash
-npm run build:css
-```
-Warna & komponen utama ada di `css/app.css` (variabel di bagian `:root`).
+## Mengubah tampilan / kode
+
+Kode sumber ada di folder `src/`. **Jangan edit `index.html` dan `server.js` di folder utama**, karena keduanya dibuat otomatis. Alurnya:
+
+1. Edit file di `src/` (misal `src/css/app.css`, `src/js/siswa.js`, `src/server.js`).
+2. Jalankan:
+   ```bash
+   npm install
+   npm run build
+   ```
+3. Upload ulang `index.html` dan `server.js` hasil build ke GitHub.
+
+Warna & komponen utama ada di `src/css/app.css` (variabel di bagian `:root`).
 
 ## Struktur
 ```
-server.js            API (Express) — auth, ujian, admin
-lib/scoring.js       Mesin penilaian (server)
-index.html           Kerangka halaman
-css/app.css          Desain & komponen
-css/tailwind.css     Hasil build Tailwind (jangan diedit manual)
-js/core.js           API, sesi, utilitas, papan skor publik
-js/siswa.js          PIN, konfirmasi, ruang ujian, anti-curang
-js/skor.js           Papan skor langsung (/skor)
-js/admin.js          Panel admin & guru
-js/import.js         Impor soal Excel/Word
-dev/                 Database tiruan untuk uji lokal
+index.html, server.js   HASIL BUILD — ini yang di-deploy
+src/index.html          Kerangka halaman
+src/server.js           API (Express) — auth, ujian, admin, profil sekolah
+src/lib/scoring.js      Mesin penilaian (server)
+src/css/app.css         Desain & komponen
+src/css/tailwind.css    Hasil build Tailwind
+src/js/core.js          API, sesi, utilitas, branding & kop surat
+src/js/siswa.js         PIN, konfirmasi, ruang ujian, anti-curang
+src/js/skor.js          Papan skor langsung (/skor)
+src/js/admin.js         Panel admin & guru
+src/js/import.js        Impor soal Excel/Word
+scripts/build.js        Penggabung src/ → index.html + server.js
+dev/                    Database tiruan untuk uji lokal
 supabase-migration.sql
 ```
 
