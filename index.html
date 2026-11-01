@@ -2,414 +2,273 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CBT Online - @spenda-digi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CBT Spenda — SMP Negeri 2 Soyo Jaya</title>
+    <meta name="theme-color" content="#14306B">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Inter', sans-serif; } .hidden { display: none !important; } ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; } .drawer-transition { transition: transform 0.3s ease-in-out; } .gform-container { position: relative; width: 100%; height: 75vh; overflow: hidden; border-radius: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); } .gform-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .anti-copas { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-touch-callout: none; }
-        sup { font-size: 0.72em; vertical-align: super; line-height: 0; position: relative; } sub { font-size: 0.72em; vertical-align: sub;   line-height: 0; position: relative; }
-        .katex { font-size: 1.1em; } .katex-display { overflow-x: auto; overflow-y: hidden; }
-        @media print { body { display: none !important; } }
-        img { pointer-events: none; }
-    </style>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/tailwind.css">
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 selection:bg-blue-200 overflow-x-hidden" oncontextmenu="return false;">
-    <div id="view-login" class="min-h-screen flex items-center justify-center p-3 bg-gradient-to-br from-slate-800 to-blue-900">
-        <div class="w-full max-w-xs bg-white p-5 rounded-2xl shadow-2xl border-t-4 border-blue-600">
-            <!-- Logo + Judul -->
-            <div class="text-center mb-4">
-                <img src="logo-sekolah.png" class="w-12 h-12 mx-auto mb-2 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
-                <h2 class="text-base font-black text-slate-800 uppercase tracking-wide">CBT Online</h2>
-                <p class="text-[10px] text-slate-400">SPENDA-DIGI-2026</p>
-            </div>
-            <!-- Form Login -->
-            <div class="space-y-3">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Username</label>
-                    <div class="relative mt-1">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa fa-user text-xs"></i></span>
-                        <input type="text" id="login-user" onkeydown="if(event.key==='Enter')prosesLogin()" class="w-full pl-9 p-2 bg-slate-50 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400 text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Password</label>
-                    <div class="relative mt-1">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa fa-lock text-xs"></i></span>
-                        <input type="password" id="login-pass" onkeydown="if(event.key==='Enter')prosesLogin()" class="w-full pl-9 pr-9 p-2 bg-slate-50 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400 text-sm">
-                        <button type="button" onclick="togglePass('login-pass','eye-icon-login')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-blue-600"><i id="eye-icon-login" class="fa fa-eye-slash text-xs"></i></button>
-                    </div>
-                </div>
-                <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white py-2 rounded-xl font-black shadow hover:bg-blue-700 transition text-sm">MASUK APLIKASI</button>
-            </div>
-            <button onclick="showPublicScore()" class="w-full mt-3 bg-slate-700 text-white py-2 rounded-xl font-bold hover:bg-slate-800 transition text-[11px]">
-                <i class="fa fa-chart-bar mr-1"></i> LIVE SCORE PUBLIK
-            </button>
-            <p class="text-center text-[9px] text-slate-300 mt-3">Hak Cipta &copy; 2026 | SPENDA-DIGI</p>
-        </div>
-    </div>
+<body class="bg-paper text-ink antialiased">
 
-    <div id="view-public-score" class="hidden min-h-screen bg-slate-100 flex-col p-4 relative">
-        <div class="max-w-5xl mx-auto w-full bg-white rounded-3xl shadow-xl p-4 md:p-6 flex flex-col h-[90vh]">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <div>
-                    <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase">LIVE SCORE UJIAN</h2>
-                    <p class="text-xs text-slate-500">Pantau pergerakan nilai siswa secara real-time</p>
-                </div>
-                <button onclick="keluarPublic()" class="bg-red-100 text-red-600 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs"><i class="fa fa-arrow-left"></i> Kembali</button>
-            </div>
-            
-            <div class="flex gap-2 mb-4">
-                <select id="pub-filter-mapel" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Mapel</option></select>
-                <select id="pub-filter-kelas" class="p-2 border rounded-lg text-xs font-bold w-1/2 outline-none" onchange="renderPublicTable()"><option value="">Semua Kelas</option></select>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-2 scroll-saver">
-                <table class="w-full text-left text-[10px] md:text-xs">
-                    <thead class="sticky top-0 bg-slate-200 text-slate-600 uppercase shadow-sm">
-                        <tr>
-                            <th class="p-2 md:p-3">Nama / Kelas</th>
-                            <th class="p-2 md:p-3 text-center">Status</th>
-                            <th class="p-2 md:p-3 text-center">Progress</th>
-                            <th class="p-2 md:p-3 text-center">Skor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="public-table-body" class="divide-y bg-white"></tbody>
-                </table>
+<!-- ================= LOGIN ================= -->
+<section id="view-login" class="view min-h-screen grid lg:grid-cols-[1.05fr_1fr]">
+    <div class="login-brand relative overflow-hidden bg-navy text-white px-6 pt-10 pb-8 lg:p-14 flex flex-col">
+        <div class="flex items-center gap-3">
+            <img src="/logo-sekolah.png" alt="Logo SMP Negeri 2 Soyo Jaya" class="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white p-0.5">
+            <div>
+                <p class="font-bold leading-tight">SMP Negeri 2 Soyo Jaya</p>
+                <p class="text-sm text-white/70">Morowali Utara, Sulawesi Tengah</p>
             </div>
         </div>
-    </div>
-
-    <div id="view-siswa-token" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-100">
-        <div class="w-full max-w-sm bg-white p-6 md:p-8 rounded-3xl shadow-xl text-center border-t-8 border-emerald-500">
-            <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa fa-unlock-alt text-lg md:text-xl"></i></div>
-            <h2 class="text-base md:text-lg font-bold text-slate-800">Halo, <span id="nama-siswa-welcome" class="text-emerald-600 font-black">Siswa</span>!</h2>
-            <p class="text-xs text-slate-500 mb-6">Masukkan PIN ujian dari pengawas</p>
-            <input type="text" id="input-pin" class="w-full p-2 md:p-3 border-2 border-emerald-200 bg-emerald-50 rounded-xl text-center text-xl md:text-2xl font-black uppercase mb-6 tracking-widest outline-none">
-            <button onclick="mulaiUjian()" class="w-full bg-emerald-600 text-white py-2 md:py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 text-sm md:text-base">MULAI UJIAN</button>
-            <button onclick="logout()" class="w-full mt-4 text-slate-400 text-xs hover:text-red-500"><i class="fa fa-sign-out-alt"></i> Keluar</button>
+        <div class="mt-10 lg:mt-auto lg:mb-auto max-w-md">
+            <h1 class="text-3xl lg:text-5xl font-extrabold tracking-tight leading-[1.08]">Ujian berbasis komputer</h1>
+            <p class="mt-3 lg:mt-5 text-white/75 text-[15px] lg:text-lg leading-relaxed">Kerjakan dengan tenang. Jawabanmu tersimpan otomatis setiap kali kamu memilih.</p>
+            <div class="hidden lg:flex gap-3 mt-10" aria-hidden="true">
+                <span class="ljk-demo">A</span><span class="ljk-demo">B</span><span class="ljk-demo is-on">C</span><span class="ljk-demo">D</span><span class="ljk-demo">E</span>
+            </div>
         </div>
+        <p class="hidden lg:block text-sm text-white/50">SPENDA-DIGI · CBT v4</p>
     </div>
 
-    <div id="view-siswa-ujian" class="hidden h-screen flex flex-col bg-slate-100 overflow-hidden relative anti-copas">
-        <header class="bg-blue-800 text-white shadow-md flex justify-between items-center px-4 py-2 md:py-3 flex-shrink-0 z-20 relative">
-            <div class="truncate"><h1 id="ujian-mapel-title" class="font-black text-sm md:text-lg tracking-wider uppercase">MAPEL</h1><p class="text-[10px] md:text-xs text-blue-200">Peserta: <span id="ujian-nama-siswa" class="font-bold text-white">Siswa</span></p></div>
-            <div class="flex items-center space-x-2"><div class="bg-blue-900 rounded-lg px-2 py-1 text-center shadow-inner relative overflow-hidden"><div id="network-status" class="bg-emerald-500 text-white text-[7px] md:text-[8px] font-bold uppercase mb-0.5 md:mb-1 rounded-sm text-center">ONLINE</div><div id="exam-countdown" class="font-mono font-black text-xs md:text-sm text-yellow-400">00:00:00</div></div><button onclick="toggleCbtNav()" class="md:hidden bg-blue-700 hover:bg-blue-600 text-white p-1.5 md:p-2 rounded-lg shadow"><i class="fa fa-th-large"></i></button></div>
-        </header>
-        <div class="flex-1 flex overflow-hidden max-w-7xl mx-auto w-full relative">
-            <div class="flex-1 bg-white md:rounded-xl md:my-4 md:ml-4 shadow-sm border flex flex-col overflow-hidden relative z-10">
-                <div id="offline-pending-alert" class="hidden bg-orange-100 border-b border-orange-200 p-2 text-center flex justify-between items-center px-4"><p class="text-xs text-orange-800 font-bold"><i class="fa fa-wifi text-red-500"></i> Offline! Jawaban tertunda.</p><button onclick="checkPendingSubmit(true)" class="bg-orange-500 text-white text-[10px] px-3 py-1 rounded">Coba Kirim</button></div>
-                <div class="flex justify-between items-center p-2 md:p-3 border-b bg-slate-50"><div class="font-bold text-blue-800 text-sm">Soal <span id="cbt-no-soal" class="text-lg md:text-xl font-black">1</span></div><span id="cbt-tipe-soal" class="bg-blue-100 text-blue-800 text-[9px] md:text-[10px] font-bold px-3 py-1 rounded-full">PG</span></div>
-                
-                <div class="flex-1 overflow-y-auto p-3 md:p-4 pb-24 md:pb-10 flex flex-col scroll-smooth">
-                    <div id="cbt-media-area" class="w-full mb-3 md:mb-4 text-center"></div>
-                    <div id="cbt-tanya" class="prose max-w-none text-xs md:text-sm text-slate-800 mb-4 md:mb-6 font-medium text-justify leading-relaxed whitespace-pre-line"></div>
-                    <div id="cbt-opsi-area" class="space-y-2 md:space-y-3 w-full mt-auto"></div>
-                </div>
-                
-                <div class="bg-slate-50 border-t p-2 md:p-3 flex justify-between items-center">
-                    <button onclick="cbtPrev()" class="bg-slate-200 text-slate-700 px-3 md:px-4 py-2 rounded-lg font-bold text-[10px] md:text-xs hover:bg-slate-300 transition"><i class="fa fa-arrow-left"></i> SEBELUM</button>
-                    <button onclick="cbtNext()" class="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg font-bold text-[10px] md:text-xs hover:bg-blue-700 transition">SELANJUTNYA <i class="fa fa-arrow-right"></i></button>
-                </div>
+    <div class="flex items-start lg:items-center justify-center px-5 py-8 lg:p-10">
+        <form id="form-login" class="w-full max-w-sm" autocomplete="on" onsubmit="event.preventDefault(); prosesLogin();">
+            <h2 class="text-2xl font-extrabold tracking-tight">Masuk</h2>
+            <p class="text-muted mt-1 mb-7">Gunakan username dan password dari panitia ujian.</p>
+            <label class="field-label" for="login-user">Username</label>
+            <input id="login-user" class="field" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+            <label class="field-label mt-4" for="login-pass">Password</label>
+            <div class="relative">
+                <input id="login-pass" type="password" class="field pr-12" autocomplete="current-password" required>
+                <button type="button" onclick="togglePass('login-pass', this)" class="absolute inset-y-0 right-0 w-12 grid place-items-center text-muted hover:text-navy" aria-label="Tampilkan password"><i class="fa fa-eye"></i></button>
             </div>
-            <div id="cbt-nav-overlay" onclick="toggleCbtNav()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
-            <div id="cbt-nav-panel" class="fixed inset-y-0 right-0 w-56 md:w-64 bg-white shadow-2xl transform translate-x-full md:translate-x-0 md:relative md:flex flex-col h-full z-40 md:my-4 md:mr-4 md:rounded-xl md:border drawer-transition"><div class="p-3 md:p-4 border-b bg-slate-50 flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm"><i class="fa fa-th mr-2 text-blue-500"></i> Navigasi</h3><button onclick="toggleCbtNav()" class="md:hidden text-slate-400 hover:text-red-500"><i class="fa fa-times text-lg"></i></button></div><div class="flex-1 overflow-y-auto p-3 md:p-4"><div id="cbt-grid" class="grid grid-cols-5 md:grid-cols-4 gap-1.5 md:gap-2"></div></div><div class="p-3 md:p-4 border-t bg-slate-50"><button id="btn-submit-ujian" onclick="submitUjian(true)" class="w-full bg-emerald-600 text-white py-2 md:py-3 rounded-xl font-black text-xs md:text-sm shadow-md">SELESAI UJIAN</button></div></div>
+            <button id="btn-login" type="submit" class="btn btn-primary w-full mt-6 h-12 text-base">Masuk</button>
+            <button type="button" data-live-btn onclick="showPublicScore()" class="btn btn-ghost w-full mt-3"><i class="fa fa-ranking-star"></i> Lihat papan skor langsung</button>
+            <p class="text-xs text-muted mt-8 text-center">Lupa password? Hubungi wali kelas atau operator sekolah.</p>
+        </form>
+    </div>
+</section>
+
+<!-- ================= PAPAN SKOR LANGSUNG ================= -->
+<section id="view-public-score" class="view hidden min-h-[100dvh] board">
+    <header class="board-head">
+        <div class="board-wrap flex flex-wrap items-center gap-x-4 gap-y-3">
+            <button onclick="keluarPublic()" class="icon-btn text-white/80 hover:bg-white/10 hover:text-white no-tv" aria-label="Kembali"><i class="fa fa-arrow-left"></i></button>
+            <img src="/logo-sekolah.png" alt="" class="w-10 h-10 rounded-full bg-white p-0.5">
+            <div class="flex-1 min-w-[180px]">
+                <h1 class="board-title">Papan skor <span id="pub-judul-paket"></span></h1>
+                <p class="text-white/60 text-sm"><span class="live-dot">Langsung</span> <span id="pub-updated" class="ml-2"></span></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 no-tv">
+                <select id="pub-filter-mapel" class="board-select" onchange="onPubFilter()" aria-label="Paket"><option value="">Semua paket</option></select>
+                <select id="pub-filter-kelas" class="board-select" onchange="onPubFilter()" aria-label="Kelas"><option value="">Semua kelas</option></select>
+                <div class="board-tabs" role="tablist">
+                    <button class="board-tab" data-mode="siswa" onclick="setPubMode('siswa')">Peserta</button>
+                    <button class="board-tab" data-mode="kelas" onclick="setPubMode('kelas')">Antar kelas</button>
+                </div>
+                <button class="icon-btn text-white/80 hover:bg-white/10 hover:text-white" onclick="bagikanPapan()" title="Salin tautan papan ini" aria-label="Salin tautan"><i class="fa fa-link"></i></button>
+                <button class="icon-btn text-white/80 hover:bg-white/10 hover:text-white" onclick="layarPenuhPapan()" title="Layar penuh untuk proyektor/TV" aria-label="Layar penuh"><i class="fa fa-expand"></i></button>
+            </div>
         </div>
+    </header>
+    <main class="board-wrap py-5 lg:py-7">
+        <div id="pub-stats" class="board-stats"></div>
+        <div id="pub-podium" class="podium"></div>
+        <ol id="public-list" class="board-list"></ol>
+        <p id="pub-note" class="text-center text-white/45 text-xs mt-6"></p>
+    </main>
+</section>
+
+<!-- ================= SISWA: PIN ================= -->
+<section id="view-siswa-token" class="view hidden min-h-screen flex flex-col">
+    <header class="px-5 py-4 flex items-center justify-between max-w-xl w-full mx-auto">
+        <div class="flex items-center gap-2.5"><img src="/logo-sekolah.png" class="w-9 h-9 rounded-full" alt=""><span class="font-bold text-sm">CBT Spenda</span></div>
+        <button onclick="logout()" class="btn btn-ghost btn-sm"><i class="fa fa-arrow-right-from-bracket"></i> Keluar</button>
+    </header>
+    <main class="flex-1 px-5 pb-10 max-w-xl w-full mx-auto">
+        <div class="mt-4 sm:mt-10">
+            <p class="text-muted">Selamat datang,</p>
+            <h1 id="nama-siswa-welcome" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Siswa</h1>
+            <p id="kelas-siswa-welcome" class="text-muted mt-0.5"></p>
+        </div>
+        <div id="resume-banner" class="hidden mt-6 rounded-2xl border border-gold/50 bg-gold-50 p-4 flex gap-3">
+            <i class="fa fa-clock-rotate-left text-gold-700 mt-1"></i>
+            <div class="text-sm"><p class="font-bold text-gold-700">Ujianmu belum selesai</p><p class="text-ink/80 mt-0.5">Jawaban <b id="resume-mapel"></b> masih tersimpan di perangkat ini. Masukkan PIN yang sama untuk melanjutkan.</p></div>
+        </div>
+        <div id="pending-banner" class="hidden mt-6 rounded-2xl border border-bad/30 bg-bad-50 p-4 flex gap-3 items-start">
+            <i class="fa fa-cloud-arrow-up text-bad mt-1"></i>
+            <div class="text-sm flex-1"><p class="font-bold text-bad">Jawaban belum terkirim</p><p class="text-ink/80 mt-0.5">Ujian sebelumnya tersimpan di perangkat ini dan belum sampai ke server.</p>
+            <button onclick="checkPendingSubmit(true)" class="btn btn-primary btn-sm mt-3">Kirim sekarang</button></div>
+        </div>
+        <form class="mt-8 card p-6" onsubmit="event.preventDefault(); cekPin();">
+            <label for="input-pin" class="font-bold block">PIN ujian</label>
+            <p class="text-sm text-muted mb-4">Pengawas akan menuliskan PIN di papan tulis.</p>
+            <input type="text" id="input-pin" inputmode="numeric" maxlength="8" autocomplete="off" class="pin-input" placeholder="••••" aria-label="PIN ujian">
+            <button id="btn-cek-pin" type="submit" class="btn btn-primary w-full h-12 mt-5 text-base">Lanjut</button>
+        </form>
+    </main>
+</section>
+
+<!-- ================= SISWA: KONFIRMASI ================= -->
+<section id="view-siswa-konfirmasi" class="view hidden min-h-screen px-5 py-8">
+    <div class="max-w-xl mx-auto">
+        <button onclick="batalKonfirmasi()" class="btn btn-ghost btn-sm -ml-2"><i class="fa fa-arrow-left"></i> Ganti PIN</button>
+        <h1 class="text-2xl font-extrabold tracking-tight mt-4">Periksa data ujianmu</h1>
+        <p class="text-muted mt-1">Pastikan semuanya benar sebelum mulai. Jika ada yang salah, lapor ke pengawas.</p>
+        <dl id="konfirmasi-data" class="card mt-6 divide-y divide-line"></dl>
+        <div class="card mt-4 p-5">
+            <h2 class="font-bold mb-3">Tata tertib</h2>
+            <ul class="rules">
+                <li>Layar akan masuk mode penuh. Jangan keluar, membuka tab lain, atau berpindah aplikasi.</li>
+                <li>Setiap pelanggaran dicatat. Peringatan ke-4 mengunci akunmu sampai dibuka pengawas.</li>
+                <li>Jawaban tersimpan otomatis. Jika koneksi putus, lanjutkan saja — jawaban dikirim saat online.</li>
+                <li>Tandai <b>Ragu-ragu</b> pada soal yang ingin kamu periksa lagi.</li>
+            </ul>
+        </div>
+        <label class="flex items-start gap-3 mt-5 cursor-pointer select-none">
+            <input id="setuju-tatib" type="checkbox" class="w-5 h-5 mt-0.5 accent-[#14306B]" onchange="document.getElementById('btn-mulai').disabled=!this.checked">
+            <span class="text-sm">Saya sudah membaca tata tertib dan siap mengerjakan dengan jujur.</span>
+        </label>
+        <button id="btn-mulai" onclick="mulaiUjian()" disabled class="btn btn-gold w-full h-12 mt-5 text-base">Mulai mengerjakan</button>
     </div>
+</section>
 
-    <div id="view-admin" class="hidden h-screen flex overflow-hidden relative">
-        <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
-        <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform -translate-x-full md:translate-x-0 md:relative z-40 drawer-transition h-full">
-            <div class="p-5 text-center border-b border-slate-800">
-                <img src="logo-sekolah.png" class="w-12 h-12 mx-auto mb-2 object-contain bg-white p-1 rounded-full" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
-                <h2 id="app-name-display" class="text-white font-bold text-xs tracking-widest uppercase">CBT ADMIN</h2>
+<!-- ================= SISWA: RUANG UJIAN ================= -->
+<section id="view-siswa-ujian" class="view hidden h-[100dvh] flex flex-col anti-copas">
+    <header class="exam-bar">
+        <div class="min-w-0 flex-1">
+            <h1 id="ujian-mapel-title" class="font-bold truncate text-[15px]">Mapel</h1>
+            <p class="text-xs text-white/70 truncate"><span id="ujian-nama-siswa"></span> <span id="network-status" class="net-pill">Online</span></p>
+        </div>
+        <div id="timer-box" class="timer" role="timer" aria-live="off"><i class="fa fa-clock"></i><span id="exam-countdown">00:00:00</span></div>
+        <button onclick="toggleCbtNav()" class="lg:hidden icon-btn text-white hover:bg-white/10 relative" aria-label="Daftar soal">
+            <i class="fa fa-table-cells"></i><span id="nav-badge" class="nav-badge"></span>
+        </button>
+    </header>
+    <div class="h-1 bg-navy-900/10"><div id="exam-progress" class="h-full bg-gold transition-all duration-300" style="width:0%"></div></div>
+
+    <div class="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto">
+        <main class="flex-1 flex flex-col min-w-0 lg:m-4 lg:mr-0 bg-white lg:rounded-2xl lg:border border-line overflow-hidden">
+            <div id="offline-pending-alert" class="hidden bg-bad-50 text-bad text-sm px-4 py-2 flex items-center justify-between gap-2">
+                <span><i class="fa fa-wifi"></i> Koneksi terputus — jawaban tetap tersimpan di perangkat.</span>
             </div>
-            <nav class="p-4 space-y-1 flex-1 overflow-y-auto text-xs md:text-sm">
-                <button onclick="showPage('dashboard')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-home w-6"></i> Dashboard</button>
-                <button id="menu-jadwal" onclick="showPage('jadwal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-calendar-alt w-6"></i> Jadwal Ujian</button>
-                <button id="menu-banksoal" onclick="showPage('banksoal')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-database w-6"></i> Bank Soal</button>
-                <button onclick="showPage('nilai')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-chart-bar w-6"></i> Hasil Nilai</button>
-                <button id="menu-users" onclick="showPage('users')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-600 hover:text-white transition"><i class="fa fa-users w-6"></i> Manajemen Siswa</button>
-            </nav>
-            <div class="p-4 border-t border-slate-800"><button onclick="logout()" class="w-full flex justify-center p-3 rounded-lg bg-red-600/10 text-red-500 font-bold text-xs md:text-sm">Keluar</button></div>
-        </aside>
-        
-        <main class="flex-1 flex flex-col overflow-hidden relative w-full">
-            <header class="h-14 md:h-16 bg-white border-b flex items-center justify-between px-4 shadow-sm z-10 flex-shrink-0"><div class="flex items-center"><button onclick="toggleAdminSidebar()" class="md:hidden mr-3 text-slate-600 p-2"><i class="fa fa-bars text-lg"></i></button><h3 id="page-title" class="font-bold text-slate-700 uppercase tracking-widest text-[10px] md:text-xs">Dashboard</h3><span id="role-badge" class="ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase hidden">Guru</span></div></header>
-            <div class="flex-1 overflow-y-auto p-3 md:p-8" id="content">
-                
-                <div id="page-dashboard" class="page-content space-y-3 md:space-y-4">
-                    <div id="dashboard-tokens" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-3 md:mb-4"></div>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
-                        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-[8px] font-bold text-slate-400">TOTAL SISWA</p><h1 id="stat-siswa" class="text-base md:text-xl font-black text-slate-700">0</h1></div>
-                        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-[8px] font-bold text-slate-400">TOTAL GURU</p><h1 id="stat-guru" class="text-base md:text-xl font-black text-slate-700">0</h1></div>
-                        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-[8px] font-bold text-slate-400">MENGERJAKAN</p><h1 id="stat-kerja" class="text-base md:text-xl font-black text-orange-500">0</h1></div>
-                        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-emerald-500"><p class="text-[8px] font-bold text-slate-400">SELESAI</p><h1 id="stat-selesai" class="text-base md:text-xl font-black text-emerald-500">0</h1></div>
-                        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border-l-4 border-red-500"><p class="text-[8px] font-bold text-slate-400">CURANG</p><h1 id="stat-curang" class="text-base md:text-xl font-black text-red-500">0</h1></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
-                        <div class="bg-slate-50 p-3 md:p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3">
-                            <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-desktop mr-2 text-blue-500"></i> Live Monitoring Global</h3>
-                            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                                <button onclick="clearMonitoring()" class="text-[10px] md:text-xs bg-orange-100 text-orange-600 border border-orange-200 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold hover:bg-orange-200 transition flex items-center gap-1"><i class="fa fa-broom"></i> Bersihkan Layar</button>
-                                
-                                <select id="filter-mapel" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Mapel</option></select>
-                                <select id="filter-kelas" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none flex-1 md:flex-none" onchange="renderActivityTable()"><option value="">Semua Kelas</option></select>
-                            </div>
-                        </div>
-                        <div id="monitor-container" class="p-2 md:p-4 bg-slate-50/50 flex flex-col gap-3 md:gap-4 rounded-b-xl"></div>
-                    </div>
-                </div>
-                
-                <div id="page-jadwal" class="page-content hidden space-y-4">
-                    <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal Ujian</h3><button onclick="clearSchedules()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Jadwal</button></div>
-                    <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border">
-                        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-start">
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-bold text-slate-500 block mb-1">PILIH 1 ATAU LEBIH MAPEL (1 PIN):</label>
-                                <div id="j_mapel_container" class="border rounded-lg p-2 bg-slate-50 max-h-28 overflow-y-auto space-y-1 text-xs">
-                                </div>
-                            </div>
-                            <input type="date" id="j_tgl" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Tanggal Mulai">
-                            <input type="time" id="j_jam" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm" title="Jam Mulai">
-                            <input type="number" id="j_durasi" placeholder="Durasi (Mnt)" title="Durasi Total" class="p-2 md:p-3 border rounded-lg text-xs md:text-sm">
-                            <button onclick="saveJadwal()" class="bg-blue-600 text-white font-bold py-2 md:py-3 rounded-lg text-xs md:text-sm hover:bg-blue-700 h-10 md:h-auto mt-auto">BUAT JADWAL</button>
-                        </div>
-                    </div>
-                    <div id="list-jadwal" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"></div>
-                </div>
-                
-                <div id="page-banksoal" class="page-content hidden space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        <div class="bg-emerald-50 p-3 md:p-4 rounded-xl border border-emerald-200 shadow-sm relative">
-                            <span class="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg">PALING DISARANKAN</span>
-                            <h3 class="font-bold text-emerald-800 text-[10px] md:text-xs mb-2 md:mb-3">Import Template Excel</h3>
-                            <input type="text" id="ex_judul" placeholder="Kode Ujian (Misal: MTK-7A)" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold outline-none border-emerald-300">
-                            <input type="file" id="ex_file" accept=".xlsx, .xls" class="w-full p-2 mb-2 border rounded bg-white text-[10px] outline-none">
-                            <button onclick="importExcelSoal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-emerald-700 transition">GENERATE DARI EXCEL</button>
-                        </div>
-                        <div class="bg-blue-50 p-3 md:p-4 rounded-xl border border-blue-200 shadow-sm">
-                            <h3 class="font-bold text-blue-800 text-[10px] md:text-xs mb-1">Import File Word (.docx)</h3>
-                            <p class="text-[9px] text-blue-500 mb-2 leading-snug">Format: <b>1. Pertanyaan</b> &rarr; <b>A. Opsi</b> &rarr; <b>Kunci: A</b></p>
-                            <input type="text" id="w_judul" placeholder="Kode Ujian (cth: IPA-8B)" class="w-full p-2 mb-2 border rounded bg-white text-[10px] md:text-xs font-bold outline-none border-blue-300">
-                            <input type="file" id="w_file" accept=".docx" class="w-full p-2 mb-2 border rounded bg-white text-[10px] outline-none">
-                            <button onclick="importWord()" class="w-full bg-blue-600 text-white font-bold py-2 rounded text-[10px] md:text-xs shadow hover:bg-blue-700 transition">IMPORT &amp; PARSING OTOMATIS</button>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white p-3 md:p-8 rounded-xl shadow-sm border mt-4">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-2 md:pb-3 mb-3 md:mb-4 gap-2"><h3 class="font-bold text-slate-700 text-xs md:text-sm">Input Soal Manual Beruntun</h3><div class="w-full md:w-1/3"><input type="text" id="s_judul_bulk" placeholder="KODE UJIAN" class="w-full p-2 border-2 border-blue-200 bg-blue-50 rounded-lg outline-none text-[10px] md:text-sm font-bold focus:border-blue-500"></div></div>
-                        <div id="bulk-questions-container" class="space-y-4 md:space-y-6"><div class="question-item bg-slate-50 p-3 md:p-4 rounded-2xl border-2 border-slate-200 relative" data-no="1"><div class="absolute -left-3 -top-3 w-6 h-6 md:w-8 md:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-black shadow-lg text-xs md:text-sm">1</div><div class="grid grid-cols-1 gap-2 md:gap-3"><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">TIPE SOAL</label><select class="q-tipe w-full p-2 border rounded-lg text-[10px] md:text-xs outline-none focus:border-blue-500"><option value="PG">1 - Pilihan Ganda Biasa</option><option value="PGK">2 - PG Kompleks (Centang)</option><option value="JODOH">3 - Menjodohkan</option><option value="ISIAN">4 - Isian Singkat</option><option value="ESAI">5 - Uraian (Esai)</option><option value="BS">7 - Benar/Salah (Tabel Asli)</option><option value="TS" class="font-bold text-emerald-600">9 - TS (Tabel Sesuai/Tidak Sesuai)</option>
-                                <option value="NK" class="font-bold text-cyan-600">11 - NK (Numerik/Kategorik)</option><option value="SIFAT">10 - SIFAT (Komutatif dll)</option><option value="GFORM" class="font-bold text-purple-600">8 - Link G-Form</option></select></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">KUNCI JAWABAN</label><input type="text" class="q-kunci w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="Misal: A, atau A,C"></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-600">SKOR BOBOT</label><input type="number" class="q-skor w-full p-2 border border-blue-300 bg-blue-50 rounded-lg text-[10px] md:text-xs font-bold" value="1"></div></div><div><label class="text-[9px] md:text-[10px] font-bold text-blue-500"><i class="fa fa-image"></i> LINK GAMBAR DRIVE</label><input type="text" class="q-image w-full p-2 border rounded-lg text-[10px] md:text-xs" placeholder="http://..."></div><div><label class="text-[9px] md:text-[10px] font-bold text-slate-500">PERTANYAAN (Awali dgn angka misal "1. Teks" untuk B-S/TS/Jodoh)</label><textarea class="q-tanya w-full p-2 border rounded-lg text-xs md:text-sm h-12 md:h-16"></textarea></div><div class="q-area-opsi"><label class="text-[9px] md:text-[10px] font-bold text-orange-600">OPSI (Gunakan ||| sebagai pemisah)</label><input type="text" class="q-opsi w-full p-2 border border-orange-200 rounded-lg text-[10px] md:text-xs" placeholder="B/S: Pernyataan 1 ||| Pernyataan 2. TS: Sesuai ||| Tidak Sesuai"></div></div></div></div>
-                        <div class="mt-4 md:mt-6 flex flex-col md:flex-row gap-2 md:gap-3"><button onclick="tambahBarisSoal()" class="flex-1 bg-blue-50 text-blue-600 border-2 border-dashed border-blue-200 py-2 md:py-3 rounded-xl font-bold hover:bg-blue-100 transition text-[10px] md:text-xs"><i class="fa fa-plus-circle mr-2"></i> TAMBAH NOMOR</button><button onclick="simpanSoalBulk()" class="flex-1 bg-slate-800 text-white py-2 md:py-3 rounded-xl font-black shadow-xl hover:bg-slate-900 transition text-[10px] md:text-xs"><i class="fa fa-save mr-2"></i> SIMPAN SEMUA</button></div>
-                    </div>
-                    <div class="flex justify-between items-center mb-2 mt-6 md:mt-8"><h3 class="font-bold text-slate-700 text-sm">Daftar Soal Tersimpan</h3><button onclick="clearQuestions()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan Semua Soal</button></div>
-                    <div id="banksoal-container" class="space-y-2"></div>
-                </div>
-
-                <div id="page-nilai" class="page-content hidden space-y-3 md:space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 gap-2">
-                        <h3 class="font-bold text-slate-700 text-xs md:text-sm flex items-center"><i class="fa fa-chart-bar mr-2 text-blue-500"></i> Hasil Ujian</h3>
-                        <div class="flex flex-wrap gap-1 md:gap-2 items-center bg-white p-1 md:p-2 rounded-lg shadow-sm border">
-                            <label class="text-[9px] md:text-[10px] font-bold text-slate-500 ml-1">KKM MAPEL FILTER:</label>
-                            <input type="number" id="input-kkm-nilai" placeholder="KKM" class="p-1.5 md:p-2 border-2 border-blue-300 rounded-lg text-[10px] md:text-xs font-black text-blue-600 bg-blue-50 outline-none w-16 md:w-20" onkeyup="updateKkmMapel(this.value)" onchange="updateKkmMapel(this.value)">
-                            
-                            <select id="filter-mapel-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="handleMapelNilaiChange()"><option value="">Semua Mapel</option></select>
-                            <select id="filter-kelas-nilai" class="p-1.5 md:p-2 border rounded-lg text-[10px] md:text-xs font-bold text-blue-800 bg-white outline-none" onchange="renderNilaiTable()"><option value="">Semua Kelas</option></select>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center mb-3">
-                        <button onclick="exportExcelDetail()" class="text-[10px] md:text-xs bg-emerald-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition"><i class="fa fa-file-excel mr-1"></i> Download Excel</button>
-                        <button onclick="clearResults()" class="text-[10px] md:text-xs bg-red-100 text-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold hover:bg-red-200"><i class="fa fa-trash"></i> Bersihkan</button>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                        <table class="w-full text-left text-[10px] md:text-xs whitespace-nowrap" id="nilai-table">
-                            <thead class="bg-slate-100 text-[10px] md:text-xs text-slate-600 font-bold uppercase tracking-wide border-b">
-                                <tr>
-                                    <th class="p-4 min-w-[150px]">Nama Siswa</th>
-                                    <th class="p-4">Mapel</th>
-                                    <th class="p-4">Waktu</th>
-                                    <th class="p-4 text-center">B / S</th>
-                                    <th class="p-4 text-center">Nilai</th>
-                                    <th class="p-4 text-center">Status Ketuntasan</th> 
-                                    <th class="p-4 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="nilai-body" class="divide-y divide-slate-100 bg-white"></tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div id="page-users" class="page-content hidden space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-3 bg-white p-4 rounded-xl border shadow-sm">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <button onclick="tambahUserManual()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-blue-700 transition flex items-center gap-1"><i class="fa fa-user-plus"></i> Tambah User</button>
-                            
-                            <label class="bg-slate-100 text-slate-700 border border-slate-300 px-3 py-2 rounded-lg font-bold text-[10px] md:text-xs cursor-pointer shadow hover:bg-slate-200 transition flex items-center gap-1">
-                                <i class="fa fa-folder-open text-amber-500"></i> Pilih File Excel
-                                <input type="file" id="file-import-user" class="hidden" accept=".xlsx, .xls, .csv">
-                            </label>
-                            
-                            <button onclick="prosesImportUser()" class="bg-emerald-600 text-white px-3 py-2 rounded-lg font-bold text-[10px] md:text-xs shadow hover:bg-emerald-700 transition flex items-center gap-1"><i class="fa fa-play"></i> Generate & Simpan</button>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <button onclick="clearUsers()" class="text-[10px] md:text-xs bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg font-bold hover:bg-red-200 transition flex items-center gap-1"><i class="fa fa-trash"></i> Bersihkan User</button>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white rounded-xl shadow-sm border overflow-x-auto"><table class="w-full text-left text-[10px] md:text-xs"><thead class="bg-slate-50 text-[8px] md:text-[9px] text-slate-400 uppercase"><tr><th class="p-2 md:p-3 min-w-[150px]">Nama Lengkap</th><th>Username</th><th>Kelas/Mapel</th><th>Role</th><th class="text-right p-2 md:p-3 min-w-[150px]">Aksi</th></tr></thead><tbody id="user-body" class="divide-y"></tbody></table></div>
+            <div class="flex items-center gap-2 px-4 lg:px-6 py-3 border-b border-line">
+                <p class="font-bold">Soal <span id="cbt-no-soal" class="tabular-nums">1</span> <span class="text-muted font-medium">dari <span id="cbt-total-soal">1</span></span></p>
+                <span id="cbt-tipe-soal" class="chip">PG</span>
+                <div class="ml-auto flex items-center gap-1" role="group" aria-label="Ukuran huruf">
+                    <button class="icon-btn icon-btn-sm" onclick="ubahFont(-1)" aria-label="Perkecil huruf"><span class="text-xs font-bold">A</span></button>
+                    <button class="icon-btn icon-btn-sm" onclick="ubahFont(1)" aria-label="Perbesar huruf"><span class="text-base font-bold">A</span></button>
                 </div>
             </div>
+            <div id="soal-scroll" class="flex-1 overflow-y-auto">
+                <article id="soal-body" class="soal px-4 lg:px-8 py-5 lg:py-7 max-w-3xl">
+                    <div id="cbt-media-area"></div>
+                    <div id="cbt-tanya" class="soal-tanya"></div>
+                    <div id="cbt-opsi-area" class="mt-5"></div>
+                </article>
+            </div>
+            <footer class="exam-foot">
+                <button onclick="cbtPrev()" id="btn-prev" class="btn btn-ghost"><i class="fa fa-chevron-left"></i><span class="hidden sm:inline">Sebelumnya</span></button>
+                <button onclick="toggleRagu()" id="btn-ragu" class="btn btn-ragu" aria-pressed="false"><span class="ragu-box"></span> Ragu-ragu</button>
+                <button onclick="cbtNext()" id="btn-next" class="btn btn-primary"><span class="hidden sm:inline">Berikutnya</span><i class="fa fa-chevron-right"></i></button>
+            </footer>
         </main>
-    </div>
 
-    <div id="modal-detail" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-3 md:p-4">
-        <div class="bg-white rounded-2xl w-full max-w-3xl h-[85vh] md:h-[80vh] flex flex-col shadow-2xl">
-            <div class="p-3 md:p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-2xl"><h3 class="font-bold text-blue-800 text-xs md:text-sm">Detail Analisis Butir Soal</h3><button onclick="document.getElementById('modal-detail').classList.add('hidden')" class="text-slate-400 hover:text-red-500"><i class="fa fa-times text-lg md:text-xl"></i></button></div>
-            <div class="p-3 md:p-4 flex-1 overflow-y-auto bg-slate-100"><div id="detail-content" class="space-y-3"></div></div>
+        <div id="cbt-nav-overlay" onclick="toggleCbtNav()" class="fixed inset-0 bg-ink/50 z-30 hidden lg:hidden"></div>
+        <aside id="cbt-nav-panel" class="nav-panel" aria-label="Lembar jawaban">
+            <div class="flex items-center justify-between px-5 pt-5">
+                <h2 class="font-bold">Lembar jawaban</h2>
+                <button onclick="toggleCbtNav()" class="lg:hidden icon-btn" aria-label="Tutup"><i class="fa fa-xmark"></i></button>
+            </div>
+            <p id="nav-summary" class="px-5 text-sm text-muted mt-1"></p>
+            <div class="flex-1 overflow-y-auto px-5 py-4"><div id="cbt-grid" class="ljk-grid"></div></div>
+            <div class="px-5 pb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted">
+                <span class="legend"><i class="bubble-mini is-filled"></i>Dijawab</span>
+                <span class="legend"><i class="bubble-mini is-ragu"></i>Ragu-ragu</span>
+                <span class="legend"><i class="bubble-mini"></i>Belum</span>
+            </div>
+            <div class="p-5 pt-2 border-t border-line"><button id="btn-submit-ujian" onclick="bukaRingkasan()" class="btn btn-ok w-full h-12">Selesai &amp; kumpulkan</button></div>
+        </aside>
+    </div>
+</section>
+
+<!-- ================= SISWA: HASIL / TERKUNCI ================= -->
+<section id="view-siswa-selesai" class="view hidden min-h-screen grid place-items-center px-5 py-10">
+    <div class="max-w-md w-full text-center" id="selesai-content"></div>
+</section>
+
+<!-- ================= ADMIN / GURU ================= -->
+<section id="view-admin" class="view hidden h-[100dvh] flex overflow-hidden">
+    <div id="admin-overlay" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-ink/50 z-30 hidden lg:hidden"></div>
+    <aside id="admin-sidebar" class="sidebar">
+        <div class="flex items-center gap-3 px-5 py-5">
+            <img src="/logo-sekolah.png" class="w-10 h-10 rounded-full bg-white p-0.5" alt="">
+            <div class="min-w-0"><p class="font-bold text-sm leading-tight text-white">SMPN 2 Soyo Jaya</p><p class="text-xs text-white/60">Panel CBT</p></div>
         </div>
+        <nav class="px-3 flex-1 overflow-y-auto space-y-0.5" id="admin-nav">
+            <button data-page="dashboard" onclick="showPage('dashboard')" class="nav-item"><i class="fa fa-display"></i>Pemantauan</button>
+            <button data-page="jadwal" onclick="showPage('jadwal')" class="nav-item admin-only"><i class="fa fa-calendar-days"></i>Jadwal &amp; PIN</button>
+            <button data-page="banksoal" onclick="showPage('banksoal')" class="nav-item"><i class="fa fa-layer-group"></i>Bank soal</button>
+            <button data-page="nilai" onclick="showPage('nilai')" class="nav-item"><i class="fa fa-chart-column"></i>Hasil &amp; analisis</button>
+            <button data-page="users" onclick="showPage('users')" class="nav-item admin-only"><i class="fa fa-user-group"></i>Peserta &amp; guru</button>
+            <button data-page="akun" onclick="showPage('akun')" class="nav-item"><i class="fa fa-key"></i>Akun saya</button>
+        </nav>
+        <div class="p-4 border-t border-white/10">
+            <p id="admin-user-name" class="text-sm font-semibold text-white truncate"></p>
+            <p id="admin-user-role" class="text-xs text-white/60 mb-3"></p>
+            <button onclick="logout()" class="w-full btn btn-sm bg-white/10 text-white hover:bg-white/20"><i class="fa fa-arrow-right-from-bracket"></i> Keluar</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+        <header class="h-14 bg-white border-b border-line flex items-center gap-2 px-3 lg:px-6 flex-shrink-0">
+            <button onclick="toggleAdminSidebar()" class="lg:hidden icon-btn" aria-label="Menu"><i class="fa fa-bars"></i></button>
+            <h1 id="page-title" class="font-bold text-[15px]">Pemantauan</h1>
+            <span id="role-badge" class="chip chip-gold hidden"></span>
+            <div class="ml-auto flex items-center gap-2"><span id="sync-indicator" class="text-xs text-muted hidden sm:inline"></span></div>
+        </header>
+        <div class="flex-1 overflow-y-auto" id="content">
+            <div class="max-w-7xl mx-auto p-3 sm:p-5 lg:p-8">
+                <div id="page-dashboard" class="page-content"></div>
+                <div id="page-jadwal" class="page-content hidden"></div>
+                <div id="page-banksoal" class="page-content hidden"></div>
+                <div id="page-nilai" class="page-content hidden"></div>
+                <div id="page-users" class="page-content hidden"></div>
+                <div id="page-akun" class="page-content hidden"></div>
+            </div>
+        </div>
+    </main>
+</section>
+
+<!-- Modal generik -->
+<div id="modal" class="hidden fixed inset-0 z-50 bg-ink/60 flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this) closeModal()">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="flex items-start gap-3 px-5 py-4 border-b border-line">
+            <div class="flex-1 min-w-0" id="modal-title"></div>
+            <button onclick="closeModal()" class="icon-btn -mr-2 -mt-1" aria-label="Tutup"><i class="fa fa-xmark"></i></button>
+        </div>
+        <div id="modal-body" class="flex-1 overflow-y-auto p-5"></div>
+        <div id="modal-foot" class="hidden px-5 py-3 border-t border-line flex justify-end gap-2"></div>
     </div>
+</div>
 
-    <script>
-        async function prosesImportUser() {
-            const fileInput = document.getElementById('file-import-user');
-            const file = fileInput.files[0];
-            
-            if (!file) return Swal.fire('Perhatian', 'Silakan klik "Pilih File Excel" terlebih dahulu.', 'warning');
-
-            Swal.fire({
-                title: 'Generate Data Pengguna?', text: `Upload file "${file.name}"?`, icon: 'question',
-                showCancelButton: true, confirmButtonColor: '#059669', confirmButtonText: 'Ya, Simpan'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const reader = new FileReader();
-                        reader.onload = async (e) => {
-                            let parsedData = [];
-                            
-                            if (!file.name.endsWith('.csv')) {
-                                const data = new Uint8Array(e.target.result);
-                                const workbook = XLSX.read(data, { type: 'array' });
-                                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                                
-                                let headerRowIndex = -1;
-                                let colMap = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1 };
-
-                                for (let i = 0; i < Math.min(rawData.length, 20); i++) {
-                                    let row = rawData[i];
-                                    if (!row || !row.length) continue;
-                                    
-                                    row.forEach((cell, idx) => {
-                                        if(!cell) return;
-                                        let str = String(cell).toLowerCase().replace(/[^a-z0-9]/g, ''); 
-                                        if(['username','user','nis','nisn'].includes(str)) colMap.u = idx;
-                                        if(['nama','name','namasiswa'].includes(str)) colMap.n = idx;
-                                        if(['password','pass','sandi'].includes(str)) colMap.p = idx;
-                                        if(['role','peran'].includes(str)) colMap.r = idx;
-                                        if(['kelas','rombel'].includes(str)) colMap.k = idx;
-                                        if(['mapel','matapelajaran'].includes(str)) colMap.m = idx;
-                                    });
-
-                                    if (colMap.u !== -1 && colMap.n !== -1) { headerRowIndex = i; break; }
-                                }
-                                
-                                if (headerRowIndex === -1) {
-                                    return Swal.fire('Gagal', 'Sistem tidak menemukan kolom "NAMA" dan "USERNAME" di Excel Anda.', 'error');
-                                }
-
-                                for (let i = headerRowIndex + 1; i < rawData.length; i++) {
-                                    let row = rawData[i];
-                                    if (!row || row.length === 0) continue;
-                                    
-                                    let username = row[colMap.u];
-                                    let nama = row[colMap.n];
-                                    let password = colMap.p !== -1 && row[colMap.p] ? row[colMap.p] : username; 
-
-                                    if (username && nama) {
-                                        parsedData.push({
-                                            username: String(username).trim(),
-                                            nama: String(nama).trim(),
-                                            password: String(password).trim(),
-                                            role: colMap.r !== -1 && row[colMap.r] ? String(row[colMap.r]).toLowerCase().trim() : 'siswa',
-                                            kelas: colMap.k !== -1 && row[colMap.k] ? String(row[colMap.k]).trim() : '',
-                                            mapel: colMap.m !== -1 && row[colMap.m] ? String(row[colMap.m]).trim() : ''
-                                        });
-                                    }
-                                }
-                            } else {
-                                parsedData = parseCSV(e.target.result); 
-                            }
-
-                            const uniqueData = [];
-                            const seen = new Set();
-                            for(let item of parsedData) {
-                                if(!seen.has(item.username)) {
-                                    seen.add(item.username);
-                                    uniqueData.push(item);
-                                }
-                            }
-
-                            if (uniqueData.length === 0) return Swal.fire('Gagal', 'Data kosong atau format sel berantakan.', 'error');
-
-                            let totalSuccess = 0;
-                            const chunkSize = 100;
-                            
-                            for (let i = 0; i < uniqueData.length; i += chunkSize) {
-                                const chunk = uniqueData.slice(i, i + chunkSize);
-                                Swal.fire({ title: `Menyimpan ${i + chunk.length} dari ${uniqueData.length}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                                
-                                const response = await fetch('/api/admin/import-users', {
-                                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: chunk })
-                                });
-                                const serverResult = await response.json();
-                                
-                                if (serverResult.status === 'success') totalSuccess += chunk.length;
-                                else {
-                                    return Swal.fire('Gagal Server', serverResult.message, 'error');
-                                }
-                            }
-                            
-                            Swal.fire('Sukses!', `Berhasil menyimpan ${totalSuccess} data pengguna!`, 'success');
-                            loadUsers(); fileInput.value = '';
-                        };
-
-                        if (file.name.endsWith('.csv')) reader.readAsText(file);
-                        else reader.readAsArrayBuffer(file);
-                        
-                    } catch(err) { Swal.fire('Error Lokal', err.message, 'error'); }
-                }
-            });
-        }
-        
-        function parseCSV(text) {
-            const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
-            if (lines.length < 2) return [];
-            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
-            return lines.slice(1).map(line => {
-                const values = []; let cur = ''; let inQ = false;
-                for (let ch of line) {
-                    if (ch === '"') { inQ = !inQ; } 
-                    else if (ch === ',' && !inQ) { values.push(cur.trim()); cur = ''; } 
-                    else { cur += ch; }
-                }
-                values.push(cur.trim());
-                const row = {};
-                headers.forEach((h, i) => { row[h] = (values[i] || '').replace(/"/g, '').trim(); });
-                return row;
-            }).filter(r => Object.values(r).some(v => v));
-        }
-    </script>
-    <script src="app.js"></script>
+<script src="/js/core.js"></script>
+<script src="/js/siswa.js"></script>
+<script src="/js/skor.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/import.js"></script>
 </body>
 </html>

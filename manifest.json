@@ -1,24 +1,13 @@
 {
-  "name": "CBT SMPN 2 SOYO JAYA",
+  "name": "CBT SMP Negeri 2 Soyo Jaya",
   "short_name": "CBT Spenda",
-  "description": "Aplikasi Ujian Berbasis Komputer & Smartphone SMP Negeri 2 Soyo Jaya",
+  "description": "Ujian berbasis komputer & smartphone SMP Negeri 2 Soyo Jaya",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#1e40af",
-  "orientation": "portrait",
+  "background_color": "#F3F5F9",
+  "theme_color": "#14306B",
   "icons": [
-    {
-      "src": "logo-sekolah.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "logo-sekolah.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
