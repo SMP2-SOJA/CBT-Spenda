@@ -263,7 +263,74 @@ app.post('/api/siswa/flag-curang', SISWA, wrap(async (req, res) => {
 //               'final' = skor hanya tampil setelah siswa selesai
 //               'off'  = papan skor dimatikan
 const PUBLIC_SCORE = ['on', 'final', 'off'].includes(process.env.PUBLIC_SCORE) ? process.env.PUBLIC_SCORE : 'on';
-app.get('/api/public/config', (req, res) => res.json({ live_score: PUBLIC_SCORE, sekolah: process.env.NAMA_SEKOLAH || 'SMP Negeri 2 Soyo Jaya' }));
+app.get('/api/public/config', (req, res) => res.json({ live_score: PUBLIC_SCORE }));
+
+// ============================================================
+// PROFIL SEKOLAH (nama, alamat, kepala sekolah, logo) — untuk
+// tampilan aplikasi & kop surat. Disimpan di tabel `config`
+// (key = 'sekolah'), logo sebagai data URL yang sudah dikompres.
+// ============================================================
+const SEKOLAH_DEFAULT = {
+    nama_sekolah: 'SMP Negeri 2 Soyo Jaya', singkatan: 'Spenda', npsn: '',
+    instansi_1: 'PEMERINTAH KABUPATEN MOROWALI UTARA', instansi_2: 'DINAS PENDIDIKAN DAN KEBUDAYAAN',
+    alamat: '', kecamatan: 'Soyo Jaya', kabupaten: 'Morowali Utara', provinsi: 'Sulawesi Tengah', kode_pos: '',
+    telepon: '', email: '', website: '', kepala_sekolah: '', nip_kepala: '', tahun_pelajaran: '', tempat_ttd: '',
+    logo_sekolah: '', logo_pemda: '', updated_at: 0,
+};
+const SEKOLAH_FIELDS = Object.keys(SEKOLAH_DEFAULT).filter(k => !['logo_sekolah', 'logo_pemda', 'updated_at'].includes(k));
+let sekolahCache = null;
+async function getSekolah() {
+    if (sekolahCache && sekolahCache.until > Date.now()) return sekolahCache.data;
+    let data = { ...SEKOLAH_DEFAULT };
+    try {
+        const { data: row } = await supabase.from('config').select('*').eq('key', 'sekolah').maybeSingle();
+        if (row && row.value) data = { ...data, ...JSON.parse(row.value) };
+    } catch (e) { /* tabel config belum ada → pakai bawaan */ }
+    sekolahCache = { data, until: Date.now() + 60 * 1000 };
+    return data;
+}
+const DATA_URL_RE = /^data:image\/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)$/;
+
+app.get('/api/public/sekolah', wrap(async (req, res) => {
+    const s = await getSekolah();
+    const { logo_sekolah, logo_pemda, ...rest } = s;
+    res.set('Cache-Control', 'no-cache');
+    res.json({ ...rest, has_logo_sekolah: !!logo_sekolah, has_logo_pemda: !!logo_pemda });
+}));
+
+// Gambar logo: /api/public/logo (sekolah) atau /api/public/logo?jenis=pemda
+app.get('/api/public/logo', wrap(async (req, res) => {
+    const s = await getSekolah();
+    const src = req.query.jenis === 'pemda' ? s.logo_pemda : s.logo_sekolah;
+    const m = String(src || '').match(DATA_URL_RE);
+    if (!m) return req.query.jenis === 'pemda' ? res.status(404).end() : res.redirect(302, '/logo-sekolah.png');
+    res.set('Content-Type', 'image/' + m[1]);
+    res.set('Cache-Control', 'public, max-age=300');
+    res.send(Buffer.from(m[2], 'base64'));
+}));
+
+app.put('/api/admin/sekolah', ADMIN, wrap(async (req, res) => {
+    const cur = await getSekolah();
+    const next = { ...cur };
+    SEKOLAH_FIELDS.forEach(k => { if (req.body[k] !== undefined) next[k] = String(req.body[k] || '').trim().slice(0, 300); });
+    if (!next.nama_sekolah) return res.json({ status: 'error', message: 'Nama sekolah wajib diisi.' });
+    for (const k of ['logo_sekolah', 'logo_pemda']) {
+        if (req.body[k] === undefined) continue;
+        const v = String(req.body[k] || '');
+        if (v === '') { next[k] = ''; continue; }
+        if (!DATA_URL_RE.test(v)) return res.json({ status: 'error', message: 'Format logo harus PNG, JPG, WEBP, atau SVG.' });
+        if (v.length > 700 * 1024) return res.json({ status: 'error', message: 'Ukuran logo terlalu besar (maks ±500 KB).' });
+        next[k] = v;
+    }
+    next.updated_at = Date.now();
+    const { error } = await supabase.from('config').upsert({ key: 'sekolah', value: JSON.stringify(next) }, { onConflict: 'key' });
+    if (error) {
+        const missing = /config/.test(error.message || '') && /(exist|schema cache|relation)/i.test(error.message || '');
+        return res.json({ status: 'error', message: missing ? 'Tabel "config" belum ada. Jalankan file supabase-migration.sql di Supabase (SQL Editor) lalu coba lagi.' : error.message });
+    }
+    sekolahCache = null;
+    res.json({ status: 'success', updated_at: next.updated_at });
+}));
 
 app.get('/api/public/live-score', wrap(async (req, res) => {
     if (PUBLIC_SCORE === 'off') return res.status(403).json({ status: 'off', message: 'Papan skor dinonaktifkan oleh sekolah.' });

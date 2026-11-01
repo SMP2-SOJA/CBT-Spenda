@@ -1,7 +1,7 @@
 // Service worker: NETWORK-FIRST untuk halaman & skrip agar setiap
 // pembaruan langsung sampai ke siswa; cache hanya cadangan saat offline.
 // API tidak pernah di-cache.
-const CACHE = 'cbt-spenda-v4.1';
+const CACHE = 'cbt-spenda-v4.3';
 const SHELL = ['/', '/css/app.css', '/js/core.js', '/js/siswa.js', '/js/skor.js', '/js/admin.js', '/js/import.js', '/logo-sekolah.png', '/icon-192.png'];
 
 self.addEventListener('install', e => {

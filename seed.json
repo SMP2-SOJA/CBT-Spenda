@@ -1,0 +1,336 @@
+{
+ "users": [
+  {
+   "id": 1,
+   "name": "Administrator Utama",
+   "username": "admin",
+   "password": "123",
+   "role": "admin",
+   "kelas": "Admin",
+   "mapel": "Semua"
+  },
+  {
+   "id": 2,
+   "name": "Ibu Sri Wahyuni",
+   "username": "guru1",
+   "password": "guru1",
+   "role": "guru",
+   "kelas": "",
+   "mapel": "MTK-7"
+  },
+  {
+   "id": 3,
+   "name": "Andi Saputra",
+   "username": "7a03",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 4,
+   "name": "Budi Prasetyo",
+   "username": "7a04",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 5,
+   "name": "Citra Lestari",
+   "username": "7a05",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 6,
+   "name": "Dewi Anggraini",
+   "username": "7a06",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 7,
+   "name": "Eko Wijaya",
+   "username": "7a07",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 8,
+   "name": "Fitri Handayani",
+   "username": "7a08",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 9,
+   "name": "Gilang Ramadhan",
+   "username": "7a09",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 10,
+   "name": "Hana Safitri",
+   "username": "7a10",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7A",
+   "mapel": ""
+  },
+  {
+   "id": 11,
+   "name": "Irfan Maulana",
+   "username": "7b11",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7B",
+   "mapel": ""
+  },
+  {
+   "id": 12,
+   "name": "Joko Susilo",
+   "username": "7b12",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7B",
+   "mapel": ""
+  },
+  {
+   "id": 13,
+   "name": "Kartika Sari",
+   "username": "7b13",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7B",
+   "mapel": ""
+  },
+  {
+   "id": 14,
+   "name": "Lukman Hakim",
+   "username": "7b14",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7B",
+   "mapel": ""
+  },
+  {
+   "id": 15,
+   "name": "Maya Puspita",
+   "username": "7b15",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7B",
+   "mapel": ""
+  },
+  {
+   "id": 16,
+   "name": "Nanda Pratama",
+   "username": "7b16",
+   "password": "1234",
+   "role": "siswa",
+   "kelas": "7B",
+   "mapel": ""
+  }
+ ],
+ "questions": [
+  {
+   "id": 1,
+   "exam_id": "MTK-7",
+   "tipe": "PG",
+   "tanya": "Hasil dari 15 + (−8) × 2 adalah ...",
+   "opsi_json": "−1|||1|||14|||46",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 2,
+   "exam_id": "MTK-7",
+   "tipe": "PG",
+   "tanya": "Bentuk sederhana dari 3x^2 + 5x − x^2 + 2x adalah ...",
+   "opsi_json": "2x^2 + 7x|||4x^2 + 7x|||2x^2 + 3x|||3x^2 + 7x",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 3,
+   "exam_id": "MTK-7",
+   "tipe": "PG",
+   "tanya": "Nilai dari (3/4) + (1/2) adalah ...",
+   "opsi_json": "(5/4)|||(4/6)|||(1/4)|||(3/8)",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 4,
+   "exam_id": "MTK-7",
+   "tipe": "PGK",
+   "tanya": "Manakah bilangan berikut yang merupakan bilangan prima? (Pilih semua yang benar)",
+   "opsi_json": "2|||9|||11|||15|||17",
+   "kunci": "A,C,E",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 5,
+   "exam_id": "MTK-7",
+   "tipe": "BS",
+   "tanya": "Tentukan Benar atau Salah untuk setiap pernyataan berikut.",
+   "opsi_json": "Setiap bilangan genap habis dibagi 2|||0 adalah bilangan asli|||−5 lebih kecil dari −2",
+   "kunci": "B,S,B",
+   "media_path": "",
+   "skor": 2,
+   "gform_url": ""
+  },
+  {
+   "id": 6,
+   "exam_id": "MTK-7",
+   "tipe": "TS",
+   "tanya": "Tentukan apakah pernyataan berikut sesuai dengan sifat persegi panjang.",
+   "opsi_json": "Memiliki 4 sudut siku-siku|||Semua sisinya sama panjang|||Diagonalnya sama panjang",
+   "kunci": "A,B,A",
+   "media_path": "",
+   "skor": 2,
+   "gform_url": ""
+  },
+  {
+   "id": 7,
+   "exam_id": "MTK-7",
+   "tipe": "JODOH",
+   "tanya": "Pasangkan istilah berikut dengan pengertiannya.\n1. Faktor\n2. Kelipatan\n3. Bilangan prima",
+   "opsi_json": "Bilangan yang hanya memiliki dua faktor|||Bilangan yang membagi habis suatu bilangan|||Hasil kali bilangan dengan bilangan asli",
+   "kunci": "1B,2C,3A",
+   "media_path": "",
+   "skor": 3,
+   "gform_url": ""
+  },
+  {
+   "id": 8,
+   "exam_id": "MTK-7",
+   "tipe": "NK",
+   "tanya": "Kelompokkan data berikut ke dalam jenis data yang tepat.",
+   "opsi_json": "Tinggi badan siswa (cm)|||Warna kesukaan|||Jumlah saudara kandung",
+   "kunci": "A,B,A",
+   "media_path": "",
+   "skor": 2,
+   "gform_url": ""
+  },
+  {
+   "id": 9,
+   "exam_id": "MTK-7",
+   "tipe": "ISIAN",
+   "tanya": "KPK dari 12 dan 18 adalah ...",
+   "opsi_json": "",
+   "kunci": "36",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 10,
+   "exam_id": "MTK-7",
+   "tipe": "ESAI",
+   "tanya": "Jelaskan langkah-langkah menentukan FPB dari 24 dan 36 menggunakan faktorisasi prima!",
+   "opsi_json": "",
+   "kunci": "faktorisasi prima 12",
+   "media_path": "",
+   "skor": 3,
+   "gform_url": ""
+  },
+  {
+   "id": 11,
+   "exam_id": "MTK-7",
+   "tipe": "PG",
+   "tanya": "Sebuah toko memberi diskon 20% untuk baju seharga Rp150.000. Harga setelah diskon adalah ...",
+   "opsi_json": "Rp120.000|||Rp130.000|||Rp30.000|||Rp100.000",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 12,
+   "exam_id": "MTK-7",
+   "tipe": "PG",
+   "tanya": "Jika 2x + 5 = 17, maka nilai x adalah ...",
+   "opsi_json": "6|||11|||5|||7",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 13,
+   "exam_id": "IPA-7",
+   "tipe": "PG",
+   "tanya": "Satuan SI untuk massa adalah ...",
+   "opsi_json": "kilogram|||gram|||newton|||ons",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 14,
+   "exam_id": "IPA-7",
+   "tipe": "PG",
+   "tanya": "Perubahan wujud dari cair menjadi gas disebut ...",
+   "opsi_json": "menguap|||membeku|||mencair|||menyublim",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  },
+  {
+   "id": 15,
+   "exam_id": "IPA-7",
+   "tipe": "PG",
+   "tanya": "Organ pernapasan utama manusia adalah ...",
+   "opsi_json": "paru-paru|||jantung|||lambung|||hati",
+   "kunci": "A",
+   "media_path": "",
+   "skor": 1,
+   "gform_url": ""
+  }
+ ],
+ "schedules": [
+  {
+   "id": 1,
+   "mapel": "MTK-7",
+   "tanggal": "2026-11-02|07:30",
+   "durasi": 90,
+   "pin": "4821",
+   "status": "Aktif"
+  },
+  {
+   "id": 2,
+   "mapel": "IPA-7",
+   "tanggal": "2026-11-03|07:30",
+   "durasi": 60,
+   "pin": "7315",
+   "status": "Ditutup"
+  }
+ ],
+ "activity": [],
+ "results": [],
+ "config": []
+}

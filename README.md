@@ -48,6 +48,13 @@ Versi 4 adalah pengembangan dari "CBT-Ujian-Sekolah" dengan **database yang sama
 - Otomatis memilih paket yang paling banyak pesertanya (ranking lintas paket tidak adil).
 - Diatur lewat env `PUBLIC_SCORE`: `on` (bawaan), `final` (skor baru tampil setelah siswa selesai), `off` (papan skor dimatikan).
 
+### Profil sekolah & kop surat (menu **Profil sekolah**, khusus admin)
+- Ubah nama sekolah, NPSN, baris instansi kop, alamat, kontak, tahun pelajaran, nama & NIP kepala sekolah, tempat tanda tangan.
+- Unggah **logo sekolah** dan **logo pemda** langsung dari aplikasi (otomatis dikecilkan ±15–60 KB). Pratinjau kop tampil langsung.
+- Logo & nama sekolah otomatis berganti di halaman login, panel admin, halaman siswa, dan papan skor.
+- Dokumen cetak berkop + tanda tangan kepala sekolah: **Rekap nilai** (Hasil & analisis → Cetak berkop), **Daftar hadir peserta** dan **Kartu peserta** (Peserta & guru).
+- Butuh tabel `config` → jalankan `supabase-migration.sql` sekali.
+
 ### Teknis
 - `package.json` diperbaiki (di arsip lama berukuran 0 byte).
 - Tailwind dibangun sekali (`css/tailwind.css`, 17 KB) — tidak lagi memakai Tailwind CDN yang mengompilasi CSS di HP siswa.
@@ -76,6 +83,19 @@ Versi 4 adalah pengembangan dari "CBT-Ujian-Sekolah" dengan **database yang sama
 4. **Opsional — migrasi database**: buka Supabase → SQL Editor → jalankan `supabase-migration.sql`. Ini mengaktifkan fitur acak soal/opsi dan kolom kelas pada nilai. Tanpa migrasi pun aplikasi tetap berjalan (fitur acak saja yang belum aktif).
 
 > Setelah deploy, siswa/guru yang sedang login cukup login ulang sekali.
+
+## Mengganti logo sekolah
+
+**Cara 1 — dari aplikasi (disarankan):** login admin → **Profil sekolah** → *Pilih gambar* pada "Logo sekolah" → **Simpan**. Gunakan PNG persegi berlatar transparan (min. 300×300 px). Tombol *Pakai logo bawaan* mengembalikan ke file `logo-sekolah.png`.
+
+**Cara 2 — ganti file (logo bawaan):** ganti file berikut dengan logo baru, nama file harus sama, lalu push ke GitHub:
+| File | Ukuran | Dipakai untuk |
+|---|---|---|
+| `logo-sekolah.png` | 160×160 px | Logo bawaan di aplikasi & kop (jika belum unggah lewat aplikasi) |
+| `icon-192.png` | 192×192 px | Ikon aplikasi saat dipasang di HP (PWA) |
+| `icon-512.png` | 512×512 px | Ikon aplikasi ukuran besar (PWA) |
+
+Lalu ubah nama di `manifest.json` (`name`, `short_name`) agar nama ikon di HP ikut berganti. Ikon PWA di HP siswa baru berubah setelah aplikasi dipasang ulang.
 
 ## Uji coba lokal tanpa Supabase
 
