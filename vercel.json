@@ -50,5 +50,11 @@
       },
       "dest": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "17 2 * * *"
+    }
   ]
 }

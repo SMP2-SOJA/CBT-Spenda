@@ -550,6 +550,73 @@ app.get('/api/public/logo', wrap(async (req, res) => {
 }));
 
 // ============================================================
+// CADANGAN & PEMULIHAN DATA (pindah akun/proyek Supabase)
+// Diambil per tabel per halaman agar tidak melewati batas ukuran
+// permintaan Vercel (±4,5 MB). Gambar soal diambil sedikit-sedikit.
+// ============================================================
+const TABEL_CADANGAN = { users: 'id', schedules: 'id', questions: 'id', media: 'id', results: 'id', activity: 'id', exam_sessions: 'id', config: 'key' };
+const tabelTidakAda = e => e && /(does not exist|schema cache|relation)/i.test(e.message || '') && !/column/i.test(e.message || '');
+app.get('/api/admin/cadangan/:tabel', ADMIN, wrap(async (req, res) => {
+    const t = req.params.tabel, key = TABEL_CADANGAN[t];
+    if (!key) return res.status(400).json({ status: 'error', message: 'Tabel tidak dikenal' });
+    const from = Math.max(0, parseInt(req.query.from) || 0), n = Math.min(1000, Math.max(1, parseInt(req.query.n) || 500));
+    const { data, error } = await supabase.from(t).select('*').order(key, { ascending: true }).range(from, from + n - 1);
+    if (error) return tabelTidakAda(error) ? res.json({ status: 'success', rows: [], selesai: true, catatan: 'tabel belum ada' }) : res.json({ status: 'error', message: error.message });
+    res.json({ status: 'success', rows: data || [], selesai: (data || []).length < n });
+}));
+app.post('/api/admin/pulihkan/:tabel', ADMIN, wrap(async (req, res) => {
+    const t = req.params.tabel, key = TABEL_CADANGAN[t];
+    if (!key) return res.status(400).json({ status: 'error', message: 'Tabel tidak dikenal' });
+    let rows = Array.isArray(req.body.rows) ? req.body.rows : [];
+    if (req.body.kosongkan) {
+        const { error } = await supabase.from(t).delete().neq(key, key === 'id' && t !== 'media' ? -1 : '___');
+        if (error) return res.json({ status: 'error', message: `Gagal mengosongkan ${t}: ${error.message}` });
+    }
+    // Kolom lama yang tidak ada di tabel baru dibuang otomatis
+    const dibuang = [];
+    for (let i = 0; rows.length && i < 15; i++) {
+        const { error } = await supabase.from(t).upsert(rows, { onConflict: key });
+        if (!error) break;
+        const m = (error.message || '').match(/Could not find the '([^']+)' column/i) || (error.message || '').match(/column "([^"]+)" of relation/i);
+        if (!m) return res.json({ status: 'error', message: `${t}: ${error.message}` });
+        dibuang.push(m[1]); rows = rows.map(r => { const c = { ...r }; delete c[m[1]]; return c; });
+    }
+    res.json({ status: 'success', n: rows.length, dibuang });
+}));
+app.post('/api/admin/pulihkan-selesai', ADMIN, wrap(async (req, res) => {
+    // Nomor id berikutnya dilanjutkan dari data yang dipulihkan
+    const { error } = await supabase.rpc('cbt_reset_sequences');
+    clearQCache(); mediaCache.clear();
+    res.json({ status: 'success', peringatan: error ? 'Fungsi cbt_reset_sequences belum ada — jalankan supabase-schema-lengkap.sql. (' + error.message + ')' : '' });
+}));
+
+// ============================================================
+// KEEP-ALIVE: dipanggil Vercel Cron setiap hari agar proyek
+// Supabase gratis tidak dijeda saat lama tidak ada ujian.
+// Buka /api/keep-alive di browser untuk cek koneksi database.
+// ============================================================
+function jenisKunci(k) {
+    if (/^sb_secret_/.test(k)) return 'secret';
+    if (/^sb_publishable_/.test(k)) return 'publishable';
+    try { return JSON.parse(Buffer.from(k.split('.')[1], 'base64').toString()).role || 'tidak dikenal'; } catch (e) { return 'tidak dikenal'; }
+}
+app.get('/api/keep-alive', wrap(async (req, res) => {
+    const t0 = Date.now();
+    const { count, error } = await supabase.from('users').select('id', { count: 'exact', head: true });
+    const kunci = jenisKunci(SUPABASE_KEY);
+    res.set('Cache-Control', 'no-store');
+    res.json({
+        status: error ? 'error' : 'ok',
+        database: error ? 'GAGAL: ' + error.message : 'terhubung',
+        proyek: (SUPABASE_URL.match(/https:\/\/([^.]+)\./) || [])[1] || SUPABASE_URL,
+        jumlah_pengguna: error ? null : count,
+        jenis_kunci: kunci,
+        peringatan: ['secret', 'service_role'].includes(kunci) ? '' : 'SUPABASE_KEY sebaiknya memakai Secret key (bukan publishable/anon). Dengan tabel ber-RLS, kunci publishable tidak bisa membaca data.',
+        waktu_ms: Date.now() - t0,
+    });
+}));
+
+// ============================================================
 // GAMBAR SOAL (tanpa Google Drive) — disimpan di tabel `media`
 // Gambar sudah dikompres di browser (maks ±1280 px) sebelum dikirim.
 // URL: /api/media/<id acak>  — di-cache browser & CDN Vercel.
