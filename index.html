@@ -7,9 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CBT Spenda — SMP Negeri 2 Soyo Jaya</title>
     <meta name="theme-color" content="#14306B">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/icon-192.png">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/api/public/manifest">
+    <link rel="icon" type="image/png" href="/api/public/icon?size=192">
+    <link rel="apple-touch-icon" href="/api/public/icon?size=192">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1083,6 +1083,8 @@ function applyBranding() {
     document.querySelectorAll('[data-sk="nama"]').forEach(el => { el.textContent = s.nama_sekolah; });
     document.querySelectorAll('[data-sk="wilayah"]').forEach(el => { el.textContent = wilayah; });
     document.querySelectorAll('[data-sk="aplikasi"]').forEach(el => { el.textContent = 'CBT ' + (s.singkatan || ''); });
+    const ikon = `/api/public/icon?size=192&v=${s.updated_at || 0}`;
+    document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(l => { l.href = ikon; });
     document.querySelectorAll('img[data-logo]').forEach(img => { img.src = logoUrl(); img.alt = 'Logo ' + s.nama_sekolah; img.onerror = () => { img.onerror = null; img.src = '/logo-sekolah.png'; }; });
 }
 window.addEventListener('DOMContentLoaded', () => { loadSekolah(); });
@@ -2932,7 +2934,7 @@ async function clearUsers() {
 
 function bukaImportUser() {
     openModal('<h2 class="font-extrabold text-lg">Impor akun dari Excel</h2>', `
-        <p class="text-sm">Baris judul harus memuat kolom <b>nama</b> dan <b>username</b> (atau NIS/NISN). Kolom opsional: <b>password</b>, <b>kelas</b>, <b>role</b>, <b>mapel</b>. Jika password kosong, username dipakai sebagai password. Username yang sudah ada akan diperbarui.</p>
+        <p class="text-sm">Baris judul harus memuat kolom <b>nama</b> dan <b>username</b> (atau NIS/NISN). Kolom opsional: <b>password</b>, <b>kelas</b>, <b>role</b>, <b>mapel</b>. Guru dengan banyak mapel/kelas: tulis dalam satu sel dipisah koma, misalnya <b>IPA-7,IPA-8</b> atau <b>INF-7A</b> (kode harus sama dengan kode paket di Bank Soal). Jika password kosong, username dipakai sebagai password. Username yang sudah ada akan diperbarui.</p>
         <button class="btn btn-xs btn-outline mt-3" onclick="downloadTemplateUser()"><i class="fa fa-download"></i> Unduh template</button>
         <label class="dropzone mt-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file</b><br><span class="text-muted" id="iu_name">.xlsx, .xls, atau .csv</span></span><input type="file" id="file-import-user" accept=".xlsx,.xls,.csv" class="sr-only" onchange="$('iu_name').textContent=this.files[0]?.name||''"></label>`,
         { foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="prosesImportUser()"><i class="fa fa-file-import"></i> Impor</button>` });
@@ -2942,7 +2944,11 @@ function downloadTemplateUser() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
         { username: '7a001', nama: 'Andi Saputra', password: '4821', kelas: '7A', role: 'siswa', mapel: '' },
         { username: '7a002', nama: 'Budi Prasetyo', password: '1937', kelas: '7A', role: 'siswa', mapel: '' },
-        { username: 'guru.mtk', nama: 'Ibu Sri Wahyuni', password: 'ganti123', kelas: '', role: 'guru', mapel: 'MTK-7' },
+        { username: 'guru.ipa1', nama: 'Guru A (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'IPA-7,IPA-8' },
+        { username: 'guru.ipa2', nama: 'Guru B (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'IPA-9' },
+        { username: 'guru.inf1', nama: 'Guru C (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'INF-7A' },
+        { username: 'guru.inf2', nama: 'Guru D (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'INF-7B' },
+        { username: 'guru.multi', nama: 'Guru E (contoh, banyak mapel)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'MTK-7,MTK-8,INF-8A' },
     ]), 'Akun');
     XLSX.writeFile(wb, 'TEMPLATE_AKUN_CBT.xlsx');
 }
@@ -3036,7 +3042,7 @@ const SK_GROUPS = [
 
 async function renderSekolah() {
     await loadSekolah();
-    skDraft = { ...SEKOLAH, _logo_sekolah: undefined, _logo_pemda: undefined };
+    skDraft = { ...SEKOLAH, _logo_sekolah: undefined, _logo_pemda: undefined, _app: undefined };
     const field = ([k, label, ph = '', span = 1]) => `<div class="${span === 2 ? 'sm:col-span-2' : ''}"><label class="field-label" for="sk_${k}">${label}</label><input id="sk_${k}" class="field" value="${esc(SEKOLAH[k] || '')}" placeholder="${esc(ph)}" oninput="skInput('${k}', this.value)"></div>`;
     const logoBox = (jenis, label, note) => `<div class="card p-4"><p class="font-bold">${label}</p><p class="text-xs text-muted mb-3">${note}</p>
         <div class="flex items-center gap-4"><div class="w-20 h-20 rounded-xl border border-line grid place-items-center bg-paper overflow-hidden"><img id="sk_prev_${jenis}" class="max-w-full max-h-full object-contain" alt=""></div>
@@ -3048,6 +3054,12 @@ async function renderSekolah() {
             <div class="space-y-4">${SK_GROUPS.map(([t, fs]) => `<div class="card p-5"><h3 class="section-title mb-3">${t}</h3>${t === 'Lokasi sekolah' ? '<p class="text-sm text-muted -mt-2 mb-3">Dipakai untuk jadwal yang mengaktifkan <b>Wajib berada di sekolah</b>. Cara termudah: buka halaman ini dari HP di halaman sekolah, lalu tekan tombol di bawah.</p>' : ''}<div class="grid sm:grid-cols-2 gap-3">${fs.map(field).join('')}</div>${t === 'Lokasi sekolah' ? `<div class="flex flex-wrap gap-2 mt-3"><button class="btn btn-sm btn-outline" onclick="pakaiLokasiSaya()"><i class="fa fa-location-crosshairs"></i> Pakai lokasi perangkat ini</button><a class="btn btn-sm btn-ghost" id="sk_maps" target="_blank" rel="noopener"><i class="fa fa-map"></i> Lihat di peta</a></div>` : ''}</div>`).join('')}</div>
             <div class="space-y-4 xl:sticky xl:top-0">
                 <div class="grid sm:grid-cols-2 gap-4">${logoBox('sekolah', 'Logo sekolah', 'Tampil di aplikasi & kanan kop. PNG transparan, persegi.')}${logoBox('pemda', 'Logo pemda (opsional)', 'Tampil di kiri kop surat.')}</div>
+                <div class="card p-4"><p class="font-bold">Ikon aplikasi &amp; tab browser</p><p class="text-xs text-muted mb-3">Tampil di tab browser dan sebagai ikon aplikasi saat dipasang di layar HP. Gambar persegi (PNG/JPG) paling baik.</p>
+                    <div class="flex items-center gap-4"><div class="w-20 h-20 rounded-xl border border-line grid place-items-center bg-paper overflow-hidden"><img id="sk_prev_app" class="max-w-full max-h-full object-contain" alt=""></div>
+                    <div class="flex flex-col gap-2"><label class="btn btn-sm btn-outline cursor-pointer"><i class="fa fa-upload"></i> Pilih gambar<input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" onchange="skIkon(this.files[0]); this.value=''"></label>
+                    <button class="btn btn-sm btn-outline" onclick="skIkonDariLogo()"><i class="fa fa-image"></i> Pakai logo sekolah</button>
+                    <button class="btn btn-sm btn-ghost" onclick="skIkon(null)"><i class="fa fa-xmark"></i> Pakai ikon bawaan</button></div></div>
+                    <p class="text-xs text-muted mt-3"><i class="fa fa-circle-info"></i> Klik <b>Simpan</b> di atas. Tab browser berubah setelah muat ulang (Ctrl+Shift+R). Ikon di HP yang sudah terpasang baru berubah jika aplikasinya dihapus dari layar utama lalu dipasang ulang.</p></div>
                 <div class="card p-4"><p class="font-bold mb-3">Pratinjau kop surat</p><div class="kop-preview" id="sk_preview"></div></div>
                 <div class="card p-5"><h3 class="section-title flex items-center gap-2"><i class="fa fa-database text-navy"></i> Cadangan & pindah server</h3>
                     <p class="text-sm text-muted mt-1">Simpan seluruh data (peserta, soal, gambar, jadwal, nilai, profil sekolah) ke satu file. File ini bisa dipulihkan di aplikasi yang memakai proyek Supabase baru.</p>
@@ -3078,6 +3090,33 @@ function skPreview() {
     if (!$('sk_preview')) return;
     $('sk_preview').innerHTML = kopSuratHtml(skDraft, { sekolah: skLogoSrc('sekolah'), pemda: skLogoSrc('pemda') });
     ['sekolah', 'pemda'].forEach(j => { const img = $('sk_prev_' + j), src = skLogoSrc(j); img.src = src || ''; img.style.visibility = src ? 'visible' : 'hidden'; });
+    const ia = $('sk_prev_app');
+    if (ia) ia.src = skDraft._app !== undefined ? (skDraft._app ? skDraft._app.d512 : '/icon-192.png') : (SEKOLAH.has_logo_app ? `/api/public/icon?size=192&v=${SEKOLAH.updated_at || 0}` : '/icon-192.png');
+}
+// Ikon aplikasi: dibuat persegi 512 & 192 px (PNG) langsung di browser
+async function skIkonDariGambar(src) {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = no; i.src = src; });
+    const buat = n => {
+        const c = document.createElement('canvas'); c.width = c.height = n;
+        const x = c.getContext('2d'), pad = Math.round(n * 0.06), box = n - pad * 2, sc = Math.min(box / img.width, box / img.height);
+        const w = img.width * sc, hh = img.height * sc;
+        x.drawImage(img, (n - w) / 2, (n - hh) / 2, w, hh);
+        return c.toDataURL('image/png');
+    };
+    return { d512: buat(512), d192: buat(192) };
+}
+async function skIkon(file) {
+    if (!file) { skDraft._app = null; return skPreview(); }
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return toast('Gunakan gambar PNG, JPG, atau WEBP', 'warning');
+    try {
+        const dataUrl = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(file); });
+        skDraft._app = await skIkonDariGambar(dataUrl); skPreview();
+        toast('Ikon siap. Klik Simpan.', 'info');
+    } catch (e) { toast('Gambar tidak dapat dibaca', 'error'); }
+}
+async function skIkonDariLogo() {
+    try { skDraft._app = await skIkonDariGambar(skLogoSrc('sekolah') || '/logo-sekolah.png'); skPreview(); toast('Ikon dari logo sekolah siap. Klik Simpan.', 'info'); }
+    catch (e) { toast('Logo sekolah tidak dapat dibaca', 'error'); }
 }
 
 // Kecilkan logo di browser (maks 400 px, tetap transparan) sebelum disimpan
@@ -3102,6 +3141,7 @@ async function simpanSekolah() {
     const body = {};
     SK_GROUPS.forEach(([, fs]) => fs.forEach(([k]) => { body[k] = $('sk_' + k).value; }));
     ['sekolah', 'pemda'].forEach(j => { if (skDraft['_logo_' + j] !== undefined) body['logo_' + j] = skDraft['_logo_' + j]; });
+    if (skDraft._app !== undefined) { body.logo_app = skDraft._app ? skDraft._app.d512 : ''; body.logo_app_192 = skDraft._app ? skDraft._app.d192 : ''; }
     if (!body.nama_sekolah.trim()) return toast('Nama sekolah wajib diisi', 'warning');
     const btn = $('sk_simpan'); btn.disabled = true;
     try {

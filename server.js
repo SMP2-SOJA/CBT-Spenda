@@ -582,9 +582,9 @@ const DATA_URL_RE = /^data:image\/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=
 
 app.get('/api/public/sekolah', wrap(async (req, res) => {
     const s = await getSekolah();
-    const { logo_sekolah, logo_pemda, ...rest } = s;
+    const { logo_sekolah, logo_pemda, logo_app, logo_app_192, ...rest } = s;
     res.set('Cache-Control', 'no-cache');
-    res.json({ ...rest, has_logo_sekolah: !!logo_sekolah, has_logo_pemda: !!logo_pemda });
+    res.json({ ...rest, has_logo_sekolah: !!logo_sekolah, has_logo_pemda: !!logo_pemda, has_logo_app: !!logo_app });
 }));
 
 // Gambar logo: /api/public/logo (sekolah) atau /api/public/logo?jenis=pemda
@@ -596,6 +596,32 @@ app.get('/api/public/logo', wrap(async (req, res) => {
     res.set('Content-Type', 'image/' + m[1]);
     res.set('Cache-Control', 'public, max-age=300');
     res.send(Buffer.from(m[2], 'base64'));
+}));
+
+// Ikon aplikasi (tab browser, layar HP): memakai gambar yang diunggah admin di Profil sekolah.
+// Jika belum diunggah, dipakai file bawaan /icon-192.png dan /icon-512.png.
+app.get('/api/public/icon', wrap(async (req, res) => {
+    const size = req.query.size === '512' ? 512 : 192;
+    const s = await getSekolah();
+    const src = size === 512 ? s.logo_app : (s.logo_app_192 || s.logo_app);
+    const m = String(src || '').match(DATA_URL_RE);
+    if (!m) { res.set('Cache-Control', 'no-cache'); return res.redirect(302, `/icon-${size}.png`); }
+    res.set('Content-Type', 'image/' + m[1]);
+    res.set('Cache-Control', 'public, max-age=300');
+    res.send(Buffer.from(m[2], 'base64'));
+}));
+app.get('/api/public/manifest', wrap(async (req, res) => {
+    const s = await getSekolah();
+    const v = s.updated_at || 0, custom = !!s.logo_app;
+    const src = sz => custom ? `/api/public/icon?size=${sz}&v=${v}` : `/icon-${sz}.png`;
+    res.set('Content-Type', 'application/manifest+json');
+    res.set('Cache-Control', 'no-cache');
+    res.json({
+        name: 'CBT SMP Negeri 2 Soyo Jaya', short_name: 'CBT Spenda',
+        description: 'Ujian berbasis komputer & smartphone SMP Negeri 2 Soyo Jaya',
+        start_url: '/', display: 'standalone', background_color: '#F3F5F9', theme_color: '#14306B',
+        icons: [{ src: src(192), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: src(512), sizes: '512x512', type: 'image/png', purpose: 'any' }],
+    });
 }));
 
 // ============================================================
@@ -704,7 +730,7 @@ app.put('/api/admin/sekolah', ADMIN, wrap(async (req, res) => {
     const next = { ...cur };
     SEKOLAH_FIELDS.forEach(k => { if (req.body[k] !== undefined) next[k] = String(req.body[k] || '').trim().slice(0, 300); });
     if (!next.nama_sekolah) return res.json({ status: 'error', message: 'Nama sekolah wajib diisi.' });
-    for (const k of ['logo_sekolah', 'logo_pemda']) {
+    for (const k of ['logo_sekolah', 'logo_pemda', 'logo_app', 'logo_app_192']) {
         if (req.body[k] === undefined) continue;
         const v = String(req.body[k] || '');
         if (v === '') { next[k] = ''; continue; }
