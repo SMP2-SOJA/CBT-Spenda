@@ -1032,20 +1032,36 @@ app.get('/api/admin/users', ADMIN, wrap(async (req, res) => {
     const { data } = await supabase.from('users').select('*').order('id', { ascending: false });
     res.json(data || []);
 }));
+// Kolom users.ruang (ruang ujian) bersifat opsional: bila belum ada di database, data lain tetap tersimpan
+let RUANG_AKTIF = true;
+const ruangError = e => !!(e && /ruang/i.test(e.message || '') && /(column|schema cache)/i.test(e.message || ''));
+const tanpaRuang = p => Array.isArray(p) ? p.map(({ ruang, ...x }) => x) : (({ ruang, ...x }) => x)(p);
+const adaIsiRuang = p => (Array.isArray(p) ? p : [p]).some(x => x && String(x.ruang || '').trim() !== '');
+async function tulisUser(run, payload) {
+    if (RUANG_AKTIF) {
+        const r = await run(payload);
+        if (!ruangError(r.error)) return { error: r.error, ruangHilang: false };
+        RUANG_AKTIF = false;
+    }
+    const r2 = await run(tanpaRuang(payload));
+    return { error: r2.error, ruangHilang: adaIsiRuang(payload) };
+}
+const PESAN_RUANG = 'Kolom "ruang" belum ada di database: jalankan file supabase-migration.sql di Supabase (SQL Editor), lalu simpan ulang data ruang.';
+
 app.post('/api/admin/add-user', ADMIN, wrap(async (req, res) => {
-    const u = { name: String(req.body.name || '').trim(), username: String(req.body.username || '').trim(), password: String(req.body.password || '').trim(), role: String(req.body.role || 'siswa').toLowerCase(), kelas: String(req.body.kelas || '').trim(), mapel: String(req.body.mapel || '').trim() };
+    const u = { name: String(req.body.name || '').trim(), username: String(req.body.username || '').trim(), password: String(req.body.password || '').trim(), role: String(req.body.role || 'siswa').toLowerCase(), kelas: String(req.body.kelas || '').trim(), mapel: String(req.body.mapel || '').trim(), ruang: String(req.body.ruang || '').trim() };
     if (!u.name || !u.username || !u.password) return res.json({ status: 'error', message: 'Nama, username, dan password wajib diisi.' });
     const { data: ex } = await supabase.from('users').select('id').eq('username', u.username).maybeSingle();
     if (ex) return res.json({ status: 'error', message: `Username "${u.username}" sudah dipakai.` });
-    const { error } = await supabase.from('users').insert([u]);
+    const { error, ruangHilang } = await tulisUser(p => supabase.from('users').insert([p]), u);
     if (error) return res.json({ status: 'error', message: error.message });
-    res.json({ status: 'success' });
+    res.json({ status: 'success', warning: ruangHilang ? PESAN_RUANG : null });
 }));
 app.put('/api/admin/update-user', ADMIN, wrap(async (req, res) => {
-    const upd = { name: req.body.name, username: req.body.username, password: req.body.password, role: String(req.body.role || 'siswa').toLowerCase(), kelas: req.body.kelas || '', mapel: req.body.mapel || '' };
-    const { error } = await supabase.from('users').update(upd).eq('username', req.body.old_username);
+    const upd = { name: req.body.name, username: req.body.username, password: req.body.password, role: String(req.body.role || 'siswa').toLowerCase(), kelas: req.body.kelas || '', mapel: req.body.mapel || '', ruang: String(req.body.ruang || '').trim() };
+    const { error, ruangHilang } = await tulisUser(p => supabase.from('users').update(p).eq('username', req.body.old_username), upd);
     if (error) return res.json({ status: 'error', message: error.message });
-    res.json({ status: 'success' });
+    res.json({ status: 'success', warning: ruangHilang ? PESAN_RUANG : null });
 }));
 app.delete('/api/admin/delete-user/:username', ADMIN, wrap(async (req, res) => {
     if (req.params.username === req.user.username) return res.json({ status: 'error', message: 'Tidak bisa menghapus akun yang sedang dipakai.' });
@@ -1064,15 +1080,17 @@ app.post('/api/admin/import-users', ADMIN, wrap(async (req, res) => {
         username: String(row.username || '').trim(), name: String(row.nama || row.name || '').trim(),
         password: String(row.password || row.pass || '').trim(), role: String(row.role || 'siswa').toLowerCase().trim(),
         kelas: String(row.kelas || '').trim(), mapel: String(row.mapel || '').trim(),
+        ruang: row.ruang === undefined ? undefined : String(row.ruang || '').trim(), // undefined = file tidak punya kolom ruang → data ruang lama tidak ditimpa
     })).filter(r => r.username && r.password);
     if (!toProcess.length) return res.json({ status: 'error', message: 'Data tidak valid.' });
     const { data: existing } = await supabase.from('users').select('username');
     const existingSet = new Set((existing || []).map(u => u.username));
     const toInsert = toProcess.filter(u => !existingSet.has(u.username));
     const toUpdate = toProcess.filter(u => existingSet.has(u.username));
-    if (toInsert.length) { const { error } = await supabase.from('users').insert(toInsert); if (error) return res.json({ status: 'error', message: error.message }); }
-    for (const u of toUpdate) await supabase.from('users').update({ name: u.name, password: u.password, role: u.role, kelas: u.kelas, mapel: u.mapel }).eq('username', u.username);
-    res.json({ status: 'success', imported: toProcess.length, inserted: toInsert.length, updated: toUpdate.length });
+    let ruangHilang = false;
+    if (toInsert.length) { const r = await tulisUser(p => supabase.from('users').insert(p), toInsert); if (r.error) return res.json({ status: 'error', message: r.error.message }); ruangHilang = ruangHilang || r.ruangHilang; }
+    for (const u of toUpdate) { const r = await tulisUser(p => supabase.from('users').update(p).eq('username', u.username), { name: u.name, password: u.password, role: u.role, kelas: u.kelas, mapel: u.mapel, ruang: u.ruang }); ruangHilang = ruangHilang || r.ruangHilang; }
+    res.json({ status: 'success', imported: toProcess.length, inserted: toInsert.length, updated: toUpdate.length, warning: ruangHilang ? PESAN_RUANG : null });
 }));
 
 // Ganti password akun sendiri (admin & guru)

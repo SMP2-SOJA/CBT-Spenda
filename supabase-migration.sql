@@ -52,3 +52,8 @@ create table if not exists media (
     uploader   text,
     created_at timestamptz default now()
 );
+
+-- ============================================================
+-- RUANG UJIAN: satu kelas bisa terbagi ke beberapa ruang (daftar hadir & kartu peserta)
+-- ============================================================
+alter table users add column if not exists ruang text default '';

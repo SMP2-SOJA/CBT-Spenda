@@ -2874,17 +2874,19 @@ async function loadUsers() {
             + `<div class="card p-3 mb-4 flex flex-wrap gap-2 items-center"><input id="user-search" class="field field-sm sm:w-60" placeholder="Cari nama atau username…" oninput="renderUsers()">
                <select id="user-role" class="field field-sm w-auto" onchange="renderUsers()"><option value="">Semua peran</option><option value="siswa">Siswa</option><option value="guru">Guru</option><option value="admin">Admin</option></select>
                <select id="user-kelas" class="field field-sm w-auto" onchange="renderUsers()"><option value="">Semua kelas</option></select>
+               <select id="user-ruang" class="field field-sm w-auto" onchange="renderUsers()"><option value="">Semua ruang</option></select>
                <span id="user-count" class="text-sm text-muted ml-auto"></span>
                <button onclick="clearUsers()" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Hapus semua non-admin</button></div>
-             <div class="card overflow-hidden"><div class="overflow-x-auto max-h-[70vh]"><table class="tbl"><thead><tr><th>Nama</th><th>Username</th><th>Password</th><th>Kelas / mapel</th><th>Peran</th><th></th></tr></thead><tbody id="user-body"></tbody></table></div></div>`;
+             <div class="card overflow-hidden"><div class="overflow-x-auto max-h-[70vh]"><table class="tbl"><thead><tr><th>Nama</th><th>Username</th><th>Password</th><th>Kelas / mapel</th><th>Ruang</th><th>Peran</th><th></th></tr></thead><tbody id="user-body"></tbody></table></div></div>`;
     }
     allUsers = await api('/admin/users') || [];
     fillSelect('user-kelas', allUsers.filter(u => u.role === 'siswa').map(u => u.kelas), 'Semua kelas');
+    fillSelect('user-ruang', allUsers.filter(u => u.role === 'siswa').map(u => u.ruang), 'Semua ruang');
     renderUsers();
 }
 function filteredUsers() {
-    const s = ($('user-search').value || '').toLowerCase(), r = $('user-role').value, k = $('user-kelas').value;
-    return allUsers.filter(u => (!r || u.role === r) && (!k || u.kelas === k) && (!s || (u.name || '').toLowerCase().includes(s) || (u.username || '').toLowerCase().includes(s)))
+    const s = ($('user-search').value || '').toLowerCase(), r = $('user-role').value, k = $('user-kelas').value, rg = $('user-ruang') ? $('user-ruang').value : '';
+    return allUsers.filter(u => (!r || u.role === r) && (!k || u.kelas === k) && (!rg || u.ruang === rg) && (!s || (u.name || '').toLowerCase().includes(s) || (u.username || '').toLowerCase().includes(s)))
         .sort((a, b) => String(a.kelas || '').localeCompare(String(b.kelas || ''), 'id', { numeric: true }) || String(a.name).localeCompare(String(b.name), 'id'));
 }
 function renderUsers() {
@@ -2893,19 +2895,20 @@ function renderUsers() {
     const roleChip = { admin: 'chip-bad', guru: 'chip-gold', siswa: '' };
     $('user-body').innerHTML = list.map(u => `<tr><td class="font-semibold">${esc(u.name)}</td><td class="font-mono text-sm">${esc(u.username)}</td>
         <td><span class="pw text-sm text-muted cursor-pointer" onclick="this.textContent=this.dataset.p" data-p="${esc(u.password)}" title="Klik untuk menampilkan">••••••</span></td>
-        <td>${esc(u.role === 'siswa' ? u.kelas : u.mapel || u.kelas || '-')}</td><td><span class="chip ${roleChip[u.role] || 'chip-muted'}">${esc(u.role)}</span></td>
+        <td>${esc(u.role === 'siswa' ? u.kelas : u.mapel || u.kelas || '-')}</td><td>${esc(u.role === 'siswa' ? (u.ruang || '-') : '')}</td><td><span class="chip ${roleChip[u.role] || 'chip-muted'}">${esc(u.role)}</span></td>
         <td class="text-right whitespace-nowrap"><button class="btn btn-xs btn-outline" onclick="editUser('${jsq(u.username)}')"><i class="fa fa-pen"></i> Ubah</button> <button class="icon-btn icon-btn-sm hover:!text-bad" title="Hapus" onclick="hapusUser('${jsq(u.username)}')"><i class="fa fa-trash"></i></button></td></tr>`).join('')
-        || `<tr><td colspan="6">${emptyBox('fa-user-group', 'Tidak ada akun yang cocok.')}</td></tr>`;
+        || `<tr><td colspan="7">${emptyBox('fa-user-group', 'Tidak ada akun yang cocok.')}</td></tr>`;
 }
 function userFormHtml(u = {}) {
     return `<div class="text-left space-y-3">
         <div><label class="field-label">Nama lengkap</label><input id="f_name" class="field" value="${esc(u.name || '')}"></div>
         <div class="grid grid-cols-2 gap-3"><div><label class="field-label">Username</label><input id="f_user" class="field" value="${esc(u.username || '')}" autocapitalize="none"></div>
         <div><label class="field-label">Password</label><input id="f_pass" class="field" value="${esc(u.password || '')}"></div></div>
-        <div class="grid grid-cols-2 gap-3"><div><label class="field-label">Peran</label><select id="f_role" class="field" onchange="$('f_kelas_lbl').textContent=this.value==='siswa'?'Kelas':'Mapel / paket'">${['siswa', 'guru', 'admin'].map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r[0].toUpperCase() + r.slice(1)}</option>`).join('')}</select></div>
-        <div><label class="field-label" id="f_kelas_lbl">${!u.role || u.role === 'siswa' ? 'Kelas' : 'Mapel / paket'}</label><input id="f_kelas" class="field" value="${esc(u.role && u.role !== 'siswa' ? (u.mapel || '') : (u.kelas || ''))}" placeholder="7A / MTK-7"></div></div></div>`;
+        <div class="grid grid-cols-2 gap-3"><div><label class="field-label">Peran</label><select id="f_role" class="field" onchange="$('f_kelas_lbl').textContent=this.value==='siswa'?'Kelas':'Mapel / paket'; $('f_ruang_wrap').classList.toggle('hidden', this.value!=='siswa')">${['siswa', 'guru', 'admin'].map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r[0].toUpperCase() + r.slice(1)}</option>`).join('')}</select></div>
+        <div><label class="field-label" id="f_kelas_lbl">${!u.role || u.role === 'siswa' ? 'Kelas' : 'Mapel / paket'}</label><input id="f_kelas" class="field" value="${esc(u.role && u.role !== 'siswa' ? (u.mapel || '') : (u.kelas || ''))}" placeholder="7A / MTK-7"></div></div>
+        <div id="f_ruang_wrap" class="${u.role && u.role !== 'siswa' ? 'hidden' : ''}"><label class="field-label">Ruang ujian (opsional)</label><input id="f_ruang" class="field" value="${esc(u.ruang || '')}" placeholder="R1 / Ruang 1"></div></div>`;
 }
-const readUserForm = () => { const role = $('f_role').value, kv = $('f_kelas').value.trim(); return { name: $('f_name').value.trim(), username: $('f_user').value.trim(), password: $('f_pass').value.trim(), role, kelas: role === 'siswa' ? kv : '', mapel: role !== 'siswa' ? kv : '' }; };
+const readUserForm = () => { const role = $('f_role').value, kv = $('f_kelas').value.trim(); return { name: $('f_name').value.trim(), username: $('f_user').value.trim(), password: $('f_pass').value.trim(), role, kelas: role === 'siswa' ? kv : '', mapel: role !== 'siswa' ? kv : '', ruang: role === 'siswa' && $('f_ruang') ? $('f_ruang').value.trim() : '' }; };
 async function tambahUserManual() {
     const r = await Swal.fire({ title: 'Tambah akun', html: userFormHtml({ password: String(Math.floor(1000 + Math.random() * 9000)) }), showCancelButton: true, confirmButtonText: 'Simpan', cancelButtonText: 'Batal', preConfirm: () => { const v = readUserForm(); if (!v.name || !v.username || !v.password) { Swal.showValidationMessage('Nama, username, dan password wajib diisi'); return false; } return v; } });
     if (!r.isConfirmed) return;
@@ -2934,7 +2937,7 @@ async function clearUsers() {
 
 function bukaImportUser() {
     openModal('<h2 class="font-extrabold text-lg">Impor akun dari Excel</h2>', `
-        <p class="text-sm">Baris judul harus memuat kolom <b>nama</b> dan <b>username</b> (atau NIS/NISN). Kolom opsional: <b>password</b>, <b>kelas</b>, <b>role</b>, <b>mapel</b>. Guru dengan banyak mapel/kelas: tulis dalam satu sel dipisah koma, misalnya <b>IPA-7,IPA-8</b> atau <b>INF-7A</b> (kode harus sama dengan kode paket di Bank Soal). Jika password kosong, username dipakai sebagai password. Username yang sudah ada akan diperbarui.</p>
+        <p class="text-sm">Baris judul harus memuat kolom <b>nama</b> dan <b>username</b> (atau NIS/NISN). Kolom opsional: <b>password</b>, <b>kelas</b>, <b>ruang</b> (ruang ujian, misal R1), <b>role</b>, <b>mapel</b>. Guru dengan banyak mapel/kelas: tulis dalam satu sel dipisah koma, misalnya <b>IPA-7,IPA-8</b> atau <b>INF-7A</b> (kode harus sama dengan kode paket di Bank Soal). Jika password kosong, username dipakai sebagai password. Username yang sudah ada akan diperbarui.</p>
         <button class="btn btn-xs btn-outline mt-3" onclick="downloadTemplateUser()"><i class="fa fa-download"></i> Unduh template</button>
         <label class="dropzone mt-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file</b><br><span class="text-muted" id="iu_name">.xlsx, .xls, atau .csv</span></span><input type="file" id="file-import-user" accept=".xlsx,.xls,.csv" class="sr-only" onchange="$('iu_name').textContent=this.files[0]?.name||''"></label>`,
         { foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="prosesImportUser()"><i class="fa fa-file-import"></i> Impor</button>` });
@@ -2942,8 +2945,8 @@ function bukaImportUser() {
 function downloadTemplateUser() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-        { username: '7a001', nama: 'Andi Saputra', password: '4821', kelas: '7A', role: 'siswa', mapel: '' },
-        { username: '7a002', nama: 'Budi Prasetyo', password: '1937', kelas: '7A', role: 'siswa', mapel: '' },
+        { username: '7a001', nama: 'Andi Saputra', password: '4821', kelas: '7A', ruang: 'R1', role: 'siswa', mapel: '' },
+        { username: '7a002', nama: 'Budi Prasetyo', password: '1937', kelas: '7A', ruang: 'R2', role: 'siswa', mapel: '' },
         { username: 'guru.ipa1', nama: 'Guru A (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'IPA-7,IPA-8' },
         { username: 'guru.ipa2', nama: 'Guru B (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'IPA-9' },
         { username: 'guru.inf1', nama: 'Guru C (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'INF-7A' },
@@ -2957,24 +2960,24 @@ async function prosesImportUser() {
     if (!file) return toast('Pilih file dulu', 'warning');
     const buf = await file.arrayBuffer();
     let parsed = [];
-    if (file.name.toLowerCase().endsWith('.csv')) parsed = parseCSV(new TextDecoder().decode(buf)).map(r => ({ username: r.username || r.nis || r.nisn, nama: r.nama || r.name, password: r.password || r.pass || r.username, role: (r.role || 'siswa').toLowerCase(), kelas: r.kelas || r.rombel || '', mapel: r.mapel || '' }));
+    if (file.name.toLowerCase().endsWith('.csv')) parsed = parseCSV(new TextDecoder().decode(buf)).map(r => ({ username: r.username || r.nis || r.nisn, nama: r.nama || r.name, password: r.password || r.pass || r.username, role: (r.role || 'siswa').toLowerCase(), kelas: r.kelas || r.rombel || '', mapel: r.mapel || '', ruang: (r.ruang !== undefined || r.ruangan !== undefined) ? String(r.ruang !== undefined ? r.ruang : r.ruangan).trim() : undefined }));
     else {
         const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
         const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-        let hi = -1; const c = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1 };
+        let hi = -1; const c = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1, g: -1 };
         for (let i = 0; i < Math.min(raw.length, 20) && hi < 0; i++) {
             (raw[i] || []).forEach((cell, idx) => {
                 const s = String(cell || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                 if (['username', 'user', 'nis', 'nisn'].includes(s)) c.u = idx; if (['nama', 'name', 'namasiswa', 'namalengkap'].includes(s)) c.n = idx;
                 if (['password', 'pass', 'sandi'].includes(s)) c.p = idx; if (['role', 'peran'].includes(s)) c.r = idx;
-                if (['kelas', 'rombel'].includes(s)) c.k = idx; if (['mapel', 'matapelajaran'].includes(s)) c.m = idx;
+                if (['kelas', 'rombel'].includes(s)) c.k = idx; if (['mapel', 'matapelajaran'].includes(s)) c.m = idx; if (['ruang', 'ruangan', 'ruangujian'].includes(s)) c.g = idx;
             });
             if (c.u >= 0 && c.n >= 0) hi = i;
         }
         if (hi < 0) return Swal.fire({ icon: 'error', title: 'Kolom tidak ditemukan', text: 'File harus memiliki kolom "nama" dan "username" (atau NIS/NISN).' });
         for (let i = hi + 1; i < raw.length; i++) {
             const r = raw[i] || []; const un = r[c.u], nm = r[c.n]; if (!un || !nm) continue;
-            parsed.push({ username: String(un).trim(), nama: String(nm).trim(), password: String(c.p >= 0 && r[c.p] ? r[c.p] : un).trim(), role: c.r >= 0 && r[c.r] ? String(r[c.r]).toLowerCase().trim() : 'siswa', kelas: c.k >= 0 && r[c.k] ? String(r[c.k]).trim() : '', mapel: c.m >= 0 && r[c.m] ? String(r[c.m]).trim() : '' });
+            parsed.push({ username: String(un).trim(), nama: String(nm).trim(), password: String(c.p >= 0 && r[c.p] ? r[c.p] : un).trim(), role: c.r >= 0 && r[c.r] ? String(r[c.r]).toLowerCase().trim() : 'siswa', kelas: c.k >= 0 && r[c.k] ? String(r[c.k]).trim() : '', mapel: c.m >= 0 && r[c.m] ? String(r[c.m]).trim() : '', ruang: c.g >= 0 ? String(r[c.g] || '').trim() : undefined });
         }
     }
     const seen = new Set(); parsed = parsed.filter(x => x.username && !seen.has(x.username) && seen.add(x.username));
@@ -2997,7 +3000,7 @@ function cetakKartu() {
     if (!list.length) return toast('Tidak ada siswa pada filter ini', 'info');
     const logo = LOGO_DATA.sekolah || location.origin + logoUrl();
     const cards = list.map(u => `<div class="k"><div class="h"><i class="lg"></i><div><b>KARTU PESERTA UJIAN</b><br><span>${esc(SEKOLAH.nama_sekolah)}${SEKOLAH.tahun_pelajaran ? ' · TP ' + esc(SEKOLAH.tahun_pelajaran) : ''}</span></div></div>
-        <table><tr><td>Nama</td><td>: <b>${esc(u.name)}</b></td></tr><tr><td>Kelas</td><td>: ${esc(u.kelas || '-')}</td></tr><tr><td>Username</td><td>: <b class="m">${esc(u.username)}</b></td></tr><tr><td>Password</td><td>: <b class="m">${esc(u.password)}</b></td></tr></table>
+        <table><tr><td>Nama</td><td>: <b>${esc(u.name)}</b></td></tr><tr><td>Kelas</td><td>: ${esc(u.kelas || '-')}</td></tr>${u.ruang ? `<tr><td>Ruang</td><td>: <b>${esc(u.ruang)}</b></td></tr>` : ''}<tr><td>Username</td><td>: <b class="m">${esc(u.username)}</b></td></tr><tr><td>Password</td><td>: <b class="m">${esc(u.password)}</b></td></tr></table>
         <p class="n">Simpan kartu ini. Jangan berikan password kepada orang lain.</p></div>`).join('');
     const w = window.open('', '_blank');
     if (!w) return toast('Izinkan pop-up untuk mencetak', 'error');
@@ -3172,12 +3175,25 @@ function cetakDaftarHadir() {
     const list = filteredUsers().filter(u => u.role === 'siswa');
     if (!list.length) return toast('Tidak ada siswa pada filter ini', 'info');
     const kelas = $('user-kelas').value;
-    const rows = list.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${esc(u.name)}</td><td class="c">${esc(u.kelas || '-')}</td><td style="height:30px">${i % 2 === 0 ? `${i + 1}.` : ''}</td><td>${i % 2 === 1 ? `${i + 1}.` : ''}</td><td></td></tr>`).join('');
-    cetakDokumen('Daftar hadir ' + (kelas || ''), `<h1>DAFTAR HADIR PESERTA UJIAN</h1><p class="sub">Tahun Pelajaran ${esc(SEKOLAH.tahun_pelajaran || '….')}</p>
-        <table class="meta"><tr><td>Mata pelajaran</td><td>: ..............................................</td></tr><tr><td>Kelas / ruang</td><td>: ${esc(kelas || '..............')} / ..............</td></tr><tr><td>Hari, tanggal</td><td>: ..............................................</td></tr><tr><td>Waktu</td><td>: .......... s.d. ..........</td></tr></table><br>
+    // Satu kelas bisa terbagi ke beberapa ruang: bila ada data ruang, daftar hadir dicetak satu halaman per ruang
+    const adaRuang = list.some(u => u.ruang);
+    const grup = new Map();
+    list.forEach(u => { const k = adaRuang ? (u.ruang || '(Belum ada ruang)') : ''; if (!grup.has(k)) grup.set(k, []); grup.get(k).push(u); });
+    const keys = [...grup.keys()].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    const halaman = keys.map((rg, gi) => {
+        const ls = grup.get(rg);
+        const rows = ls.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${esc(u.name)}</td><td class="c">${esc(u.kelas || '-')}</td><td style="height:30px">${i % 2 === 0 ? `${i + 1}.` : ''}</td><td>${i % 2 === 1 ? `${i + 1}.` : ''}</td><td></td></tr>`).join('');
+        const kls = [...new Set(ls.map(u => u.kelas).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'id', { numeric: true })).join(', ');
+        const metaKelas = adaRuang
+            ? `<tr><td>Ruang</td><td>: <b>${esc(rg)}</b></td></tr><tr><td>Kelas</td><td>: ${esc(kls || '..............')}</td></tr>`
+            : `<tr><td>Kelas / ruang</td><td>: ${esc(kelas || '..............')} / ..............</td></tr>`;
+        return `<div${gi < keys.length - 1 ? ' style="break-after:page"' : ''}>${kopSuratHtml()}<h1>DAFTAR HADIR PESERTA UJIAN</h1><p class="sub">Tahun Pelajaran ${esc(SEKOLAH.tahun_pelajaran || '….')}</p>
+        <table class="meta"><tr><td>Mata pelajaran</td><td>: ..............................................</td></tr>${metaKelas}<tr><td>Hari, tanggal</td><td>: ..............................................</td></tr><tr><td>Waktu</td><td>: .......... s.d. ..........</td></tr></table><br>
         <table class="data"><thead><tr><th style="width:34px">No</th><th>Nama peserta</th><th style="width:60px">Kelas</th><th colspan="2">Tanda tangan</th><th style="width:80px">Ket.</th></tr></thead><tbody>${rows}</tbody></table>
-        <p style="font-size:10.5pt;margin-top:8px">Jumlah peserta: ${list.length} · Hadir: ........ · Tidak hadir: ........</p>
-        ${ttdHtml({ kiri: { jabatan: 'Pengawas Ujian', nama: '', nip: '' } })}`);
+        <p style="font-size:10.5pt;margin-top:8px">Jumlah peserta: ${ls.length} · Hadir: ........ · Tidak hadir: ........</p>
+        ${ttdHtml({ kiri: { jabatan: 'Pengawas Ujian', nama: '', nip: '' } })}</div>`;
+    });
+    cetakDokumen('Daftar hadir ' + (adaRuang ? 'per ruang' : (kelas || '')), halaman.join(''), { kop: false });
 }
 
 
