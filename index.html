@@ -3015,7 +3015,8 @@ function bukaBagiRuang() {
             <div><label class="field-label">Jumlah siswa per ruang</label><input id="br_kap" type="number" min="2" class="field" value="20"></div>
             <div><label class="field-label">Jumlah ruangan dipakai</label><input id="br_jml" type="number" min="1" class="field" value="${Math.max(1, Math.ceil(siswa.length / 20))}"></div>
             <div><label class="field-label">Awalan nama ruang</label><input id="br_pre" class="field" value="R" placeholder="R → R1, R2…"></div>
-            <div class="flex items-end"><label class="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" id="br_acak" checked> Acak urutan siswa</label></div>
+            <div class="flex items-end"><label class="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" id="br_acak" checked> Acak siswa dalam tiap kelas</label></div>
+            <div class="col-span-2"><label class="field-label">Jika jumlah siswa melebihi kapasitas</label><select id="br_lebih" class="field"><option value="sebar">Sebar sisa siswa ke ruang yang ada (jumlah ruang tetap)</option><option value="tambah">Tambah ruang otomatis</option></select></div>
         </div>
         <p class="field-label mt-3">Kelas yang diikutkan</p>
         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">${kelasList.map(k => `<label class="flex items-center gap-1.5"><input type="checkbox" class="br-kls" value="${esc(k)}" checked> ${esc(k || '(tanpa kelas)')} <span class="text-muted">(${siswa.filter(u => (u.kelas || '') === k).length})</span></label>`).join('')}</div>
@@ -3023,31 +3024,50 @@ function bukaBagiRuang() {
         <div id="br_hasil" class="mt-3"></div>`,
         { wide: true, foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="terapkanBagiRuang()"><i class="fa fa-check"></i> Terapkan pembagian</button>` });
 }
-function bagiRuangAuto(list, R, C, prefix, acak) {
-    const N = list.length;
+function bagiRuangAuto(list, R, C, prefix, acak, lebih) {
+    const N = list.length, info = [];
     if (N < 1) return { error: 'Tidak ada siswa pada kelas yang dipilih.' };
     if (R > N) return { error: `Jumlah ruangan (${R}) lebih banyak daripada jumlah siswa (${N}).` };
-    if (N > R * C) return { error: `Kapasitas tidak cukup: ${N} siswa, sedangkan ${R} ruang × ${C} siswa = ${R * C} kursi. Tambah jumlah ruang atau siswa per ruang.` };
-    const urut = (a, b) => String(a.kelas || '').localeCompare(String(b.kelas || ''), 'id', { numeric: true }) || String(a.name).localeCompare(String(b.name), 'id');
-    const kocok = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    if (N > R * C) {
+        if (lebih === 'tambah') { const R2 = Math.ceil(N / C); info.push(`Kapasitas ${R} ruang × ${C} = ${R * C} kursi kurang untuk ${N} siswa, sehingga ruang ditambah otomatis menjadi ${R2} ruang.`); R = R2; }
+        else info.push(`${N} siswa melebihi kapasitas ${R} ruang × ${C} = ${R * C} kursi. Sisa ${N - R * C} siswa disebar ke ruang yang ada, sehingga tiap ruang berisi ${Math.floor(N / R)}–${Math.ceil(N / R)} siswa.`);
+    }
+    // Ukuran ruang dibuat merata; sisa pembagian jatuh ke ruang-ruang pertama (R1, R2, …)
+    const target = Array.from({ length: R }, (_, i) => Math.floor(N / R) + (i < N % R ? 1 : 0));
+    const keys = ['L', 'P', 'X'];
     const grup = { L: [], P: [], X: [] };
     list.forEach(u => grup[u.jk === 'L' ? 'L' : u.jk === 'P' ? 'P' : 'X'].push(u));
-    Object.values(grup).forEach(g => acak ? kocok(g) : g.sort(urut));
-    const rooms = Array.from({ length: R }, (_, i) => ({ nama: prefix + (i + 1), members: [], target: Math.floor(N / R) + (i < N % R ? 1 : 0) }));
-    // Bagikan seperti kartu: laki-laki dulu, lalu perempuan melanjutkan dari ruang berikutnya → komposisi tiap ruang seimbang
-    let p = 0;
-    ['L', 'P', 'X'].forEach(k => grup[k].forEach(u => {
-        while (rooms[p % R].members.length >= rooms[p % R].target) p++;
-        rooms[p % R].members.push(u); p++;
-    }));
-    const warn = [];
-    const x = grup.X.length; if (x) warn.push(`${x} siswa belum diisi jenis kelaminnya; mereka dibagi merata dan tidak dihitung dalam pencampuran L/P.`);
-    rooms.forEach(r => {
-        const l = r.members.filter(u => u.jk === 'L').length, pp = r.members.filter(u => u.jk === 'P').length;
-        r.l = l; r.p = pp; r.x = r.members.length - l - pp;
-        if (r.members.length > 1 && r.x === 0 && (l === 0 || pp === 0)) warn.push(`${r.nama} hanya berisi ${l === 0 ? 'perempuan' : 'laki-laki'} (jumlah ${l === 0 ? 'laki-laki' : 'perempuan'} terlalu sedikit untuk dibagi ke semua ruang).`);
+    const cmpKelas = (a, b) => String(a.kelas || '').localeCompare(String(b.kelas || ''), 'id', { numeric: true });
+    const kocok = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    keys.forEach(g => { if (acak) { kocok(grup[g]); grup[g].sort(cmpKelas); } else grup[g].sort((a, b) => cmpKelas(a, b) || String(a.name).localeCompare(String(b.name), 'id')); });
+
+    // 1) Kuota laki-laki / perempuan tiap ruang dibuat proporsional terhadap ukuran ruang
+    const quota = target.map(() => ({ L: 0, P: 0, X: 0 })), pairs = [];
+    const needG = { L: grup.L.length, P: grup.P.length, X: grup.X.length }, needR = target.slice();
+    target.forEach((t, i) => keys.forEach(g => { const ideal = grup[g].length * t / N, f = Math.floor(ideal); quota[i][g] = f; needG[g] -= f; needR[i] -= f; pairs.push({ i, g, fr: ideal - f }); }));
+    for (let guard = 0; guard < 100000 && keys.some(g => needG[g] > 0); guard++) {
+        let best = null;
+        pairs.forEach(q => { if (needG[q.g] > 0 && needR[q.i] > 0 && (!best || q.fr > best.fr)) best = q; });
+        if (!best) break;
+        quota[best.i][best.g]++; needG[best.g]--; needR[best.i]--; best.fr -= 1;
+    }
+    // 2) Siswa tiap jenis kelamin (sudah berurutan per kelas) dibagikan bergiliran → tiap kelas tersebar merata ke semua ruang
+    const rooms = target.map((t, i) => ({ nama: prefix + (i + 1), members: [], target: t }));
+    keys.forEach(g => {
+        let p = 0; const sisa = quota.map(q => q[g]);
+        grup[g].forEach(u => { let n = 0; while (sisa[p % R] <= 0 && n++ < R) p++; rooms[p % R].members.push(u); sisa[p % R]--; p++; });
     });
-    return { rooms, warn };
+
+    const warn = [];
+    if (grup.X.length) warn.push(`${grup.X.length} siswa belum diisi jenis kelaminnya; mereka dibagi merata dan tidak dihitung dalam pencampuran L/P.`);
+    const jmlKelas = new Set(list.map(u => u.kelas || '')).size;
+    rooms.forEach(r => {
+        r.l = r.members.filter(u => u.jk === 'L').length; r.p = r.members.filter(u => u.jk === 'P').length; r.x = r.members.length - r.l - r.p;
+        r.kelasN = new Set(r.members.map(u => u.kelas || '')).size; r.over = r.members.length > C;
+        if (r.members.length > 1 && r.x === 0 && (r.l === 0 || r.p === 0)) warn.push(`${r.nama} hanya berisi ${r.l === 0 ? 'perempuan' : 'laki-laki'} (jumlah ${r.l === 0 ? 'laki-laki' : 'perempuan'} terlalu sedikit untuk semua ruang).`);
+        if (jmlKelas > 1 && r.members.length > 1 && r.kelasN === 1) warn.push(`${r.nama} hanya berisi satu kelas.`);
+    });
+    return { rooms, warn, info };
 }
 function hitungBagiRuang() {
     const C = parseInt($('br_kap').value), R = parseInt($('br_jml').value), pre = $('br_pre').value;
@@ -3056,12 +3076,12 @@ function hitungBagiRuang() {
     if (!(C >= 2) || !(R >= 1)) { box.innerHTML = '<p class="text-sm text-bad">Isi jumlah siswa per ruang (minimal 2) dan jumlah ruangan (minimal 1).</p>'; return; }
     if (!kls.length) { box.innerHTML = '<p class="text-sm text-bad">Pilih minimal satu kelas.</p>'; return; }
     const list = allUsers.filter(u => u.role === 'siswa' && kls.includes(u.kelas || ''));
-    const r = bagiRuangAuto(list, R, C, pre, $('br_acak').checked);
+    const r = bagiRuangAuto(list, R, C, pre, $('br_acak').checked, $('br_lebih').value);
     if (r.error) { box.innerHTML = `<p class="text-sm text-bad"><i class="fa fa-circle-exclamation"></i> ${esc(r.error)}</p>`; return; }
     bagiHasil = r;
     const komp = m => { const c = {}; m.forEach(u => { c[u.kelas || '-'] = (c[u.kelas || '-'] || 0) + 1; }); return Object.entries(c).map(([k, n]) => `${esc(k)}: ${n}`).join(', '); };
-    box.innerHTML = (r.warn.length ? `<div class="text-sm p-2 rounded bg-amber-50 text-amber-800 mb-2">${r.warn.map(w => `<div><i class="fa fa-triangle-exclamation"></i> ${esc(w)}</div>`).join('')}</div>` : '<p class="text-sm text-ok mb-2"><i class="fa fa-circle-check"></i> Setiap ruang berisi laki-laki dan perempuan.</p>')
-        + `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>Ruang</th><th>Jumlah</th><th>L</th><th>P</th><th>Belum diisi</th><th>Komposisi kelas</th></tr></thead><tbody>${r.rooms.map(m => `<tr><td class="font-semibold">${esc(m.nama)}</td><td>${m.members.length}</td><td>${m.l}</td><td>${m.p}</td><td>${m.x || '-'}</td><td class="text-sm">${komp(m.members)}</td></tr>`).join('')}</tbody></table></div>
+    box.innerHTML = (r.info.length ? `<div class="text-sm p-2 rounded bg-blue-50 text-blue-800 mb-2">${r.info.map(w => `<div><i class="fa fa-circle-info"></i> ${esc(w)}</div>`).join('')}</div>` : '') + (r.warn.length ? `<div class="text-sm p-2 rounded bg-amber-50 text-amber-800 mb-2">${r.warn.map(w => `<div><i class="fa fa-triangle-exclamation"></i> ${esc(w)}</div>`).join('')}</div>` : '<p class="text-sm text-ok mb-2"><i class="fa fa-circle-check"></i> Setiap ruang berisi laki-laki dan perempuan dari beberapa kelas.</p>')
+        + `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>Ruang</th><th>Jumlah</th><th>L</th><th>P</th><th>Belum diisi</th><th>Komposisi kelas</th></tr></thead><tbody>${r.rooms.map(m => `<tr><td class="font-semibold">${esc(m.nama)}</td><td>${m.members.length}${m.over ? ' <span class="text-xs text-amber-700">(> kapasitas)</span>' : ''}</td><td>${m.l}</td><td>${m.p}</td><td>${m.x || '-'}</td><td class="text-sm">${komp(m.members)}</td></tr>`).join('')}</tbody></table></div>
         <p class="text-xs text-muted mt-2">Total ${list.length} siswa. Klik "Hitung" lagi untuk mengacak ulang. Klik <b>Terapkan pembagian</b> untuk menyimpan; data ruang siswa yang diikutkan akan diganti.</p>`;
 }
 async function terapkanBagiRuang() {
