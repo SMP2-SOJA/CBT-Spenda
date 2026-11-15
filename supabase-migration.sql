@@ -57,3 +57,5 @@ create table if not exists media (
 -- RUANG UJIAN: satu kelas bisa terbagi ke beberapa ruang (daftar hadir & kartu peserta)
 -- ============================================================
 alter table users add column if not exists ruang text default '';
+-- Jenis kelamin siswa (L/P) untuk pembagian ruang otomatis
+alter table users add column if not exists jk text default '';

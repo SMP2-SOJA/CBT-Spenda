@@ -2869,6 +2869,7 @@ async function loadUsers() {
         $('page-users').innerHTML = pageHead('Peserta & guru', 'Kelola akun login. Kode kelas siswa (misal 7A) menentukan paket soal yang ia terima.',
             `<div class="flex flex-wrap gap-2"><button onclick="tambahUserManual()" class="btn btn-sm btn-primary"><i class="fa fa-user-plus"></i> Tambah</button>
              <button onclick="bukaImportUser()" class="btn btn-sm btn-outline"><i class="fa fa-file-import"></i> Impor Excel</button>
+             <button onclick="bukaBagiRuang()" class="btn btn-sm btn-outline"><i class="fa fa-door-open"></i> Bagi ruang otomatis</button>
              <button onclick="cetakKartu()" class="btn btn-sm btn-outline"><i class="fa fa-id-card"></i> Kartu peserta</button>
              <button onclick="cetakDaftarHadir()" class="btn btn-sm btn-outline"><i class="fa fa-clipboard-list"></i> Daftar hadir</button></div>`)
             + `<div class="card p-3 mb-4 flex flex-wrap gap-2 items-center"><input id="user-search" class="field field-sm sm:w-60" placeholder="Cari nama atau username…" oninput="renderUsers()">
@@ -2877,7 +2878,7 @@ async function loadUsers() {
                <select id="user-ruang" class="field field-sm w-auto" onchange="renderUsers()"><option value="">Semua ruang</option></select>
                <span id="user-count" class="text-sm text-muted ml-auto"></span>
                <button onclick="clearUsers()" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Hapus semua non-admin</button></div>
-             <div class="card overflow-hidden"><div class="overflow-x-auto max-h-[70vh]"><table class="tbl"><thead><tr><th>Nama</th><th>Username</th><th>Password</th><th>Kelas / mapel</th><th>Ruang</th><th>Peran</th><th></th></tr></thead><tbody id="user-body"></tbody></table></div></div>`;
+             <div class="card overflow-hidden"><div class="overflow-x-auto max-h-[70vh]"><table class="tbl"><thead><tr><th>Nama</th><th>Username</th><th>Password</th><th>Kelas / mapel</th><th>L/P</th><th>Ruang</th><th>Peran</th><th></th></tr></thead><tbody id="user-body"></tbody></table></div></div>`;
     }
     allUsers = await api('/admin/users') || [];
     fillSelect('user-kelas', allUsers.filter(u => u.role === 'siswa').map(u => u.kelas), 'Semua kelas');
@@ -2895,9 +2896,9 @@ function renderUsers() {
     const roleChip = { admin: 'chip-bad', guru: 'chip-gold', siswa: '' };
     $('user-body').innerHTML = list.map(u => `<tr><td class="font-semibold">${esc(u.name)}</td><td class="font-mono text-sm">${esc(u.username)}</td>
         <td><span class="pw text-sm text-muted cursor-pointer" onclick="this.textContent=this.dataset.p" data-p="${esc(u.password)}" title="Klik untuk menampilkan">••••••</span></td>
-        <td>${esc(u.role === 'siswa' ? u.kelas : u.mapel || u.kelas || '-')}</td><td>${esc(u.role === 'siswa' ? (u.ruang || '-') : '')}</td><td><span class="chip ${roleChip[u.role] || 'chip-muted'}">${esc(u.role)}</span></td>
+        <td>${esc(u.role === 'siswa' ? u.kelas : u.mapel || u.kelas || '-')}</td><td>${esc(u.role === 'siswa' ? (u.jk || '-') : '')}</td><td>${esc(u.role === 'siswa' ? (u.ruang || '-') : '')}</td><td><span class="chip ${roleChip[u.role] || 'chip-muted'}">${esc(u.role)}</span></td>
         <td class="text-right whitespace-nowrap"><button class="btn btn-xs btn-outline" onclick="editUser('${jsq(u.username)}')"><i class="fa fa-pen"></i> Ubah</button> <button class="icon-btn icon-btn-sm hover:!text-bad" title="Hapus" onclick="hapusUser('${jsq(u.username)}')"><i class="fa fa-trash"></i></button></td></tr>`).join('')
-        || `<tr><td colspan="7">${emptyBox('fa-user-group', 'Tidak ada akun yang cocok.')}</td></tr>`;
+        || `<tr><td colspan="8">${emptyBox('fa-user-group', 'Tidak ada akun yang cocok.')}</td></tr>`;
 }
 function userFormHtml(u = {}) {
     return `<div class="text-left space-y-3">
@@ -2906,9 +2907,10 @@ function userFormHtml(u = {}) {
         <div><label class="field-label">Password</label><input id="f_pass" class="field" value="${esc(u.password || '')}"></div></div>
         <div class="grid grid-cols-2 gap-3"><div><label class="field-label">Peran</label><select id="f_role" class="field" onchange="$('f_kelas_lbl').textContent=this.value==='siswa'?'Kelas':'Mapel / paket'; $('f_ruang_wrap').classList.toggle('hidden', this.value!=='siswa')">${['siswa', 'guru', 'admin'].map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r[0].toUpperCase() + r.slice(1)}</option>`).join('')}</select></div>
         <div><label class="field-label" id="f_kelas_lbl">${!u.role || u.role === 'siswa' ? 'Kelas' : 'Mapel / paket'}</label><input id="f_kelas" class="field" value="${esc(u.role && u.role !== 'siswa' ? (u.mapel || '') : (u.kelas || ''))}" placeholder="7A / MTK-7"></div></div>
-        <div id="f_ruang_wrap" class="${u.role && u.role !== 'siswa' ? 'hidden' : ''}"><label class="field-label">Ruang ujian (opsional)</label><input id="f_ruang" class="field" value="${esc(u.ruang || '')}" placeholder="R1 / Ruang 1"></div></div>`;
+        <div id="f_ruang_wrap" class="grid grid-cols-2 gap-3 ${u.role && u.role !== 'siswa' ? 'hidden' : ''}"><div><label class="field-label">Jenis kelamin</label><select id="f_jk" class="field"><option value="">-</option><option value="L" ${u.jk === 'L' ? 'selected' : ''}>Laki-laki (L)</option><option value="P" ${u.jk === 'P' ? 'selected' : ''}>Perempuan (P)</option></select></div>
+        <div><label class="field-label">Ruang ujian (opsional)</label><input id="f_ruang" class="field" value="${esc(u.ruang || '')}" placeholder="R1 / Ruang 1"></div></div></div>`;
 }
-const readUserForm = () => { const role = $('f_role').value, kv = $('f_kelas').value.trim(); return { name: $('f_name').value.trim(), username: $('f_user').value.trim(), password: $('f_pass').value.trim(), role, kelas: role === 'siswa' ? kv : '', mapel: role !== 'siswa' ? kv : '', ruang: role === 'siswa' && $('f_ruang') ? $('f_ruang').value.trim() : '' }; };
+const readUserForm = () => { const role = $('f_role').value, kv = $('f_kelas').value.trim(); return { name: $('f_name').value.trim(), username: $('f_user').value.trim(), password: $('f_pass').value.trim(), role, kelas: role === 'siswa' ? kv : '', mapel: role !== 'siswa' ? kv : '', ruang: role === 'siswa' && $('f_ruang') ? $('f_ruang').value.trim() : '', jk: role === 'siswa' && $('f_jk') ? $('f_jk').value : '' }; };
 async function tambahUserManual() {
     const r = await Swal.fire({ title: 'Tambah akun', html: userFormHtml({ password: String(Math.floor(1000 + Math.random() * 9000)) }), showCancelButton: true, confirmButtonText: 'Simpan', cancelButtonText: 'Batal', preConfirm: () => { const v = readUserForm(); if (!v.name || !v.username || !v.password) { Swal.showValidationMessage('Nama, username, dan password wajib diisi'); return false; } return v; } });
     if (!r.isConfirmed) return;
@@ -2937,7 +2939,7 @@ async function clearUsers() {
 
 function bukaImportUser() {
     openModal('<h2 class="font-extrabold text-lg">Impor akun dari Excel</h2>', `
-        <p class="text-sm">Baris judul harus memuat kolom <b>nama</b> dan <b>username</b> (atau NIS/NISN). Kolom opsional: <b>password</b>, <b>kelas</b>, <b>ruang</b> (ruang ujian, misal R1), <b>role</b>, <b>mapel</b>. Guru dengan banyak mapel/kelas: tulis dalam satu sel dipisah koma, misalnya <b>IPA-7,IPA-8</b> atau <b>INF-7A</b> (kode harus sama dengan kode paket di Bank Soal). Jika password kosong, username dipakai sebagai password. Username yang sudah ada akan diperbarui.</p>
+        <p class="text-sm">Baris judul harus memuat kolom <b>nama</b> dan <b>username</b> (atau NIS/NISN). Kolom opsional: <b>password</b>, <b>kelas</b>, <b>jk</b> (L/P), <b>ruang</b> (ruang ujian, misal R1), <b>role</b>, <b>mapel</b>. Guru dengan banyak mapel/kelas: tulis dalam satu sel dipisah koma, misalnya <b>IPA-7,IPA-8</b> atau <b>INF-7A</b> (kode harus sama dengan kode paket di Bank Soal). Jika password kosong, username dipakai sebagai password. Username yang sudah ada akan diperbarui.</p>
         <button class="btn btn-xs btn-outline mt-3" onclick="downloadTemplateUser()"><i class="fa fa-download"></i> Unduh template</button>
         <label class="dropzone mt-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file</b><br><span class="text-muted" id="iu_name">.xlsx, .xls, atau .csv</span></span><input type="file" id="file-import-user" accept=".xlsx,.xls,.csv" class="sr-only" onchange="$('iu_name').textContent=this.files[0]?.name||''"></label>`,
         { foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="prosesImportUser()"><i class="fa fa-file-import"></i> Impor</button>` });
@@ -2945,8 +2947,8 @@ function bukaImportUser() {
 function downloadTemplateUser() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-        { username: '7a001', nama: 'Andi Saputra', password: '4821', kelas: '7A', ruang: 'R1', role: 'siswa', mapel: '' },
-        { username: '7a002', nama: 'Budi Prasetyo', password: '1937', kelas: '7A', ruang: 'R2', role: 'siswa', mapel: '' },
+        { username: '7a001', nama: 'Andi Saputra', password: '4821', kelas: '7A', jk: 'L', ruang: 'R1', role: 'siswa', mapel: '' },
+        { username: '7a002', nama: 'Budi Prasetyo', password: '1937', kelas: '7A', jk: 'P', ruang: 'R2', role: 'siswa', mapel: '' },
         { username: 'guru.ipa1', nama: 'Guru A (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'IPA-7,IPA-8' },
         { username: 'guru.ipa2', nama: 'Guru B (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'IPA-9' },
         { username: 'guru.inf1', nama: 'Guru C (contoh)', password: 'ganti123', kelas: '', role: 'guru', mapel: 'INF-7A' },
@@ -2960,24 +2962,24 @@ async function prosesImportUser() {
     if (!file) return toast('Pilih file dulu', 'warning');
     const buf = await file.arrayBuffer();
     let parsed = [];
-    if (file.name.toLowerCase().endsWith('.csv')) parsed = parseCSV(new TextDecoder().decode(buf)).map(r => ({ username: r.username || r.nis || r.nisn, nama: r.nama || r.name, password: r.password || r.pass || r.username, role: (r.role || 'siswa').toLowerCase(), kelas: r.kelas || r.rombel || '', mapel: r.mapel || '', ruang: (r.ruang !== undefined || r.ruangan !== undefined) ? String(r.ruang !== undefined ? r.ruang : r.ruangan).trim() : undefined }));
+    if (file.name.toLowerCase().endsWith('.csv')) parsed = parseCSV(new TextDecoder().decode(buf)).map(r => ({ username: r.username || r.nis || r.nisn, nama: r.nama || r.name, password: r.password || r.pass || r.username, role: (r.role || 'siswa').toLowerCase(), kelas: r.kelas || r.rombel || '', mapel: r.mapel || '', ruang: (r.ruang !== undefined || r.ruangan !== undefined) ? String(r.ruang !== undefined ? r.ruang : r.ruangan).trim() : undefined, jk: (r.jk !== undefined || r.jenis_kelamin !== undefined || r.kelamin !== undefined) ? String(r.jk !== undefined ? r.jk : (r.jenis_kelamin !== undefined ? r.jenis_kelamin : r.kelamin)).trim() : undefined }));
     else {
         const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
         const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-        let hi = -1; const c = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1, g: -1 };
+        let hi = -1; const c = { u: -1, n: -1, p: -1, r: -1, k: -1, m: -1, g: -1, j: -1 };
         for (let i = 0; i < Math.min(raw.length, 20) && hi < 0; i++) {
             (raw[i] || []).forEach((cell, idx) => {
                 const s = String(cell || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                 if (['username', 'user', 'nis', 'nisn'].includes(s)) c.u = idx; if (['nama', 'name', 'namasiswa', 'namalengkap'].includes(s)) c.n = idx;
                 if (['password', 'pass', 'sandi'].includes(s)) c.p = idx; if (['role', 'peran'].includes(s)) c.r = idx;
-                if (['kelas', 'rombel'].includes(s)) c.k = idx; if (['mapel', 'matapelajaran'].includes(s)) c.m = idx; if (['ruang', 'ruangan', 'ruangujian'].includes(s)) c.g = idx;
+                if (['kelas', 'rombel'].includes(s)) c.k = idx; if (['mapel', 'matapelajaran'].includes(s)) c.m = idx; if (['ruang', 'ruangan', 'ruangujian'].includes(s)) c.g = idx; if (['jk', 'jeniskelamin', 'kelamin', 'lp', 'gender'].includes(s)) c.j = idx;
             });
             if (c.u >= 0 && c.n >= 0) hi = i;
         }
         if (hi < 0) return Swal.fire({ icon: 'error', title: 'Kolom tidak ditemukan', text: 'File harus memiliki kolom "nama" dan "username" (atau NIS/NISN).' });
         for (let i = hi + 1; i < raw.length; i++) {
             const r = raw[i] || []; const un = r[c.u], nm = r[c.n]; if (!un || !nm) continue;
-            parsed.push({ username: String(un).trim(), nama: String(nm).trim(), password: String(c.p >= 0 && r[c.p] ? r[c.p] : un).trim(), role: c.r >= 0 && r[c.r] ? String(r[c.r]).toLowerCase().trim() : 'siswa', kelas: c.k >= 0 && r[c.k] ? String(r[c.k]).trim() : '', mapel: c.m >= 0 && r[c.m] ? String(r[c.m]).trim() : '', ruang: c.g >= 0 ? String(r[c.g] || '').trim() : undefined });
+            parsed.push({ username: String(un).trim(), nama: String(nm).trim(), password: String(c.p >= 0 && r[c.p] ? r[c.p] : un).trim(), role: c.r >= 0 && r[c.r] ? String(r[c.r]).toLowerCase().trim() : 'siswa', kelas: c.k >= 0 && r[c.k] ? String(r[c.k]).trim() : '', mapel: c.m >= 0 && r[c.m] ? String(r[c.m]).trim() : '', ruang: c.g >= 0 ? String(r[c.g] || '').trim() : undefined, jk: c.j >= 0 ? String(r[c.j] || '').trim() : undefined });
         }
     }
     const seen = new Set(); parsed = parsed.filter(x => x.username && !seen.has(x.username) && seen.add(x.username));
@@ -2993,6 +2995,83 @@ async function prosesImportUser() {
         ins += r.inserted || 0; upd += r.updated || 0;
     }
     closeModal(); Swal.fire({ icon: 'success', title: 'Impor selesai', text: `${ins} akun baru, ${upd} akun diperbarui.` }); loadUsers();
+}
+
+
+// =============================================================
+// BAGI RUANG OTOMATIS (campuran laki-laki & perempuan, ukuran ruang merata)
+// =============================================================
+let bagiHasil = null;
+function bukaBagiRuang() {
+    const siswa = allUsers.filter(u => u.role === 'siswa');
+    if (!siswa.length) return toast('Belum ada data siswa', 'info');
+    const kelasList = [...new Set(siswa.map(u => u.kelas || ''))].sort((a, b) => String(a).localeCompare(String(b), 'id', { numeric: true }));
+    const tanpaJk = siswa.filter(u => u.jk !== 'L' && u.jk !== 'P').length;
+    bagiHasil = null;
+    openModal('<h2 class="font-extrabold text-lg">Bagi ruang ujian otomatis</h2>', `
+        <p class="text-sm">Isi jumlah siswa per ruang dan jumlah ruang. Aplikasi membagi siswa secara merata dan <b>mencampur laki-laki &amp; perempuan</b> di tiap ruang. Hasilnya dapat dilihat dulu sebelum disimpan.</p>
+        ${tanpaJk ? `<p class="text-sm mt-2 p-2 rounded bg-amber-50 text-amber-800"><i class="fa fa-triangle-exclamation"></i> ${tanpaJk} dari ${siswa.length} siswa belum diisi jenis kelaminnya (kolom <b>jk</b>: L/P). Lengkapi lewat Impor Excel atau tombol Ubah agar pencampuran akurat.</p>` : ''}
+        <div class="grid grid-cols-2 gap-3 mt-3 text-left">
+            <div><label class="field-label">Jumlah siswa per ruang</label><input id="br_kap" type="number" min="2" class="field" value="20"></div>
+            <div><label class="field-label">Jumlah ruangan dipakai</label><input id="br_jml" type="number" min="1" class="field" value="${Math.max(1, Math.ceil(siswa.length / 20))}"></div>
+            <div><label class="field-label">Awalan nama ruang</label><input id="br_pre" class="field" value="R" placeholder="R → R1, R2…"></div>
+            <div class="flex items-end"><label class="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" id="br_acak" checked> Acak urutan siswa</label></div>
+        </div>
+        <p class="field-label mt-3">Kelas yang diikutkan</p>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">${kelasList.map(k => `<label class="flex items-center gap-1.5"><input type="checkbox" class="br-kls" value="${esc(k)}" checked> ${esc(k || '(tanpa kelas)')} <span class="text-muted">(${siswa.filter(u => (u.kelas || '') === k).length})</span></label>`).join('')}</div>
+        <button class="btn btn-sm btn-outline mt-4" onclick="hitungBagiRuang()"><i class="fa fa-calculator"></i> Hitung &amp; lihat pratinjau</button>
+        <div id="br_hasil" class="mt-3"></div>`,
+        { wide: true, foot: `<button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="terapkanBagiRuang()"><i class="fa fa-check"></i> Terapkan pembagian</button>` });
+}
+function bagiRuangAuto(list, R, C, prefix, acak) {
+    const N = list.length;
+    if (N < 1) return { error: 'Tidak ada siswa pada kelas yang dipilih.' };
+    if (R > N) return { error: `Jumlah ruangan (${R}) lebih banyak daripada jumlah siswa (${N}).` };
+    if (N > R * C) return { error: `Kapasitas tidak cukup: ${N} siswa, sedangkan ${R} ruang × ${C} siswa = ${R * C} kursi. Tambah jumlah ruang atau siswa per ruang.` };
+    const urut = (a, b) => String(a.kelas || '').localeCompare(String(b.kelas || ''), 'id', { numeric: true }) || String(a.name).localeCompare(String(b.name), 'id');
+    const kocok = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const grup = { L: [], P: [], X: [] };
+    list.forEach(u => grup[u.jk === 'L' ? 'L' : u.jk === 'P' ? 'P' : 'X'].push(u));
+    Object.values(grup).forEach(g => acak ? kocok(g) : g.sort(urut));
+    const rooms = Array.from({ length: R }, (_, i) => ({ nama: prefix + (i + 1), members: [], target: Math.floor(N / R) + (i < N % R ? 1 : 0) }));
+    // Bagikan seperti kartu: laki-laki dulu, lalu perempuan melanjutkan dari ruang berikutnya → komposisi tiap ruang seimbang
+    let p = 0;
+    ['L', 'P', 'X'].forEach(k => grup[k].forEach(u => {
+        while (rooms[p % R].members.length >= rooms[p % R].target) p++;
+        rooms[p % R].members.push(u); p++;
+    }));
+    const warn = [];
+    const x = grup.X.length; if (x) warn.push(`${x} siswa belum diisi jenis kelaminnya; mereka dibagi merata dan tidak dihitung dalam pencampuran L/P.`);
+    rooms.forEach(r => {
+        const l = r.members.filter(u => u.jk === 'L').length, pp = r.members.filter(u => u.jk === 'P').length;
+        r.l = l; r.p = pp; r.x = r.members.length - l - pp;
+        if (r.members.length > 1 && r.x === 0 && (l === 0 || pp === 0)) warn.push(`${r.nama} hanya berisi ${l === 0 ? 'perempuan' : 'laki-laki'} (jumlah ${l === 0 ? 'laki-laki' : 'perempuan'} terlalu sedikit untuk dibagi ke semua ruang).`);
+    });
+    return { rooms, warn };
+}
+function hitungBagiRuang() {
+    const C = parseInt($('br_kap').value), R = parseInt($('br_jml').value), pre = $('br_pre').value;
+    const kls = [...document.querySelectorAll('.br-kls:checked')].map(i => i.value);
+    const box = $('br_hasil'); bagiHasil = null;
+    if (!(C >= 2) || !(R >= 1)) { box.innerHTML = '<p class="text-sm text-bad">Isi jumlah siswa per ruang (minimal 2) dan jumlah ruangan (minimal 1).</p>'; return; }
+    if (!kls.length) { box.innerHTML = '<p class="text-sm text-bad">Pilih minimal satu kelas.</p>'; return; }
+    const list = allUsers.filter(u => u.role === 'siswa' && kls.includes(u.kelas || ''));
+    const r = bagiRuangAuto(list, R, C, pre, $('br_acak').checked);
+    if (r.error) { box.innerHTML = `<p class="text-sm text-bad"><i class="fa fa-circle-exclamation"></i> ${esc(r.error)}</p>`; return; }
+    bagiHasil = r;
+    const komp = m => { const c = {}; m.forEach(u => { c[u.kelas || '-'] = (c[u.kelas || '-'] || 0) + 1; }); return Object.entries(c).map(([k, n]) => `${esc(k)}: ${n}`).join(', '); };
+    box.innerHTML = (r.warn.length ? `<div class="text-sm p-2 rounded bg-amber-50 text-amber-800 mb-2">${r.warn.map(w => `<div><i class="fa fa-triangle-exclamation"></i> ${esc(w)}</div>`).join('')}</div>` : '<p class="text-sm text-ok mb-2"><i class="fa fa-circle-check"></i> Setiap ruang berisi laki-laki dan perempuan.</p>')
+        + `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>Ruang</th><th>Jumlah</th><th>L</th><th>P</th><th>Belum diisi</th><th>Komposisi kelas</th></tr></thead><tbody>${r.rooms.map(m => `<tr><td class="font-semibold">${esc(m.nama)}</td><td>${m.members.length}</td><td>${m.l}</td><td>${m.p}</td><td>${m.x || '-'}</td><td class="text-sm">${komp(m.members)}</td></tr>`).join('')}</tbody></table></div>
+        <p class="text-xs text-muted mt-2">Total ${list.length} siswa. Klik "Hitung" lagi untuk mengacak ulang. Klik <b>Terapkan pembagian</b> untuk menyimpan; data ruang siswa yang diikutkan akan diganti.</p>`;
+}
+async function terapkanBagiRuang() {
+    if (!bagiHasil) return toast('Klik "Hitung & lihat pratinjau" dulu', 'warning');
+    const groups = bagiHasil.rooms.map(m => ({ ruang: m.nama, usernames: m.members.map(u => u.username) }));
+    loading('Menyimpan pembagian ruang…');
+    const r = await api('/admin/set-ruang', { body: { groups } });
+    if (r.status !== 'success') return Swal.fire({ icon: 'error', title: 'Gagal', text: r.message });
+    closeModal(); await loadUsers();
+    Swal.fire({ icon: 'success', title: 'Pembagian ruang tersimpan', text: `${r.total} siswa dibagi ke ${groups.length} ruang. Daftar hadir dan kartu peserta kini mengikuti ruang.` });
 }
 
 function cetakKartu() {

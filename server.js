@@ -1032,24 +1032,30 @@ app.get('/api/admin/users', ADMIN, wrap(async (req, res) => {
     const { data } = await supabase.from('users').select('*').order('id', { ascending: false });
     res.json(data || []);
 }));
-// Kolom users.ruang (ruang ujian) bersifat opsional: bila belum ada di database, data lain tetap tersimpan
-let RUANG_AKTIF = true;
-const ruangError = e => !!(e && /ruang/i.test(e.message || '') && /(column|schema cache)/i.test(e.message || ''));
-const tanpaRuang = p => Array.isArray(p) ? p.map(({ ruang, ...x }) => x) : (({ ruang, ...x }) => x)(p);
-const adaIsiRuang = p => (Array.isArray(p) ? p : [p]).some(x => x && String(x.ruang || '').trim() !== '');
+// Kolom users.ruang (ruang ujian) & users.jk (jenis kelamin L/P) bersifat opsional:
+// bila belum ada di database, data lain tetap tersimpan dan admin diberi peringatan.
+let opsionalMatiSampai = 0;
+const opsionalError = e => !!(e && /(ruang|\bjk\b)/i.test(e.message || '') && /(column|schema cache)/i.test(e.message || ''));
+const tanpaOpsional = p => Array.isArray(p) ? p.map(({ ruang, jk, ...x }) => x) : (({ ruang, jk, ...x }) => x)(p);
+const adaIsiOpsional = p => (Array.isArray(p) ? p : [p]).some(x => x && (String(x.ruang || '').trim() !== '' || String(x.jk || '').trim() !== ''));
 async function tulisUser(run, payload) {
-    if (RUANG_AKTIF) {
+    if (Date.now() >= opsionalMatiSampai) {
         const r = await run(payload);
-        if (!ruangError(r.error)) return { error: r.error, ruangHilang: false };
-        RUANG_AKTIF = false;
+        if (!opsionalError(r.error)) return { error: r.error, ruangHilang: false };
+        opsionalMatiSampai = Date.now() + 30000; // coba lagi 30 dtk kemudian (mis. setelah migrasi dijalankan)
     }
-    const r2 = await run(tanpaRuang(payload));
-    return { error: r2.error, ruangHilang: adaIsiRuang(payload) };
+    const kosong = tanpaOpsional(payload);
+    const r2 = (Array.isArray(kosong) ? kosong.length : Object.keys(kosong).length) ? await run(kosong) : { error: null };
+    return { error: r2.error, ruangHilang: adaIsiOpsional(payload) };
 }
-const PESAN_RUANG = 'Kolom "ruang" belum ada di database: jalankan file supabase-migration.sql di Supabase (SQL Editor), lalu simpan ulang data ruang.';
+const PESAN_RUANG = 'Kolom "ruang" / "jk" belum ada di database: jalankan file supabase-migration.sql di Supabase (SQL Editor), lalu simpan ulang data ruang dan jenis kelamin.';
+const JK_L = new Set(['l', 'lk', 'laki', 'laki-laki', 'laki laki', 'lakilaki', 'm', 'male', 'pria']);
+const JK_P = new Set(['p', 'pr', 'perempuan', 'f', 'female', 'wanita']);
+const normJk = v => { const t = String(v || '').trim().toLowerCase(); return JK_L.has(t) ? 'L' : JK_P.has(t) ? 'P' : ''; };
+const jkDari = row => { const v = row.jk !== undefined ? row.jk : (row.jenis_kelamin !== undefined ? row.jenis_kelamin : row.kelamin); return v === undefined ? undefined : normJk(v); };
 
 app.post('/api/admin/add-user', ADMIN, wrap(async (req, res) => {
-    const u = { name: String(req.body.name || '').trim(), username: String(req.body.username || '').trim(), password: String(req.body.password || '').trim(), role: String(req.body.role || 'siswa').toLowerCase(), kelas: String(req.body.kelas || '').trim(), mapel: String(req.body.mapel || '').trim(), ruang: String(req.body.ruang || '').trim() };
+    const u = { name: String(req.body.name || '').trim(), username: String(req.body.username || '').trim(), password: String(req.body.password || '').trim(), role: String(req.body.role || 'siswa').toLowerCase(), kelas: String(req.body.kelas || '').trim(), mapel: String(req.body.mapel || '').trim(), ruang: String(req.body.ruang || '').trim(), jk: normJk(req.body.jk) };
     if (!u.name || !u.username || !u.password) return res.json({ status: 'error', message: 'Nama, username, dan password wajib diisi.' });
     const { data: ex } = await supabase.from('users').select('id').eq('username', u.username).maybeSingle();
     if (ex) return res.json({ status: 'error', message: `Username "${u.username}" sudah dipakai.` });
@@ -1058,10 +1064,29 @@ app.post('/api/admin/add-user', ADMIN, wrap(async (req, res) => {
     res.json({ status: 'success', warning: ruangHilang ? PESAN_RUANG : null });
 }));
 app.put('/api/admin/update-user', ADMIN, wrap(async (req, res) => {
-    const upd = { name: req.body.name, username: req.body.username, password: req.body.password, role: String(req.body.role || 'siswa').toLowerCase(), kelas: req.body.kelas || '', mapel: req.body.mapel || '', ruang: String(req.body.ruang || '').trim() };
+    const upd = { name: req.body.name, username: req.body.username, password: req.body.password, role: String(req.body.role || 'siswa').toLowerCase(), kelas: req.body.kelas || '', mapel: req.body.mapel || '', ruang: String(req.body.ruang || '').trim(), jk: normJk(req.body.jk) };
     const { error, ruangHilang } = await tulisUser(p => supabase.from('users').update(p).eq('username', req.body.old_username), upd);
     if (error) return res.json({ status: 'error', message: error.message });
     res.json({ status: 'success', warning: ruangHilang ? PESAN_RUANG : null });
+}));
+// Simpan hasil pembagian ruang otomatis: groups = [{ ruang: 'R1', usernames: [...] }, ...]
+app.post('/api/admin/set-ruang', ADMIN, wrap(async (req, res) => {
+    const groups = Array.isArray(req.body.groups) ? req.body.groups : [];
+    if (!groups.length) return res.json({ status: 'error', message: 'Data pembagian ruang kosong.' });
+    let total = 0;
+    for (const g of groups) {
+        const ruang = String(g.ruang || '').trim().slice(0, 40);
+        const names = (g.usernames || []).map(String).filter(Boolean);
+        if (!ruang || !names.length) continue;
+        for (let i = 0; i < names.length; i += 150) {
+            const part = names.slice(i, i + 150);
+            const r = await tulisUser(p => supabase.from('users').update(p).in('username', part).eq('role', 'siswa'), { ruang });
+            if (r.ruangHilang) return res.json({ status: 'error', message: PESAN_RUANG });
+            if (r.error) return res.json({ status: 'error', message: r.error.message });
+            total += part.length;
+        }
+    }
+    res.json({ status: 'success', total });
 }));
 app.delete('/api/admin/delete-user/:username', ADMIN, wrap(async (req, res) => {
     if (req.params.username === req.user.username) return res.json({ status: 'error', message: 'Tidak bisa menghapus akun yang sedang dipakai.' });
@@ -1081,6 +1106,7 @@ app.post('/api/admin/import-users', ADMIN, wrap(async (req, res) => {
         password: String(row.password || row.pass || '').trim(), role: String(row.role || 'siswa').toLowerCase().trim(),
         kelas: String(row.kelas || '').trim(), mapel: String(row.mapel || '').trim(),
         ruang: row.ruang === undefined ? undefined : String(row.ruang || '').trim(), // undefined = file tidak punya kolom ruang → data ruang lama tidak ditimpa
+        jk: jkDari(row),
     })).filter(r => r.username && r.password);
     if (!toProcess.length) return res.json({ status: 'error', message: 'Data tidak valid.' });
     const { data: existing } = await supabase.from('users').select('username');
@@ -1089,7 +1115,7 @@ app.post('/api/admin/import-users', ADMIN, wrap(async (req, res) => {
     const toUpdate = toProcess.filter(u => existingSet.has(u.username));
     let ruangHilang = false;
     if (toInsert.length) { const r = await tulisUser(p => supabase.from('users').insert(p), toInsert); if (r.error) return res.json({ status: 'error', message: r.error.message }); ruangHilang = ruangHilang || r.ruangHilang; }
-    for (const u of toUpdate) { const r = await tulisUser(p => supabase.from('users').update(p).eq('username', u.username), { name: u.name, password: u.password, role: u.role, kelas: u.kelas, mapel: u.mapel, ruang: u.ruang }); ruangHilang = ruangHilang || r.ruangHilang; }
+    for (const u of toUpdate) { const r = await tulisUser(p => supabase.from('users').update(p).eq('username', u.username), { name: u.name, password: u.password, role: u.role, kelas: u.kelas, mapel: u.mapel, ruang: u.ruang, jk: u.jk }); ruangHilang = ruangHilang || r.ruangHilang; }
     res.json({ status: 'success', imported: toProcess.length, inserted: toInsert.length, updated: toUpdate.length, warning: ruangHilang ? PESAN_RUANG : null });
 }));
 
