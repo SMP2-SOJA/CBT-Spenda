@@ -2147,7 +2147,16 @@ async function clearMonitoring() {
 // =============================================================
 // ============ JADWAL UJIAN & PENGAWAS RUANG ============
 let JP = { jadwal: [], tugas: {} }, JPex = [], JPdirty = false;
-const jpSubjek = c => { const m = String(c || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase().match(/^[a-z]+/); return m ? m[0] : ''; };
+const JP_ALIAS = [['mtk','matematika','mat','math'],['ipa','ilmupengetahuanalam','sains'],['ips','ilmupengetahuansosial'],['bin','bind','bindo','bahasaindonesia','indo'],['bing','big','ing','bahasainggris','inggris'],['pkn','ppkn','pancasila','pendidikankewarganegaraan'],['pai','pabp','agamaislam','pendidikanagamaislam'],['pak','agamakristen','pendidikanagamakristen','pakris'],['inf','tik','informatika'],['sbk','sbdp','senibudaya','seni','senbud'],['pjok','pjkr','penjas','penjaskes','olahraga'],['prk','prakarya'],['mulok','muatanlokal']];
+const JP_STD = [['MTK', 'Matematika'], ['BIN', 'Bahasa Indonesia'], ['BING', 'Bahasa Inggris'], ['IPA', 'IPA'], ['IPS', 'IPS'], ['PKN', 'PPKn'], ['PAI', 'Pendidikan Agama Islam'], ['PAK', 'Pendidikan Agama Kristen'], ['INF', 'Informatika'], ['SBK', 'Seni Budaya'], ['PJOK', 'PJOK'], ['PRK', 'Prakarya'], ['MULOK', 'Muatan Lokal']];
+const jpSubjek = c => { const m = String(c || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase().match(/^[a-z]+/); if (!m) return ''; const g = JP_ALIAS.find(x => x.includes(m[0])); return g ? g[0] : m[0]; };
+function jpDaftarMapel() {
+    const out = new Map();
+    JP_STD.forEach(([k, n]) => out.set(jpSubjek(k), { kode: k, nama: n }));
+    JPex.forEach(e => { const m = String(e).match(/^[A-Za-z]+/); if (m && !out.has(jpSubjek(m[0]))) out.set(jpSubjek(m[0]), { kode: m[0].toUpperCase(), nama: '' }); });
+    JP.jadwal.forEach(j => j.paket.forEach(p => { const m = String(p).match(/^[A-Za-z]+/); if (m && !out.has(jpSubjek(m[0]))) out.set(jpSubjek(m[0]), { kode: m[0].toUpperCase(), nama: '' }); }));
+    return [...out.values()];
+}
 const jpSubjekGuru = s => { const t = String(s || '').trim(); if (!t || /^semua/i.test(t)) return []; return [...new Set(t.split(/[,;\n]/).map(jpSubjek).filter(Boolean))]; };
 const jpGurus = () => allUsers.filter(u => u.role === 'guru').sort((a, b) => (a.name || '').localeCompare(b.name || '', 'id'));
 const jpRuang = () => [...new Set(allUsers.filter(u => u.role === 'siswa' && u.ruang).map(u => u.ruang))].sort((a, b) => String(a).localeCompare(String(b), 'id', { numeric: true }));
@@ -2204,7 +2213,8 @@ function jpRender() {
         <div><label class="field-label" for="jp_sesi">Sesi</label><select id="jp_sesi" class="field"><option value="1">Sesi 1</option><option value="2">Sesi 2</option></select></div>
         <div><label class="field-label" for="jp_mulai">Mulai</label><input type="time" id="jp_mulai" class="field" value="07:30"></div>
         <div><label class="field-label" for="jp_selesai">Selesai</label><input type="time" id="jp_selesai" class="field" value="09:30"></div></div>
-        <div><p class="field-label">Mata pelajaran (paket soal)</p><div class="border border-line rounded-xl max-h-52 overflow-y-auto divide-y divide-line">${JPex.map(e => `<label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-paper"><input type="checkbox" name="jp_paket" value="${esc(e)}" class="w-4 h-4 accent-[#14306B]"><span class="text-sm font-semibold">${esc(e)}</span></label>`).join('') || '<p class="p-3 text-sm text-muted">Belum ada paket soal.</p>'}</div></div>
+        <div><p class="field-label">Mata pelajaran</p><div class="border border-line rounded-xl max-h-52 overflow-y-auto divide-y divide-line">${jpDaftarMapel().map(m => `<label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-paper"><input type="checkbox" name="jp_paket" value="${esc(m.kode)}" class="w-4 h-4 accent-[#14306B]"><span class="text-sm font-semibold">${esc(m.nama || m.kode)}</span><span class="text-xs text-muted">${m.nama ? esc(m.kode) : ''}</span></label>`).join('')}</div>
+        <input id="jp_lain" class="field mt-2" placeholder="Mapel lain (opsional), mis. BTQ"><p class="text-xs text-muted mt-1">Tidak perlu paket soal. Kode mapel dicocokkan dengan kolom Mapel guru (mis. MTK, IPA, PAI).</p></div>
         <button class="btn btn-primary w-full"><i class="fa fa-plus"></i> Tambah jadwal</button></form>
       <div class="card p-5"><h3 class="section-title">Beban mengawas</h3>${Object.keys(beban).length ? `<div class="text-sm space-y-1 mt-2">${Object.entries(beban).sort((a, b) => b[1] - a[1]).map(([u, n]) => `<div class="flex justify-between"><span>${esc(gname(u))}</span><b>${n}×</b></div>`).join('')}</div>` : '<p class="text-sm text-muted mt-2">Belum ada penugasan.</p>'}</div></div>
       <div class="space-y-4">
@@ -2227,6 +2237,7 @@ function jpKartu(j, rooms, gurus) {
 function jpId() { return 'j' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function jpTambah() {
     const tanggal = $('jp_tgl').value, sesi = parseInt($('jp_sesi').value), paket = [...document.querySelectorAll('input[name=jp_paket]:checked')].map(c => c.value);
+    const lain = ($('jp_lain').value || '').trim().toUpperCase().replace(/[^A-Z0-9 \-]/g, ''); if (lain && !paket.includes(lain)) paket.push(lain);
     if (!tanggal) return toast('Tanggal wajib diisi', 'error');
     if (!paket.length) return toast('Pilih minimal satu mata pelajaran', 'error');
     const hari = JP.jadwal.filter(j => j.tanggal === tanggal);

@@ -1138,7 +1138,8 @@ app.post('/api/account/password', auth(), wrap(async (req, res) => {
 //  4. Tiap ruang memiliki 2 pengawas yang berbeda
 // ============================================================
 const JP_KEY = 'jadwal_pengawas';
-const subjekKode = c => { const m = alnumLow(c).match(/^[a-z]+/); return m ? m[0] : ''; };
+const JP_ALIAS = [['mtk','matematika','mat','math'],['ipa','ilmupengetahuanalam','sains'],['ips','ilmupengetahuansosial'],['bin','bind','bindo','bahasaindonesia','indo'],['bing','big','ing','bahasainggris','inggris'],['pkn','ppkn','pancasila','pendidikankewarganegaraan'],['pai','pabp','agamaislam','pendidikanagamaislam'],['pak','agamakristen','pendidikanagamakristen','pakris'],['inf','tik','informatika'],['sbk','sbdp','senibudaya','seni','senbud'],['pjok','pjkr','penjas','penjaskes','olahraga'],['prk','prakarya'],['mulok','muatanlokal']];
+const subjekKode = c => { const m = alnumLow(c).match(/^[a-z]+/); if (!m) return ''; const g = JP_ALIAS.find(x => x.includes(m[0])); return g ? g[0] : m[0]; };
 const subjekGuru = mapelStr => {
     const t = String(mapelStr || '').trim();
     if (!t || /^semua/i.test(t)) return [];
