@@ -726,6 +726,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
             <button data-page="nilai" onclick="showPage('nilai')" class="nav-item"><i class="fa fa-chart-column"></i>Hasil &amp; analisis</button>
             <button data-page="users" onclick="showPage('users')" class="nav-item admin-only"><i class="fa fa-user-group"></i>Peserta &amp; guru</button>
             <button data-page="pengawas" onclick="showPage('pengawas')" class="nav-item admin-only"><i class="fa fa-user-shield"></i>Jadwal &amp; pengawas ruang</button>
+            <button data-page="wa" onclick="showPage('wa')" class="nav-item admin-only"><i class="fa fa-paper-plane"></i>Kirim hasil via WA</button>
             <button data-page="sekolah" onclick="showPage('sekolah')" class="nav-item admin-only"><i class="fa fa-school"></i>Profil sekolah</button>
             <button data-page="akun" onclick="showPage('akun')" class="nav-item"><i class="fa fa-key"></i>Akun saya</button>
         </nav>
@@ -751,6 +752,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 <div id="page-nilai" class="page-content hidden"></div>
                 <div id="page-users" class="page-content hidden"></div>
                 <div id="page-pengawas" class="page-content hidden"></div>
+                <div id="page-wa" class="page-content hidden"></div>
                 <div id="page-sekolah" class="page-content hidden"></div>
                 <div id="page-akun" class="page-content hidden"></div>
             </div>
@@ -1874,7 +1876,7 @@ document.addEventListener('fullscreenchange', () => {
 // CBT SPENDA — PANEL ADMIN & GURU
 // ============================================================
 const isAdmin = () => activeUser && activeUser.role === 'admin';
-const PAGE_TITLE = { dashboard: 'Pemantauan', jadwal: 'Jadwal & PIN', banksoal: 'Bank soal', nilai: 'Hasil & analisis', users: 'Peserta & guru', akun: 'Akun saya', pengawas: 'Jadwal & pengawas ruang', sekolah: 'Profil sekolah' };
+const PAGE_TITLE = { dashboard: 'Pemantauan', jadwal: 'Jadwal & PIN', banksoal: 'Bank soal', nilai: 'Hasil & analisis', users: 'Peserta & guru', akun: 'Akun saya', pengawas: 'Jadwal & pengawas ruang', wa: 'Kirim hasil via WA', sekolah: 'Profil sekolah' };
 let currentPage = 'dashboard', dashTimer = null;
 let allActivityData = [], allSchedules = [], allQuestions = [], allResults = [], allUsers = [];
 
@@ -1886,7 +1888,7 @@ function bukaPanelAdmin() {
     if (!isAdmin()) { $('role-badge').textContent = 'Guru'; $('role-badge').classList.remove('hidden'); }
     let start = 'dashboard';
     try { start = sessionStorage.getItem('cbt_page') || 'dashboard'; } catch (e) {}
-    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'sekolah'].includes(start)) start = 'dashboard';
+    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'wa', 'sekolah'].includes(start)) start = 'dashboard';
     showPage(start);
     clearInterval(dashTimer);
     dashTimer = setInterval(() => { if (currentPage === 'dashboard' && document.visibilityState === 'visible') refreshDashboard(true); }, 5000);
@@ -1899,7 +1901,7 @@ function toggleAdminSidebar(force) {
 
 function showPage(p) {
     if (!activeUser || activeUser.role === 'siswa') return;
-    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'sekolah'].includes(p)) p = 'dashboard';
+    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'wa', 'sekolah'].includes(p)) p = 'dashboard';
     currentPage = p;
     try { sessionStorage.setItem('cbt_page', p); } catch (e) {}
     document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
@@ -1907,7 +1909,7 @@ function showPage(p) {
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('is-active', b.dataset.page === p));
     $('page-title').textContent = PAGE_TITLE[p];
     toggleAdminSidebar(false);
-    ({ dashboard: initDashboard, jadwal: loadJadwal, banksoal: loadBankSoal, nilai: loadNilai, users: loadUsers, akun: renderAkun, pengawas: loadPengawas, sekolah: renderSekolah })[p]();
+    ({ dashboard: initDashboard, jadwal: loadJadwal, banksoal: loadBankSoal, nilai: loadNilai, users: loadUsers, akun: renderAkun, pengawas: loadPengawas, wa: loadWa, sekolah: renderSekolah })[p]();
 }
 
 const pageHead = (title, sub, right = '') => `<div class="page-head"><div class="flex-1 min-w-[220px]"><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>${right}</div>`;
@@ -2318,6 +2320,132 @@ function jpCetak() {
         + bagian.map(hs => `<div class="bagian">${tabel(hs)}</div>`).join('')
         + `<p style="margin:6px 0 2px;font-size:10pt"><b>Keterangan warna pengawas:</b></p><div>${legenda}</div>` + ttdHtml();
     cetakDokumen('Jadwal dan Pengawas Ruang', body, { landscape: true });
+}
+
+// ============ KIRIM HASIL UJIAN KE WA ORANG TUA ============
+let WA = { nomor: {}, kkm: { def: 75, mapel: {} }, log: {}, fonnte: false }, WAres = [], WAchg = {}, WAsel = new Set(), WAmapel = '', WAkelas = '';
+const waNorm = v => { let d = String(v || '').replace(/\D/g, ''); if (!d) return ''; if (d.startsWith('0')) d = '62' + d.slice(1); else if (d.startsWith('8')) d = '62' + d; return /^62\d{8,13}$/.test(d) ? d : null; };
+const waKkmUntuk = p => { const v = WA.kkm.mapel[jpSubjek(p)]; return Number.isFinite(+v) && v !== undefined && v !== '' ? +v : +WA.kkm.def; };
+async function loadWa() {
+    $('page-wa').innerHTML = pageHead('Kirim hasil via WA', 'Kirim nilai, status tuntas/remedial ke WhatsApp orang tua.') + '<p class="text-sm text-muted p-4">Memuat…</p>';
+    const [d, res, us] = await Promise.all([api('/admin/wa-data'), api('/admin/results'), api('/admin/users')]);
+    if (d) WA = { nomor: d.nomor || {}, kkm: d.kkm || { def: 75, mapel: {} }, log: d.log || {}, fonnte: !!d.fonnte };
+    WAres = res || []; allUsers = us || allUsers; WAchg = {}; WAsel = new Set();
+    const paket = [...new Set(WAres.map(r => r.mapel))].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    if (!paket.includes(WAmapel)) WAmapel = paket[0] || '';
+    waRender();
+}
+function waBaris() {
+    const um = new Map(allUsers.filter(u => u.role === 'siswa').map(u => [u.name, u]));
+    return WAres.filter(r => r.mapel === WAmapel && um.has(r.student_name) && (!WAkelas || (um.get(r.student_name).kelas || r.kelas) === WAkelas))
+        .map(r => { const u = um.get(r.student_name), n = parseFloat(String(r.nilai).replace(',', '.')); return { u, r, nilai: n, kelas: u.kelas || r.kelas || '-' }; })
+        .sort((a, b) => a.kelas.localeCompare(b.kelas, 'id', { numeric: true }) || a.u.name.localeCompare(b.u.name, 'id'));
+}
+function waRender() {
+    const pg = $('page-wa'), paket = [...new Set(WAres.map(r => r.mapel))].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    const kelasList = [...new Set(WAres.filter(r => r.mapel === WAmapel).map(r => r.kelas).filter(k => k && k !== '-'))].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    const rows = waBaris(), kkm = waKkmUntuk(WAmapel), kunci = jpSubjek(WAmapel);
+    const nomorDari = u => WAchg[u.username] !== undefined ? WAchg[u.username] : (WA.nomor[u.username] || '');
+    const adaPerMapel = WA.kkm.mapel[kunci] !== undefined;
+    pg.innerHTML = pageHead('Kirim hasil via WA', 'Pesan berisi nilai, status tuntas/remedial, dan catatan bahwa nilai ini bukan nilai rapor.',
+        `<div class="flex gap-2 flex-wrap"><button class="btn btn-sm" onclick="waTemplate()"><i class="fa fa-download"></i> Template nomor</button><button class="btn btn-sm" onclick="$('wa_file').click()"><i class="fa fa-file-import"></i> Impor nomor</button><input type="file" id="wa_file" accept=".xlsx,.xls,.csv" class="hidden" onchange="waImpor(this)"><button class="btn btn-sm" onclick="waSimpanNomor()"><i class="fa fa-floppy-disk"></i> Simpan nomor${Object.keys(WAchg).length ? ' *' : ''}</button></div>`)
+    + (WA.fonnte ? '' : `<div class="card p-4 border border-amber-300 mb-4 text-sm"><b class="text-amber-700">Token Fonnte belum dipasang.</b> Pratinjau tetap bisa dipakai, tetapi pengiriman belum aktif. Pasang <code>FONNTE_TOKEN</code> di Vercel (Settings → Environment Variables) lalu Redeploy.</div>`)
+    + (!paket.length ? emptyBox('fa-paper-plane', 'Belum ada hasil ujian yang bisa dikirim.') : `
+    <div class="card p-5 mb-4"><div class="grid md:grid-cols-4 gap-3 items-end">
+        <div><label class="field-label" for="wa_mapel">Mata pelajaran (paket)</label><select id="wa_mapel" class="field" onchange="WAmapel=this.value;WAsel=new Set();waRender()">${paket.map(p => `<option value="${esc(p)}"${p === WAmapel ? ' selected' : ''}>${esc(p)}</option>`).join('')}</select></div>
+        <div><label class="field-label" for="wa_kelas">Kelas</label><select id="wa_kelas" class="field" onchange="WAkelas=this.value;WAsel=new Set();waRender()"><option value="">Semua kelas</option>${kelasList.map(k => `<option value="${esc(k)}"${k === WAkelas ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select></div>
+        <div><label class="field-label" for="wa_kkm">KKM mapel ini ${adaPerMapel ? '' : '<span class="text-xs text-muted">(umum)</span>'}</label><input type="number" id="wa_kkm" class="field" min="0" max="100" value="${kkm}" onchange="waKkmSimpan(this.value)"></div>
+        <label class="flex items-center gap-2 text-sm pb-2"><input type="checkbox" id="wa_final" class="w-4 h-4 accent-[#14306B]"><span><b>Nilai sudah final</b><br><span class="text-xs text-muted">Koreksi essay sudah selesai</span></span></label>
+    </div><p class="text-xs text-muted mt-2">KKM awal 75 untuk semua mapel. Mengubah angka di atas hanya berlaku untuk mapel ini (${esc(kunci.toUpperCase())}).</p></div>
+    <div class="flex gap-2 flex-wrap mb-3"><button class="btn btn-sm" onclick="waPilihSiap()">Pilih semua yang siap</button><button class="btn btn-sm" onclick="WAsel=new Set();waRender()">Kosongkan</button>
+        <button class="btn btn-sm" onclick="waPratinjau()"><i class="fa fa-eye"></i> Pratinjau pesan</button><button class="btn btn-sm" onclick="waTes()"><i class="fa fa-vial"></i> Kirim tes ke nomor saya</button>
+        <label class="flex items-center gap-2 text-sm ml-2"><input type="checkbox" id="wa_ulang" class="w-4 h-4 accent-[#14306B]">Kirim ulang yang sudah terkirim</label>
+        <button class="btn btn-sm btn-primary ml-auto" onclick="waKirim()"><i class="fa fa-paper-plane"></i> Kirim terpilih (${WAsel.size})</button></div>
+    <div class="card overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-muted"><th class="p-2 w-8"></th><th class="p-2">Nama</th><th class="p-2">Kelas</th><th class="p-2">Nilai</th><th class="p-2">Status</th><th class="p-2">Nomor WA orang tua</th><th class="p-2">Pengiriman</th></tr></thead><tbody>
+    ${rows.map(({ u, nilai, kelas }) => { const tuntas = nilai >= kkm, nm = nomorDari(u), ok = waNorm(nm), lg = WA.log[WAmapel + '|' + u.username];
+        const st = lg ? (lg.ok ? `<span class="chip chip-ok">Terkirim</span>` : `<span class="chip chip-bad" title="${esc(lg.reason || '')}">Gagal</span>`) : '<span class="text-muted">—</span>';
+        return `<tr class="border-t border-line"><td class="p-2"><input type="checkbox" ${ok ? '' : 'disabled'} ${WAsel.has(u.username) ? 'checked' : ''} onchange="waToggle('${esc(u.username)}',this.checked)" class="w-4 h-4 accent-[#14306B]"></td>
+        <td class="p-2 font-semibold">${esc(u.name)}</td><td class="p-2">${esc(kelas)}</td><td class="p-2 font-bold">${Number.isFinite(nilai) ? nilai : '-'}</td>
+        <td class="p-2">${tuntas ? '<span class="chip chip-ok">Tuntas</span>' : '<span class="chip chip-bad">Remedial</span>'}</td>
+        <td class="p-2"><input class="field" style="min-width:150px;${nm && ok === null ? 'border-color:#dc2626' : ''}" value="${esc(nm)}" placeholder="08xxxxxxxxxx" onchange="waNomor('${esc(u.username)}',this.value)"></td><td class="p-2">${st}</td></tr>`; }).join('') || '<tr><td colspan="7" class="p-4 text-muted">Tidak ada data.</td></tr>'}
+    </tbody></table></div>`);
+}
+function waToggle(u, on) { on ? WAsel.add(u) : WAsel.delete(u); waRender(); }
+function waNomor(u, v) { WAchg[u] = v.trim(); waRender(); }
+function waPilihSiap() {
+    const ulang = $('wa_ulang') && $('wa_ulang').checked;
+    waBaris().forEach(({ u }) => { const nm = WAchg[u.username] !== undefined ? WAchg[u.username] : WA.nomor[u.username]; const lg = WA.log[WAmapel + '|' + u.username]; if (waNorm(nm) && (ulang || !(lg && lg.ok))) WAsel.add(u.username); });
+    waRender();
+}
+async function waSimpanNomor(diam) {
+    if (!Object.keys(WAchg).length) { if (!diam) toast('Tidak ada perubahan nomor', 'info'); return true; }
+    const r = await api('/admin/wa-nomor', { method: 'PUT', body: { nomor: WAchg } });
+    if (r && r.status === 'success') { WA.nomor = r.nomor; WAchg = {}; if (!diam) { toast('Nomor tersimpan', 'success'); waRender(); } if (r.salah && r.salah.length) Swal.fire({ icon: 'warning', title: 'Sebagian nomor tidak valid', text: r.salah.length + ' nomor tidak disimpan (format harus 08xx / 628xx).' }); return true; }
+    Swal.fire({ icon: 'error', title: 'Gagal menyimpan', text: (r && r.message) || 'Kesalahan' }); return false;
+}
+let waKkmTimer;
+function waKkmSimpan(v) {
+    const n = parseFloat(v); if (!Number.isFinite(n) || n < 0 || n > 100) return toast('KKM harus 0–100', 'error');
+    WA.kkm.mapel[jpSubjek(WAmapel)] = n; waRender();
+    clearTimeout(waKkmTimer); waKkmTimer = setTimeout(async () => { const r = await api('/admin/wa-kkm', { method: 'PUT', body: WA.kkm }); toast(r && r.status === 'success' ? 'KKM tersimpan' : 'Gagal menyimpan KKM', r && r.status === 'success' ? 'success' : 'error'); }, 400);
+}
+function waTemplate() {
+    const rows = allUsers.filter(u => u.role === 'siswa').sort((a, b) => (a.kelas || '').localeCompare(b.kelas || '', 'id', { numeric: true }) || a.name.localeCompare(b.name, 'id'));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['username', 'nama', 'kelas', 'wa']].concat(rows.map(u => [u.username, u.name, u.kelas || '', WA.nomor[u.username] || '']))), 'Nomor WA');
+    XLSX.writeFile(wb, 'TEMPLATE_NOMOR_WA_ORTU.xlsx');
+}
+async function waImpor(inp) {
+    const f = inp.files[0]; inp.value = ''; if (!f) return;
+    try {
+        const buf = await f.arrayBuffer(), wb = XLSX.read(new Uint8Array(buf), { type: 'array' }), raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+        let hi = -1, cu = -1, cw = -1;
+        for (let i = 0; i < Math.min(raw.length, 20) && hi < 0; i++) (raw[i] || []).forEach((c, ix) => { const s = String(c || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (['username', 'user', 'nis', 'nisn'].includes(s)) cu = ix; if (['wa', 'whatsapp', 'hp', 'nohp', 'nomor', 'nomorwa', 'nowa', 'telepon'].includes(s)) cw = ix; if (cu >= 0 && cw >= 0) hi = i; });
+        if (hi < 0) return Swal.fire({ icon: 'error', title: 'Kolom tidak ditemukan', text: 'File harus punya kolom "username" (atau NIS) dan "wa" (nomor WA).' });
+        const ada = new Set(allUsers.map(u => u.username)); let n = 0;
+        for (let i = hi + 1; i < raw.length; i++) { const r = raw[i] || [], u = String(r[cu] || '').trim(), w = String(r[cw] || '').trim(); if (u && w && ada.has(u)) { WAchg[u] = w; n++; } }
+        waRender(); toast(n + ' nomor dibaca. Klik "Simpan nomor" untuk menyimpan.', 'success');
+    } catch (e) { Swal.fire({ icon: 'error', title: 'File tidak bisa dibaca', text: e.message }); }
+}
+async function waPratinjau() {
+    const u = [...WAsel][0] || (waBaris().find(b => waNorm(WAchg[b.u.username] !== undefined ? WAchg[b.u.username] : WA.nomor[b.u.username])) || {}).u?.username;
+    if (!u) return toast('Pilih minimal satu siswa yang nomornya valid', 'error');
+    if (!await waSimpanNomor(true)) return;
+    await api('/admin/wa-kkm', { method: 'PUT', body: WA.kkm });
+    const r = await api('/admin/wa-kirim', { method: 'POST', body: { mapel: WAmapel, items: [u], dryRun: true } });
+    const h = r && r.hasil && r.hasil[0];
+    Swal.fire({ title: 'Pratinjau pesan', html: h && h.ok ? `<p class="text-xs" style="margin-bottom:8px">Ke: ${esc(h.target)}</p><pre style="text-align:left;white-space:pre-wrap;font-family:inherit;font-size:13px">${esc(h.pesan)}</pre>` : esc((h && h.reason) || (r && r.message) || 'Gagal'), confirmButtonText: 'Tutup' });
+}
+async function waTes() {
+    const { value } = await Swal.fire({ title: 'Kirim tes', input: 'text', inputLabel: 'Nomor WA Anda (pesan contoh dikirim ke sini, bukan ke orang tua)', inputPlaceholder: '08xxxxxxxxxx', showCancelButton: true, confirmButtonText: 'Kirim tes', cancelButtonText: 'Batal' });
+    if (!value) return;
+    if (waNorm(value) === null || !waNorm(value)) return toast('Nomor tidak valid', 'error');
+    const u = (waBaris()[0] || {}).u; if (!u) return toast('Tidak ada data siswa', 'error');
+    await api('/admin/wa-kkm', { method: 'PUT', body: WA.kkm });
+    loading('Mengirim tes…');
+    const r = await api('/admin/wa-kirim', { method: 'POST', body: { mapel: WAmapel, items: [u.username], tes: value } });
+    const h = r && r.hasil && r.hasil[0];
+    Swal.fire({ icon: h && h.ok ? 'success' : 'error', title: h && h.ok ? 'Pesan tes terkirim' : 'Gagal', text: h && h.ok ? 'Periksa WA Anda. Isinya memakai data ' + u.name + '.' : ((h && h.reason) || (r && r.message) || '') });
+}
+async function waKirim() {
+    if (!$('wa_final').checked) return Swal.fire({ icon: 'info', title: 'Konfirmasi dulu', text: 'Centang "Nilai sudah final" sebelum mengirim.' });
+    if (!WAsel.size) return toast('Pilih siswa terlebih dahulu', 'error');
+    if (!WA.fonnte) return Swal.fire({ icon: 'warning', title: 'Token Fonnte belum dipasang', text: 'Pasang FONNTE_TOKEN di Vercel lalu Redeploy.' });
+    const c = await Swal.fire({ icon: 'question', title: `Kirim ke ${WAsel.size} orang tua?`, text: 'Pesan tidak bisa ditarik setelah terkirim.', showCancelButton: true, confirmButtonText: 'Kirim', cancelButtonText: 'Batal' });
+    if (!c.isConfirmed) return;
+    if (!await waSimpanNomor(true)) return;
+    await api('/admin/wa-kkm', { method: 'PUT', body: WA.kkm });
+    const list = [...WAsel], gagal = []; let ok = 0;
+    Swal.fire({ title: 'Mengirim…', html: '<b id="wa_prog">0</b> / ' + list.length, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    for (let i = 0; i < list.length; i += 3) {
+        let r; try { r = await api('/admin/wa-kirim', { method: 'POST', body: { mapel: WAmapel, items: list.slice(i, i + 3) } }); } catch (e) { r = null; }
+        (r && r.hasil ? r.hasil : list.slice(i, i + 3).map(u => ({ username: u, ok: false, reason: (r && r.message) || 'Gagal terhubung' }))).forEach(h => { if (h.ok) { ok++; WA.log[WAmapel + '|' + h.username] = { ok: true }; } else { gagal.push(h); WA.log[WAmapel + '|' + h.username] = { ok: false, reason: h.reason }; } });
+        const el = $('wa_prog'); if (el) el.textContent = Math.min(i + 3, list.length);
+        if (r && r.status === 'error' && r.message && /FONNTE_TOKEN/.test(r.message)) break;
+    }
+    WAsel = new Set(); waRender();
+    const nm = u => (allUsers.find(x => x.username === u) || {}).name || u;
+    Swal.fire({ icon: gagal.length ? 'warning' : 'success', title: `${ok} terkirim${gagal.length ? ', ' + gagal.length + ' gagal' : ''}`, html: gagal.slice(0, 15).map(g => esc(nm(g.username)) + ': ' + esc(g.reason || '')).join('<br>') });
 }
 
 async function loadJadwal() {

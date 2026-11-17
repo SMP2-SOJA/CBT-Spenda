@@ -1228,4 +1228,99 @@ app.put('/api/admin/jadwal-pengawas', ADMIN, wrap(async (req, res) => {
     res.json({ status: 'success', warnings: warn });
 }));
 
+// ============================================================
+// KIRIM HASIL UJIAN KE WA ORANG TUA (Fonnte). Tanpa migrasi SQL: data disimpan di tabel config.
+//  wa_ortu = { username: "628..." }   wa_kkm = { def: 75, mapel: { mtk: 80 } }   wa_log = { "paket|username": {t, ok} }
+// Token Fonnte dibaca dari environment variable FONNTE_TOKEN (tidak disimpan di kode/database).
+// ============================================================
+const FONNTE_TOKEN = process.env.FONNTE_TOKEN || '';
+const NAMA_MAPEL = { mtk: 'Matematika', bin: 'Bahasa Indonesia', bing: 'Bahasa Inggris', ipa: 'IPA', ips: 'IPS', pkn: 'PPKn', pai: 'Pendidikan Agama Islam', pak: 'Pendidikan Agama Kristen', inf: 'Informatika', sbk: 'Seni Budaya', pjok: 'PJOK', prk: 'Prakarya', mulok: 'Muatan Lokal' };
+async function getCfg(key, def) {
+    try { const { data: row } = await supabase.from('config').select('*').eq('key', key).maybeSingle(); if (row && row.value) return { ...def, ...JSON.parse(row.value) }; } catch (e) { /* belum ada */ }
+    return def;
+}
+const setCfg = (key, val) => supabase.from('config').upsert({ key, value: JSON.stringify(val) }, { onConflict: 'key' });
+function normWa(v) {
+    let d = String(v || '').replace(/\D/g, '');
+    if (!d) return '';
+    if (d.startsWith('0')) d = '62' + d.slice(1); else if (d.startsWith('8')) d = '62' + d;
+    return /^62\d{8,13}$/.test(d) ? d : null; // null = tidak valid
+}
+const kkmUntuk = (kkm, paket) => { const k = subjekKode(paket); const v = kkm.mapel && kkm.mapel[k] !== undefined ? kkm.mapel[k] : kkm.def; return Number.isFinite(+v) ? +v : 75; };
+function susunPesanWa({ nama, kelas, paket, tanggal, nilai, kkm, sekolah }) {
+    const mp = NAMA_MAPEL[subjekKode(paket)] || paket;
+    const n = parseFloat(String(nilai).replace(',', '.'));
+    const tuntas = Number.isFinite(n) && n >= kkm;
+    const angka = Number.isFinite(n) ? (Number.isInteger(n) ? String(n) : n.toFixed(1)) : String(nilai);
+    let t = `Yth. Orang tua/wali dari *${nama}*${kelas && kelas !== '-' ? ` (Kelas ${kelas})` : ''}.\n\nHasil ujian *${mp}*${tanggal ? ', ' + tanggal : ''}:\nNilai: *${angka}*\nStatus: *${tuntas ? 'TUNTAS' : 'BELUM TUNTAS (REMEDIAL)'}* (KKM ${kkm})\n\n`;
+    t += tuntas ? 'Catatan: nilai ini bukan nilai rapor.' : 'Catatan: nilai ini bukan nilai rapor. Namun, siswa tetap wajib mengikuti remedial/perbaikan sampai tuntas. Informasi jadwal remedial akan disampaikan oleh sekolah.';
+    return t + `\n\n— ${sekolah}`;
+}
+async function kirimFonnte(target, message) {
+    const ac = new AbortController(), to = setTimeout(() => ac.abort(), 8000);
+    try {
+        const r = await fetch('https://api.fonnte.com/send', { method: 'POST', headers: { Authorization: FONNTE_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ target, message, countryCode: '62' }).toString(), signal: ac.signal });
+        const j = await r.json().catch(() => ({}));
+        return j && j.status === true ? { ok: true } : { ok: false, reason: (j && (j.reason || j.message)) || 'Ditolak Fonnte' };
+    } catch (e) { return { ok: false, reason: e.name === 'AbortError' ? 'Waktu habis' : e.message }; }
+    finally { clearTimeout(to); }
+}
+app.get('/api/admin/wa-data', ADMIN, wrap(async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const [nomor, kkm, log] = await Promise.all([getCfg('wa_ortu', {}), getCfg('wa_kkm', { def: 75, mapel: {} }), getCfg('wa_log', {})]);
+    res.json({ nomor, kkm, log, fonnte: !!FONNTE_TOKEN });
+}));
+app.put('/api/admin/wa-nomor', ADMIN, wrap(async (req, res) => {
+    const ubah = (req.body && typeof req.body.nomor === 'object' && req.body.nomor) || {};
+    const nomor = await getCfg('wa_ortu', {}), salah = [];
+    Object.keys(ubah).slice(0, 2000).forEach(u => {
+        const v = String(ubah[u] || '').trim();
+        if (!v) { delete nomor[u]; return; }
+        const n = normWa(v);
+        if (n === null) salah.push(u); else nomor[u] = n;
+    });
+    const { error } = await setCfg('wa_ortu', nomor);
+    if (error) return res.json({ status: 'error', message: error.message });
+    res.json({ status: 'success', nomor, salah });
+}));
+app.put('/api/admin/wa-kkm', ADMIN, wrap(async (req, res) => {
+    const b = req.body || {}, def = Math.min(100, Math.max(0, parseFloat(b.def)));
+    if (!Number.isFinite(def)) return res.json({ status: 'error', message: 'KKM tidak valid' });
+    const mapel = {};
+    Object.entries(b.mapel || {}).forEach(([k, v]) => { const n = parseFloat(v); if (/^[a-z]+$/.test(k) && Number.isFinite(n)) mapel[k] = Math.min(100, Math.max(0, n)); });
+    const { error } = await setCfg('wa_kkm', { def, mapel });
+    if (error) return res.json({ status: 'error', message: error.message });
+    res.json({ status: 'success' });
+}));
+// body: { mapel: <kode paket>, items: [username...], dryRun?, tes?: "08..." }
+app.post('/api/admin/wa-kirim', ADMIN, wrap(async (req, res) => {
+    const b = req.body || {}, paket = String(b.mapel || '').trim();
+    if (!paket) return res.json({ status: 'error', message: 'Mapel belum dipilih' });
+    const usernames = (Array.isArray(b.items) ? b.items : []).map(String).slice(0, 10);
+    if (!usernames.length) return res.json({ status: 'error', message: 'Tidak ada siswa dipilih' });
+    if (!b.dryRun && !FONNTE_TOKEN) return res.json({ status: 'error', message: 'FONNTE_TOKEN belum dipasang di Vercel (Settings → Environment Variables).' });
+    const [nomor, kkm, log, sek, { data: users }, { data: results }] = await Promise.all([
+        getCfg('wa_ortu', {}), getCfg('wa_kkm', { def: 75, mapel: {} }), getCfg('wa_log', {}), getSekolah(),
+        supabase.from('users').select('username, name, kelas').in('username', usernames),
+        supabase.from('results').select('student_name, mapel, nilai, kelas, tanggal').eq('mapel', paket),
+    ]);
+    const nilaiMap = new Map((results || []).map(r => [r.student_name, r]));
+    const nilaiKkm = kkmUntuk(kkm, paket), hasil = [];
+    for (const un of usernames) {
+        const u = (users || []).find(x => x.username === un), r = u && nilaiMap.get(u.name);
+        if (!u) { hasil.push({ username: un, ok: false, reason: 'Siswa tidak ditemukan' }); continue; }
+        if (!r) { hasil.push({ username: un, ok: false, reason: 'Belum ada nilai' }); continue; }
+        const target = b.tes ? normWa(b.tes) : nomor[un];
+        if (!target) { hasil.push({ username: un, ok: false, reason: 'Nomor WA kosong/tidak valid' }); continue; }
+        const pesan = susunPesanWa({ nama: u.name, kelas: (r.kelas && r.kelas !== '-') ? r.kelas : u.kelas, paket, tanggal: r.tanggal, nilai: r.nilai, kkm: nilaiKkm, sekolah: sek.nama_sekolah || 'Sekolah' });
+        if (b.dryRun) { hasil.push({ username: un, ok: true, pesan, target }); continue; }
+        const k = await kirimFonnte(target, pesan);
+        if (!b.tes) log[`${paket}|${un}`] = { t: new Date().toISOString(), ok: k.ok, reason: k.ok ? '' : k.reason };
+        hasil.push({ username: un, ok: k.ok, reason: k.reason || '' });
+        await new Promise(r2 => setTimeout(r2, 1200));
+    }
+    if (!b.dryRun && !b.tes) await setCfg('wa_log', log);
+    res.json({ status: 'success', hasil });
+}));
+
 module.exports = app;
