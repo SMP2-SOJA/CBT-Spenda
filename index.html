@@ -2298,8 +2298,7 @@ function jpCetak() {
     const warna = {}; dipakai.forEach((u, i) => { const h = Math.round((i * 137.508) % 360), l = 82 + (i % 3) * 4; warna[u] = `hsl(${h},70%,${l}%)`; });
     const nm = u => { const g = gm.get(u); return g ? esc(g.name) : ''; };
     const chip = u => u && gm.has(u) ? `<div class="pg" style="background:${warna[u]}">${nm(u)}</div>` : '<div class="pg kosong">&nbsp;</div>';
-    const hari = [...new Set(list.map(j => j.tanggal))], per = 3, bagian = [];
-    for (let i = 0; i < hari.length; i += per) bagian.push(hari.slice(i, i + per));
+    const hari = [...new Set(list.map(j => j.tanggal))], bagian = [hari], n = list.length, fz = n <= 6 ? 9.5 : n <= 10 ? 8.5 : n <= 14 ? 7.5 : 6.5;
     const tabel = hs => {
         const js = list.filter(j => hs.includes(j.tanggal));
         const h1 = hs.map(t => `<th colspan="${js.filter(j => j.tanggal === t).length}">${esc(jpTgl(t))}</th>`).join('');
@@ -2311,9 +2310,9 @@ function jpCetak() {
     const legenda = dipakai.map(u => { const n = list.reduce((a, j) => a + Object.values(JP.tugas[j.id] || {}).filter(l => l.includes(u)).length, 0); return `<span class="lg" style="background:${warna[u]}">${nm(u)} <b>(${n}×)</b></span>`; }).join('');
     const body = `<style>
         *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        table.jp{table-layout:fixed;font-size:9.5pt;margin-bottom:12px} .jp th{font-size:9.5pt} .jp td{padding:3px;vertical-align:top} .rg{vertical-align:middle!important;font-size:11pt}
-        .pg{border:1px solid #888;border-radius:4px;padding:2px 4px;margin:2px 0;line-height:1.2;font-size:9pt;text-align:center} .pg.kosong{background:#fff;border:1px dashed #bbb}
-        .mp{font-weight:normal;font-size:8.5pt} .lg{display:inline-block;border:1px solid #888;border-radius:4px;padding:2px 6px;margin:2px 4px 2px 0;font-size:9pt}
+        table.jp{table-layout:fixed;font-size:${fz}pt;margin-bottom:12px} .jp th{font-size:${fz}pt} .jp td{padding:3px;vertical-align:top} .rg{vertical-align:middle!important;font-size:11pt}
+        .pg{border:1px solid #888;border-radius:4px;padding:2px 4px;margin:2px 0;line-height:1.2;font-size:${fz}pt;text-align:center} .pg.kosong{background:#fff;border:1px dashed #bbb}
+        .mp{font-weight:normal;font-size:${Math.max(fz - 1, 6)}pt} .lg{display:inline-block;border:1px solid #888;border-radius:4px;padding:2px 6px;margin:2px 4px 2px 0;font-size:9pt}
         .bagian{break-after:page} .bagian:last-of-type{break-after:auto}
     </style><h1>JADWAL UJIAN DAN PENGAWAS RUANG</h1><p class="sub">${esc(rentang)}</p>`
         + bagian.map(hs => `<div class="bagian">${tabel(hs)}</div>`).join('')
