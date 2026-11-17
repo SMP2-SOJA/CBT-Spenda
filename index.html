@@ -2289,11 +2289,36 @@ async function jpSimpan() {
     else Swal.fire({ icon: 'error', title: 'Gagal menyimpan', html: ((r && r.errors) || [r && r.message || 'Kesalahan']).map(esc).join('<br>') });
 }
 function jpCetak() {
-    const rooms = jpRuang(), gm = new Map(jpGurus().map(g => [g.username, g.name]));
-    if (!JP.jadwal.length) return toast('Belum ada jadwal', 'error');
-    const body = `<h1>JADWAL UJIAN DAN PENGAWAS RUANG</h1><p class="sub">${esc(SEKOLAH.tahun_ajaran || '')}</p>` + jpSorted().map(j => `<p style="margin:10px 0 4px"><b>${esc(jpTgl(j.tanggal))} · Sesi ${j.sesi}</b> (${esc(j.mulai || '')}${j.selesai ? ' – ' + esc(j.selesai) : ''}) — ${j.paket.map(esc).join(', ')}</p>
-      <table class="data"><thead><tr><th class="c" style="width:40px">No</th><th>Ruang</th><th>Pengawas 1</th><th>Pengawas 2</th></tr></thead><tbody>${rooms.map((r, i) => { const l = (JP.tugas[j.id] || {})[r] || []; return `<tr><td class="c">${i + 1}</td><td>${esc(r)}</td><td>${esc(gm.get(l[0]) || '')}</td><td>${esc(gm.get(l[1]) || '')}</td></tr>`; }).join('')}</tbody></table>`).join('') + ttdHtml();
-    cetakDokumen('Jadwal dan Pengawas Ruang', body);
+    const rooms = jpRuang(), gurus = jpGurus(), list = jpSorted();
+    if (!list.length) return toast('Belum ada jadwal', 'error');
+    const gm = new Map(gurus.map(g => [g.username, g]));
+    // warna berbeda untuk tiap guru (sudut warna merata, terang agar teks tetap terbaca)
+    const dipakai = [...new Set(list.flatMap(j => Object.values(JP.tugas[j.id] || {}).flat()))].filter(u => gm.has(u))
+        .sort((a, b) => gm.get(a).name.localeCompare(gm.get(b).name, 'id'));
+    const warna = {}; dipakai.forEach((u, i) => { const h = Math.round((i * 137.508) % 360), l = 82 + (i % 3) * 4; warna[u] = `hsl(${h},70%,${l}%)`; });
+    const nm = u => { const g = gm.get(u); return g ? esc(g.name) : ''; };
+    const chip = u => u && gm.has(u) ? `<div class="pg" style="background:${warna[u]}">${nm(u)}</div>` : '<div class="pg kosong">&nbsp;</div>';
+    const hari = [...new Set(list.map(j => j.tanggal))], per = 3, bagian = [];
+    for (let i = 0; i < hari.length; i += per) bagian.push(hari.slice(i, i + per));
+    const tabel = hs => {
+        const js = list.filter(j => hs.includes(j.tanggal));
+        const h1 = hs.map(t => `<th colspan="${js.filter(j => j.tanggal === t).length}">${esc(jpTgl(t))}</th>`).join('');
+        const h2 = js.map(j => `<th>Sesi ${j.sesi}<br><span class="mp">${esc(j.mulai || '')}${j.selesai ? '–' + esc(j.selesai) : ''}</span><br><span class="mp">${j.paket.map(esc).join(', ')}</span></th>`).join('');
+        const rows = rooms.map(r => `<tr><td class="c rg"><b>${esc(r)}</b></td>${js.map(j => { const l = (JP.tugas[j.id] || {})[r] || []; return `<td>${chip(l[0])}${chip(l[1])}</td>`; }).join('')}</tr>`).join('');
+        return `<table class="data jp"><thead><tr><th rowspan="2" style="width:60px">Ruang</th>${h1}</tr><tr>${h2}</tr></thead><tbody>${rows}</tbody></table>`;
+    };
+    const rentang = hari.length > 1 ? `${jpTgl(hari[0])} s.d. ${jpTgl(hari[hari.length - 1])}` : jpTgl(hari[0]);
+    const legenda = dipakai.map(u => { const n = list.reduce((a, j) => a + Object.values(JP.tugas[j.id] || {}).filter(l => l.includes(u)).length, 0); return `<span class="lg" style="background:${warna[u]}">${nm(u)} <b>(${n}×)</b></span>`; }).join('');
+    const body = `<style>
+        *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        table.jp{table-layout:fixed;font-size:9.5pt;margin-bottom:12px} .jp th{font-size:9.5pt} .jp td{padding:3px;vertical-align:top} .rg{vertical-align:middle!important;font-size:11pt}
+        .pg{border:1px solid #888;border-radius:4px;padding:2px 4px;margin:2px 0;line-height:1.2;font-size:9pt;text-align:center} .pg.kosong{background:#fff;border:1px dashed #bbb}
+        .mp{font-weight:normal;font-size:8.5pt} .lg{display:inline-block;border:1px solid #888;border-radius:4px;padding:2px 6px;margin:2px 4px 2px 0;font-size:9pt}
+        .bagian{break-after:page} .bagian:last-of-type{break-after:auto}
+    </style><h1>JADWAL UJIAN DAN PENGAWAS RUANG</h1><p class="sub">${esc(rentang)}</p>`
+        + bagian.map(hs => `<div class="bagian">${tabel(hs)}</div>`).join('')
+        + `<p style="margin:6px 0 2px;font-size:10pt"><b>Keterangan warna pengawas:</b></p><div>${legenda}</div>` + ttdHtml();
+    cetakDokumen('Jadwal dan Pengawas Ruang', body, { landscape: true });
 }
 
 async function loadJadwal() {
