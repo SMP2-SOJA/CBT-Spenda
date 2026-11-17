@@ -1129,4 +1129,102 @@ app.post('/api/account/password', auth(), wrap(async (req, res) => {
     res.json({ status: 'success' });
 }));
 
+// ============================================================
+// JADWAL UJIAN & PENGAWAS RUANG (disimpan di tabel config, kunci 'jadwal_pengawas')
+// Aturan yang dijaga server:
+//  1. Maksimal 2 jadwal mapel per hari
+//  2. Guru yang mapelnya diujikan pada hari itu tidak boleh mengawas (seluruh sesi hari itu)
+//  3. Satu guru tidak boleh mengawas dua ruang pada jadwal yang sama
+//  4. Tiap ruang memiliki 2 pengawas yang berbeda
+// ============================================================
+const JP_KEY = 'jadwal_pengawas';
+const subjekKode = c => { const m = alnumLow(c).match(/^[a-z]+/); return m ? m[0] : ''; };
+const subjekGuru = mapelStr => {
+    const t = String(mapelStr || '').trim();
+    if (!t || /^semua/i.test(t)) return [];
+    return [...new Set(t.split(/[,;\n]/).map(subjekKode).filter(Boolean))];
+};
+async function getJP() {
+    try {
+        const { data: row } = await supabase.from('config').select('*').eq('key', JP_KEY).maybeSingle();
+        const v = row && row.value ? JSON.parse(row.value) : null;
+        if (v && Array.isArray(v.jadwal)) return { jadwal: v.jadwal, tugas: v.tugas && typeof v.tugas === 'object' ? v.tugas : {} };
+    } catch (e) { /* belum ada */ }
+    return { jadwal: [], tugas: {} };
+}
+function bersihJP(b) {
+    const mentah = Array.isArray(b.jadwal) ? b.jadwal : [];
+    const jam = v => /^\d{1,2}:\d{2}$/.test(String(v || '')) ? String(v).padStart(5, '0') : '';
+    const jadwal = mentah.map(j => ({
+        id: String(j.id || '').slice(0, 40), tanggal: String(j.tanggal || '').slice(0, 10), sesi: parseInt(j.sesi) || 0,
+        mulai: jam(j.mulai), selesai: jam(j.selesai),
+        paket: (Array.isArray(j.paket) ? j.paket : []).map(p => String(p).trim().slice(0, 80)).filter(Boolean).slice(0, 40),
+    }));
+    const ids = new Set();
+    for (const j of jadwal) {
+        if (!j.id || ids.has(j.id)) return { error: 'Data jadwal tidak valid (ID kosong/ganda).' };
+        ids.add(j.id);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(j.tanggal)) return { error: 'Tanggal jadwal tidak valid.' };
+        if (j.sesi !== 1 && j.sesi !== 2) return { error: 'Sesi harus 1 atau 2.' };
+        if (!j.paket.length) return { error: `Jadwal ${j.tanggal} sesi ${j.sesi} belum memiliki mata pelajaran.` };
+    }
+    const tugas = {};
+    jadwal.forEach(j => {
+        const src = (b.tugas && typeof b.tugas === 'object') ? b.tugas[j.id] : null;
+        if (!src || typeof src !== 'object') return;
+        const out = {};
+        Object.keys(src).slice(0, 300).forEach(r => {
+            const ruang = String(r).trim().slice(0, 40);
+            if (ruang) out[ruang] = (Array.isArray(src[r]) ? src[r] : []).map(x => String(x || '').trim()).filter(Boolean).slice(0, 3);
+        });
+        tugas[j.id] = out;
+    });
+    return { jadwal, tugas };
+}
+function validasiJP(jp, gurus) {
+    const err = [], warn = [];
+    const guruMap = new Map(gurus.map(g => [g.username, g]));
+    const perHari = {};
+    jp.jadwal.forEach(j => { (perHari[j.tanggal] = perHari[j.tanggal] || []).push(j); });
+    Object.entries(perHari).forEach(([tgl, arr]) => {
+        if (arr.length > 2) err.push(`Tanggal ${tgl}: maksimal 2 jadwal mapel per hari (saat ini ${arr.length}).`);
+        const sesi = arr.map(a => a.sesi);
+        if (new Set(sesi).size !== sesi.length) err.push(`Tanggal ${tgl}: nomor sesi ganda.`);
+    });
+    jp.jadwal.forEach(j => {
+        const label = `${j.tanggal} sesi ${j.sesi}`;
+        const subjekHari = new Set((perHari[j.tanggal] || []).flatMap(x => x.paket.map(subjekKode)));
+        const dipakai = new Map();
+        let kurang = 0;
+        Object.entries(jp.tugas[j.id] || {}).forEach(([ruang, list]) => {
+            if (list.length > 2) err.push(`${label} · ${ruang}: maksimal 2 pengawas per ruang.`);
+            if (new Set(list).size !== list.length) err.push(`${label} · ${ruang}: pengawas yang sama dipilih dua kali.`);
+            list.forEach(u => {
+                const g = guruMap.get(u);
+                if (!g) { err.push(`${label} · ${ruang}: "${u}" bukan akun guru.`); return; }
+                if (subjekGuru(g.mapel).some(s => subjekHari.has(s))) err.push(`${label} · ${ruang}: ${g.name} tidak boleh mengawas karena mapelnya diujikan pada hari itu.`);
+                if (dipakai.has(u) && dipakai.get(u) !== ruang) err.push(`${label}: ${g.name} mengawas dua ruang (${dipakai.get(u)} dan ${ruang}).`);
+                dipakai.set(u, ruang);
+            });
+            if (list.length < 2) kurang++;
+        });
+        if (kurang) warn.push(`${label}: ${kurang} ruang belum memiliki 2 pengawas.`);
+    });
+    return { err: [...new Set(err)], warn };
+}
+app.get('/api/admin/jadwal-pengawas', ADMIN, wrap(async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(await getJP());
+}));
+app.put('/api/admin/jadwal-pengawas', ADMIN, wrap(async (req, res) => {
+    const jp = bersihJP(req.body || {});
+    if (jp.error) return res.json({ status: 'error', message: jp.error, errors: [jp.error] });
+    const { data: gurus } = await supabase.from('users').select('username, name, mapel').eq('role', 'guru');
+    const { err, warn } = validasiJP(jp, gurus || []);
+    if (err.length) return res.json({ status: 'error', message: err[0], errors: err });
+    const { error } = await supabase.from('config').upsert({ key: JP_KEY, value: JSON.stringify(jp) }, { onConflict: 'key' });
+    if (error) return res.json({ status: 'error', message: error.message, errors: [error.message] });
+    res.json({ status: 'success', warnings: warn });
+}));
+
 module.exports = app;

@@ -725,6 +725,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
             <button data-page="banksoal" onclick="showPage('banksoal')" class="nav-item"><i class="fa fa-layer-group"></i>Bank soal</button>
             <button data-page="nilai" onclick="showPage('nilai')" class="nav-item"><i class="fa fa-chart-column"></i>Hasil &amp; analisis</button>
             <button data-page="users" onclick="showPage('users')" class="nav-item admin-only"><i class="fa fa-user-group"></i>Peserta &amp; guru</button>
+            <button data-page="pengawas" onclick="showPage('pengawas')" class="nav-item admin-only"><i class="fa fa-user-shield"></i>Jadwal &amp; pengawas ruang</button>
             <button data-page="sekolah" onclick="showPage('sekolah')" class="nav-item admin-only"><i class="fa fa-school"></i>Profil sekolah</button>
             <button data-page="akun" onclick="showPage('akun')" class="nav-item"><i class="fa fa-key"></i>Akun saya</button>
         </nav>
@@ -749,6 +750,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 <div id="page-banksoal" class="page-content hidden"></div>
                 <div id="page-nilai" class="page-content hidden"></div>
                 <div id="page-users" class="page-content hidden"></div>
+                <div id="page-pengawas" class="page-content hidden"></div>
                 <div id="page-sekolah" class="page-content hidden"></div>
                 <div id="page-akun" class="page-content hidden"></div>
             </div>
@@ -1872,7 +1874,7 @@ document.addEventListener('fullscreenchange', () => {
 // CBT SPENDA — PANEL ADMIN & GURU
 // ============================================================
 const isAdmin = () => activeUser && activeUser.role === 'admin';
-const PAGE_TITLE = { dashboard: 'Pemantauan', jadwal: 'Jadwal & PIN', banksoal: 'Bank soal', nilai: 'Hasil & analisis', users: 'Peserta & guru', akun: 'Akun saya', sekolah: 'Profil sekolah' };
+const PAGE_TITLE = { dashboard: 'Pemantauan', jadwal: 'Jadwal & PIN', banksoal: 'Bank soal', nilai: 'Hasil & analisis', users: 'Peserta & guru', akun: 'Akun saya', pengawas: 'Jadwal & pengawas ruang', sekolah: 'Profil sekolah' };
 let currentPage = 'dashboard', dashTimer = null;
 let allActivityData = [], allSchedules = [], allQuestions = [], allResults = [], allUsers = [];
 
@@ -1884,7 +1886,7 @@ function bukaPanelAdmin() {
     if (!isAdmin()) { $('role-badge').textContent = 'Guru'; $('role-badge').classList.remove('hidden'); }
     let start = 'dashboard';
     try { start = sessionStorage.getItem('cbt_page') || 'dashboard'; } catch (e) {}
-    if (!isAdmin() && ['jadwal', 'users', 'sekolah'].includes(start)) start = 'dashboard';
+    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'sekolah'].includes(start)) start = 'dashboard';
     showPage(start);
     clearInterval(dashTimer);
     dashTimer = setInterval(() => { if (currentPage === 'dashboard' && document.visibilityState === 'visible') refreshDashboard(true); }, 5000);
@@ -1897,7 +1899,7 @@ function toggleAdminSidebar(force) {
 
 function showPage(p) {
     if (!activeUser || activeUser.role === 'siswa') return;
-    if (!isAdmin() && ['jadwal', 'users', 'sekolah'].includes(p)) p = 'dashboard';
+    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'sekolah'].includes(p)) p = 'dashboard';
     currentPage = p;
     try { sessionStorage.setItem('cbt_page', p); } catch (e) {}
     document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
@@ -1905,7 +1907,7 @@ function showPage(p) {
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('is-active', b.dataset.page === p));
     $('page-title').textContent = PAGE_TITLE[p];
     toggleAdminSidebar(false);
-    ({ dashboard: initDashboard, jadwal: loadJadwal, banksoal: loadBankSoal, nilai: loadNilai, users: loadUsers, akun: renderAkun, sekolah: renderSekolah })[p]();
+    ({ dashboard: initDashboard, jadwal: loadJadwal, banksoal: loadBankSoal, nilai: loadNilai, users: loadUsers, akun: renderAkun, pengawas: loadPengawas, sekolah: renderSekolah })[p]();
 }
 
 const pageHead = (title, sub, right = '') => `<div class="page-head"><div class="flex-1 min-w-[220px]"><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>${right}</div>`;
@@ -2143,6 +2145,146 @@ async function clearMonitoring() {
 // =============================================================
 // JADWAL & PIN
 // =============================================================
+// ============ JADWAL UJIAN & PENGAWAS RUANG ============
+let JP = { jadwal: [], tugas: {} }, JPex = [], JPdirty = false;
+const jpSubjek = c => { const m = String(c || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase().match(/^[a-z]+/); return m ? m[0] : ''; };
+const jpSubjekGuru = s => { const t = String(s || '').trim(); if (!t || /^semua/i.test(t)) return []; return [...new Set(t.split(/[,;\n]/).map(jpSubjek).filter(Boolean))]; };
+const jpGurus = () => allUsers.filter(u => u.role === 'guru').sort((a, b) => (a.name || '').localeCompare(b.name || '', 'id'));
+const jpRuang = () => [...new Set(allUsers.filter(u => u.role === 'siswa' && u.ruang).map(u => u.ruang))].sort((a, b) => String(a).localeCompare(String(b), 'id', { numeric: true }));
+const jpSubjekHari = tgl => new Set(JP.jadwal.filter(j => j.tanggal === tgl).flatMap(j => j.paket.map(jpSubjek)));
+const jpBlocked = (g, tgl) => jpSubjekGuru(g.mapel).some(s => jpSubjekHari(tgl).has(s));
+const jpTgl = t => { try { return new Date(t + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return t; } };
+const jpSorted = () => [...JP.jadwal].sort((a, b) => (a.tanggal + a.sesi).localeCompare(b.tanggal + b.sesi));
+
+async function loadPengawas() {
+    const pg = $('page-pengawas');
+    pg.innerHTML = pageHead('Jadwal & pengawas ruang', 'Susun jadwal mapel per hari lalu tetapkan 2 pengawas untuk setiap ruang.') + loading_html();
+    const [jp, ex, us] = await Promise.all([api('/admin/jadwal-pengawas'), api('/admin/available-exams?withCount=1'), api('/admin/users')]);
+    JP = { jadwal: (jp && jp.jadwal) || [], tugas: (jp && jp.tugas) || {} };
+    JPex = Object.keys(ex || {}).sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    allUsers = us || allUsers; JPdirty = false;
+    jpRender();
+}
+function loading_html() { return '<p class="text-sm text-muted p-4">Memuat…</p>'; }
+
+function jpIssues() {
+    const err = [], warn = [], rooms = jpRuang(), gm = new Map(jpGurus().map(g => [g.username, g]));
+    const perHari = {}; JP.jadwal.forEach(j => (perHari[j.tanggal] = perHari[j.tanggal] || []).push(j));
+    Object.entries(perHari).forEach(([t, a]) => { if (a.length > 2) err.push(`${jpTgl(t)}: lebih dari 2 jadwal mapel.`); });
+    if (!rooms.length) warn.push('Belum ada ruang pada data siswa. Jalankan pembagian ruang di menu Peserta & guru.');
+    jpSorted().forEach(j => {
+        const lb = `${jpTgl(j.tanggal)} sesi ${j.sesi}`, t = JP.tugas[j.id] || {}, used = new Map(); let kurang = 0;
+        rooms.forEach(r => {
+            const l = t[r] || [];
+            if (l.length < 2) kurang++;
+            if (new Set(l).size !== l.length) err.push(`${lb} · ${r}: pengawas ganda.`);
+            l.forEach(u => {
+                const g = gm.get(u); if (!g) return;
+                if (jpBlocked(g, j.tanggal)) err.push(`${lb} · ${r}: ${g.name} mapelnya diujikan hari itu.`);
+                if (used.has(u) && used.get(u) !== r) err.push(`${lb}: ${g.name} mengawas ${used.get(u)} dan ${r}.`);
+                used.set(u, r);
+            });
+        });
+        if (kurang && rooms.length) warn.push(`${lb}: ${kurang} ruang belum lengkap 2 pengawas.`);
+    });
+    return { err: [...new Set(err)], warn };
+}
+
+function jpRender() {
+    const pg = $('page-pengawas'), rooms = jpRuang(), gurus = jpGurus(), today = new Date().toLocaleDateString('en-CA');
+    const iss = jpIssues(), list = jpSorted();
+    const beban = {}; list.forEach(j => Object.values(JP.tugas[j.id] || {}).forEach(l => l.forEach(u => beban[u] = (beban[u] || 0) + 1)));
+    const gname = u => (gurus.find(g => g.username === u) || {}).name || u;
+    pg.innerHTML = pageHead('Jadwal & pengawas ruang', 'Maks. 2 mapel per hari · guru mapel yang diujikan hari itu tidak mengawas · tidak mengawas dua ruang sekaligus · 2 pengawas per ruang.',
+        `<div class="flex gap-2 flex-wrap"><button class="btn btn-sm" onclick="jpAuto()"><i class="fa fa-wand-magic-sparkles"></i> Susun otomatis</button><button class="btn btn-sm" onclick="jpCetak()"><i class="fa fa-print"></i> Cetak</button><button class="btn btn-sm btn-primary" onclick="jpSimpan()"><i class="fa fa-floppy-disk"></i> Simpan${JPdirty ? ' *' : ''}</button></div>`)
+    + `<div class="grid lg:grid-cols-[340px_1fr] gap-5 items-start">
+      <div class="space-y-4"><form class="card p-5 space-y-3" onsubmit="event.preventDefault(); jpTambah();">
+        <h3 class="section-title">Tambah jadwal mapel</h3>
+        <div class="grid grid-cols-2 gap-3"><div><label class="field-label" for="jp_tgl">Tanggal</label><input type="date" id="jp_tgl" class="field" value="${today}"></div>
+        <div><label class="field-label" for="jp_sesi">Sesi</label><select id="jp_sesi" class="field"><option value="1">Sesi 1</option><option value="2">Sesi 2</option></select></div>
+        <div><label class="field-label" for="jp_mulai">Mulai</label><input type="time" id="jp_mulai" class="field" value="07:30"></div>
+        <div><label class="field-label" for="jp_selesai">Selesai</label><input type="time" id="jp_selesai" class="field" value="09:30"></div></div>
+        <div><p class="field-label">Mata pelajaran (paket soal)</p><div class="border border-line rounded-xl max-h-52 overflow-y-auto divide-y divide-line">${JPex.map(e => `<label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-paper"><input type="checkbox" name="jp_paket" value="${esc(e)}" class="w-4 h-4 accent-[#14306B]"><span class="text-sm font-semibold">${esc(e)}</span></label>`).join('') || '<p class="p-3 text-sm text-muted">Belum ada paket soal.</p>'}</div></div>
+        <button class="btn btn-primary w-full"><i class="fa fa-plus"></i> Tambah jadwal</button></form>
+      <div class="card p-5"><h3 class="section-title">Beban mengawas</h3>${Object.keys(beban).length ? `<div class="text-sm space-y-1 mt-2">${Object.entries(beban).sort((a, b) => b[1] - a[1]).map(([u, n]) => `<div class="flex justify-between"><span>${esc(gname(u))}</span><b>${n}×</b></div>`).join('')}</div>` : '<p class="text-sm text-muted mt-2">Belum ada penugasan.</p>'}</div></div>
+      <div class="space-y-4">
+        ${iss.err.length ? `<div class="card p-4 border border-red-300"><b class="text-sm text-red-700">Perlu diperbaiki</b><ul class="list-disc pl-5 text-sm mt-1">${iss.err.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
+        ${iss.warn.length ? `<div class="card p-4 border border-amber-300"><b class="text-sm text-amber-700">Perhatian</b><ul class="list-disc pl-5 text-sm mt-1">${iss.warn.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
+        ${list.length ? list.map(j => jpKartu(j, rooms, gurus)).join('') : emptyBox('fa-calendar-days', 'Belum ada jadwal. Tambahkan jadwal mapel di samping.')}
+      </div></div>`;
+}
+function jpKartu(j, rooms, gurus) {
+    const t = JP.tugas[j.id] || {}, pakai = {};
+    rooms.forEach(r => (t[r] || []).forEach(u => pakai[u] = r));
+    const opt = (r, idx) => {
+        const cur = (t[r] || [])[idx] || '', lain = (t[r] || [])[1 - idx] || '';
+        return `<select class="field" onchange="jpSet('${esc(j.id)}','${esc(r)}',${idx},this.value)"><option value="">— pilih —</option>${gurus.filter(g => g.username === cur || (!jpBlocked(g, j.tanggal) && g.username !== lain && (!pakai[g.username] || pakai[g.username] === r))).map(g => `<option value="${esc(g.username)}"${g.username === cur ? ' selected' : ''}>${esc(g.name)}${g.mapel ? ' (' + esc(g.mapel) + ')' : ''}</option>`).join('')}</select>`;
+    };
+    return `<div class="card p-5"><div class="flex items-start gap-3 flex-wrap"><div class="flex-1"><h3 class="section-title">${esc(jpTgl(j.tanggal))} · Sesi ${j.sesi}</h3><p class="text-sm text-muted">${esc(j.mulai || '')}${j.selesai ? ' – ' + esc(j.selesai) : ''} · ${j.paket.map(esc).join(', ')}</p></div>
+      <button class="btn btn-sm btn-danger" onclick="jpHapus('${esc(j.id)}')"><i class="fa fa-trash"></i></button></div>
+      ${rooms.length ? `<div class="overflow-x-auto mt-3"><table class="w-full text-sm"><thead><tr class="text-left text-muted"><th class="py-1 pr-2">Ruang</th><th class="pr-2">Pengawas 1</th><th>Pengawas 2</th></tr></thead><tbody>${rooms.map(r => `<tr><td class="py-1 pr-2 font-bold">${esc(r)}</td><td class="pr-2">${opt(r, 0)}</td><td>${opt(r, 1)}</td></tr>`).join('')}</tbody></table></div>` : ''}</div>`;
+}
+function jpId() { return 'j' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function jpTambah() {
+    const tanggal = $('jp_tgl').value, sesi = parseInt($('jp_sesi').value), paket = [...document.querySelectorAll('input[name=jp_paket]:checked')].map(c => c.value);
+    if (!tanggal) return toast('Tanggal wajib diisi', 'error');
+    if (!paket.length) return toast('Pilih minimal satu mata pelajaran', 'error');
+    const hari = JP.jadwal.filter(j => j.tanggal === tanggal);
+    if (hari.length >= 2) return toast('Dalam 1 hari maksimal 2 jadwal mapel', 'error');
+    if (hari.some(j => j.sesi === sesi)) return toast('Sesi tersebut sudah terpakai pada tanggal ini', 'error');
+    const nj = { id: jpId(), tanggal, sesi, mulai: $('jp_mulai').value, selesai: $('jp_selesai').value, paket };
+    // pastikan pengawas yang sudah ditetapkan tidak melanggar aturan mapel hari itu
+    JP.jadwal.push(nj);
+    const gm = new Map(jpGurus().map(g => [g.username, g]));
+    JP.jadwal.filter(j => j.tanggal === tanggal).forEach(j => Object.keys(JP.tugas[j.id] || {}).forEach(r => { JP.tugas[j.id][r] = JP.tugas[j.id][r].filter(u => gm.get(u) && !jpBlocked(gm.get(u), tanggal)); }));
+    JPdirty = true; jpRender();
+}
+async function jpHapus(id) {
+    const r = await Swal.fire({ icon: 'question', title: 'Hapus jadwal ini?', showCancelButton: true, confirmButtonText: 'Hapus', cancelButtonText: 'Batal' });
+    if (!r.isConfirmed) return;
+    JP.jadwal = JP.jadwal.filter(j => j.id !== id); delete JP.tugas[id]; JPdirty = true; jpRender();
+}
+function jpSet(id, ruang, idx, val) {
+    const t = JP.tugas[id] = JP.tugas[id] || {}, l = (t[ruang] || []).slice(); l[idx] = val;
+    t[ruang] = l.filter(Boolean);
+    JPdirty = true; jpRender();
+}
+function jpAuto() {
+    const rooms = jpRuang(), gurus = jpGurus();
+    if (!rooms.length) return toast('Belum ada ruang pada data siswa', 'error');
+    if (!JP.jadwal.length) return toast('Tambahkan jadwal terlebih dahulu', 'error');
+    const beban = {}; gurus.forEach(g => beban[g.username] = 0); const kurang = [];
+    jpSorted().forEach(j => {
+        const t = JP.tugas[j.id] = {}, used = new Set();
+        const ok = gurus.filter(g => !jpBlocked(g, j.tanggal));
+        rooms.forEach(r => {
+            t[r] = [];
+            for (let k = 0; k < 2; k++) {
+                const c = ok.filter(g => !used.has(g.username)).sort((a, b) => beban[a.username] - beban[b.username] || a.name.localeCompare(b.name, 'id'))[0];
+                if (!c) break;
+                t[r].push(c.username); used.add(c.username); beban[c.username]++;
+            }
+        });
+        if (ok.length < rooms.length * 2) kurang.push(`${jpTgl(j.tanggal)} sesi ${j.sesi}: butuh ${rooms.length * 2} guru, hanya ${ok.length} yang boleh mengawas.`);
+    });
+    JPdirty = true; jpRender();
+    if (kurang.length) Swal.fire({ icon: 'warning', title: 'Guru tidak cukup', html: kurang.map(esc).join('<br>') + '<br><br>Sebagian ruang belum lengkap. Tambah akun guru atau kurangi jumlah ruang.' });
+    else toast('Pengawas tersusun otomatis. Periksa lalu klik Simpan.', 'success');
+}
+async function jpSimpan() {
+    const iss = jpIssues(); if (iss.err.length) return Swal.fire({ icon: 'error', title: 'Belum bisa disimpan', html: iss.err.map(esc).join('<br>') });
+    const r = await api('/admin/jadwal-pengawas', { method: 'PUT', body: JP });
+    if (r && r.status === 'success') { JPdirty = false; jpRender(); toast('Tersimpan', 'success'); if (r.warnings && r.warnings.length) Swal.fire({ icon: 'info', title: 'Tersimpan, dengan catatan', html: r.warnings.map(esc).join('<br>') }); }
+    else Swal.fire({ icon: 'error', title: 'Gagal menyimpan', html: ((r && r.errors) || [r && r.message || 'Kesalahan']).map(esc).join('<br>') });
+}
+function jpCetak() {
+    const rooms = jpRuang(), gm = new Map(jpGurus().map(g => [g.username, g.name]));
+    if (!JP.jadwal.length) return toast('Belum ada jadwal', 'error');
+    const body = `<h1>JADWAL UJIAN DAN PENGAWAS RUANG</h1><p class="sub">${esc(SEKOLAH.tahun_ajaran || '')}</p>` + jpSorted().map(j => `<p style="margin:10px 0 4px"><b>${esc(jpTgl(j.tanggal))} · Sesi ${j.sesi}</b> (${esc(j.mulai || '')}${j.selesai ? ' – ' + esc(j.selesai) : ''}) — ${j.paket.map(esc).join(', ')}</p>
+      <table class="data"><thead><tr><th class="c" style="width:40px">No</th><th>Ruang</th><th>Pengawas 1</th><th>Pengawas 2</th></tr></thead><tbody>${rooms.map((r, i) => { const l = (JP.tugas[j.id] || {})[r] || []; return `<tr><td class="c">${i + 1}</td><td>${esc(r)}</td><td>${esc(gm.get(l[0]) || '')}</td><td>${esc(gm.get(l[1]) || '')}</td></tr>`; }).join('')}</tbody></table>`).join('') + ttdHtml();
+    cetakDokumen('Jadwal dan Pengawas Ruang', body);
+}
+
 async function loadJadwal() {
     const pg = $('page-jadwal');
     if (!$('list-jadwal')) {
