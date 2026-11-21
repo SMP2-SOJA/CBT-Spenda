@@ -3175,7 +3175,8 @@ async function loadUsers() {
              <button onclick="bukaImportUser()" class="btn btn-sm btn-outline"><i class="fa fa-file-import"></i> Impor Excel</button>
              <button onclick="bukaBagiRuang()" class="btn btn-sm btn-outline"><i class="fa fa-door-open"></i> Bagi ruang otomatis</button>
              <button onclick="cetakKartu()" class="btn btn-sm btn-outline"><i class="fa fa-id-card"></i> Kartu peserta</button>
-             <button onclick="cetakDaftarHadir()" class="btn btn-sm btn-outline"><i class="fa fa-clipboard-list"></i> Daftar hadir</button></div>`)
+             <button onclick="cetakDaftarHadir()" class="btn btn-sm btn-outline"><i class="fa fa-clipboard-list"></i> Daftar hadir</button>
+             <button onclick="cetakDaftarRuang()" class="btn btn-sm btn-outline"><i class="fa fa-list-ol"></i> Daftar peserta ruang</button></div>`)
             + `<div class="card p-3 mb-4 flex flex-wrap gap-2 items-center"><input id="user-search" class="field field-sm sm:w-60" placeholder="Cari nama atau username…" oninput="renderUsers()">
                <select id="user-role" class="field field-sm w-auto" onchange="renderUsers()"><option value="">Semua peran</option><option value="siswa">Siswa</option><option value="guru">Guru</option><option value="admin">Admin</option></select>
                <select id="user-kelas" class="field field-sm w-auto" onchange="renderUsers()"><option value="">Semua kelas</option></select>
@@ -3402,16 +3403,24 @@ function cetakKartu() {
     const list = filteredUsers().filter(u => u.role === 'siswa');
     if (!list.length) return toast('Tidak ada siswa pada filter ini', 'info');
     const logo = LOGO_DATA.sekolah || location.origin + logoUrl();
-    const cards = list.map(u => `<div class="k"><div class="h"><i class="lg"></i><div><b>KARTU PESERTA UJIAN</b><br><span>${esc(SEKOLAH.nama_sekolah)}${SEKOLAH.tahun_pelajaran ? ' · TP ' + esc(SEKOLAH.tahun_pelajaran) : ''}</span></div></div>
+    // Urut berdasarkan ruang (bukan kelas); tiap ruang mulai di halaman baru. Tanpa data ruang → urut kelas.
+    const adaRuang = list.some(u => u.ruang), nat = (a, b) => String(a || '').localeCompare(String(b || ''), 'id', { numeric: true });
+    list.sort((a, b) => adaRuang ? ((a.ruang ? 0 : 1) - (b.ruang ? 0 : 1) || nat(a.ruang, b.ruang) || nat(a.name, b.name)) : (nat(a.kelas, b.kelas) || nat(a.name, b.name)));
+    const kartu = u => `<div class="k"><div class="h"><i class="lg"></i><div><b>KARTU PESERTA UJIAN</b><br><span>${esc(SEKOLAH.nama_sekolah)}${SEKOLAH.tahun_pelajaran ? ' · TP ' + esc(SEKOLAH.tahun_pelajaran) : ''}</span></div></div>
         <table><tr><td>Nama</td><td>: <b>${esc(u.name)}</b></td></tr><tr><td>Kelas</td><td>: ${esc(u.kelas || '-')}</td></tr>${u.ruang ? `<tr><td>Ruang</td><td>: <b>${esc(u.ruang)}</b></td></tr>` : ''}<tr><td>Username</td><td>: <b class="m">${esc(u.username)}</b></td></tr><tr><td>Password</td><td>: <b class="m">${esc(u.password)}</b></td></tr></table>
-        <p class="n">Simpan kartu ini. Jangan berikan password kepada orang lain.</p></div>`).join('');
+        <p class="n">Simpan kartu ini. Jangan berikan password kepada orang lain.</p></div>`;
+    let cards;
+    if (adaRuang) {
+        const grup = new Map(); list.forEach(u => { const k = u.ruang || '(Belum ada ruang)'; if (!grup.has(k)) grup.set(k, []); grup.get(k).push(u); });
+        const ks = [...grup.keys()]; cards = ks.map((k, i) => `<div class="g"${i < ks.length - 1 ? ' style="break-after:page"' : ''}>${grup.get(k).map(kartu).join('')}</div>`).join('');
+    } else cards = `<div class="g">${list.map(kartu).join('')}</div>`;
     const w = window.open('', '_blank');
     if (!w) return toast('Izinkan pop-up untuk mencetak', 'error');
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Kartu Peserta ${esc($('user-kelas').value || '')}</title><style>
         @page{size:A4;margin:10mm}body{font-family:Arial,sans-serif;margin:0}.g{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
         .k{border:1.5px solid #14306B;border-radius:8px;padding:10px 12px;break-inside:avoid;font-size:12px}.h{display:flex;gap:8px;align-items:center;border-bottom:2px solid #D9A21B;padding-bottom:6px;margin-bottom:6px;color:#14306B}
         .h .lg{width:34px;height:34px;flex-shrink:0;background:url('${logo}') center/contain no-repeat;-webkit-print-color-adjust:exact;print-color-adjust:exact}.h span{font-size:11px;color:#444}table{border-collapse:collapse}td{padding:2px 4px 2px 0;vertical-align:top}.m{font-family:Consolas,monospace;font-size:13px;letter-spacing:.04em}.n{font-size:9.5px;color:#666;margin:6px 0 0}
-        </style></head><body><div class="g">${cards}</div><script>Promise.race([Promise.all([...document.images].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))),new Promise(r=>setTimeout(r,4000))]).then(()=>setTimeout(()=>window.print(),250))<\/script></body></html>`);
+        </style></head><body>${cards}<script>Promise.race([Promise.all([...document.images].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))),new Promise(r=>setTimeout(r,4000))]).then(()=>setTimeout(()=>window.print(),250))<\/script></body></html>`);
     w.document.close();
 }
 
@@ -3574,6 +3583,26 @@ function cetakRekapNilai() {
         <tfoot><tr><td colspan="${m ? 5 : 6}" class="r">Rata-rata / tertinggi / terendah</td><td class="c" colspan="2"><b>${avg.toFixed(1)}</b> / ${Math.max(...nums)} / ${Math.min(...nums)}</td></tr></tfoot></table>
         ${ttdHtml({ kiri: { jabatan: 'Guru Mata Pelajaran', nama: '', nip: '' } })}`);
 }
+// Daftar peserta per ruang untuk ditempel di pintu/depan ruang (berbeda dengan daftar hadir: tanpa kolom tanda tangan)
+function cetakDaftarRuang() {
+    const list = filteredUsers().filter(u => u.role === 'siswa');
+    if (!list.length) return toast('Tidak ada siswa pada filter ini', 'info');
+    if (!list.some(u => u.ruang)) return Swal.fire({ icon: 'info', title: 'Belum ada pembagian ruang', text: 'Jalankan "Bagi ruang otomatis" atau isi kolom ruang terlebih dahulu.' });
+    const grup = new Map();
+    list.forEach(u => { const k = u.ruang || '(Belum ada ruang)'; if (!grup.has(k)) grup.set(k, []); grup.get(k).push(u); });
+    const keys = [...grup.keys()].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    const halaman = keys.map((rg, gi) => {
+        const ls = grup.get(rg).slice().sort((a, b) => a.name.localeCompare(b.name, 'id'));
+        const rh = ls.length <= 20 ? 32 : ls.length <= 26 ? 25 : ls.length <= 32 ? 19 : 17, fs = ls.length <= 26 ? 13 : 11.5;
+        const rows = ls.map((u, i) => `<tr><td class="c" style="height:${rh}px">${i + 1}</td><td>${esc(u.name)}</td><td class="c">${esc(u.kelas || '-')}</td><td class="c">${esc(u.username)}</td></tr>`).join('');
+        const kls = [...new Set(ls.map(u => u.kelas).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'id', { numeric: true })).join(', ');
+        return `<div${gi < keys.length - 1 ? ' style="break-after:page"' : ''}><style>.dr td,.dr th{font-size:${fs}pt!important${ls.length > 26 ? ';padding:1px 6px!important' : ''}}</style>${kopSuratHtml()}
+        <h1>DAFTAR PESERTA UJIAN</h1><p class="sub">Tahun Pelajaran ${esc(SEKOLAH.tahun_pelajaran || '….')}</p>
+        <div style="text-align:center;margin:4px 0 10px"><span style="display:inline-block;border:3px solid #000;border-radius:8px;padding:4px 36px;font-size:26pt;font-weight:bold;letter-spacing:.06em">RUANG ${esc(rg)}</span><div style="font-size:11pt;margin-top:4px">Kelas: ${esc(kls || '-')} · Jumlah peserta: ${ls.length}</div></div>
+        <table class="data dr"><thead><tr><th style="width:44px">No</th><th>Nama peserta</th><th style="width:70px">Kelas</th><th style="width:120px">Username</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    });
+    cetakDokumen('Daftar peserta per ruang', halaman.join(''), { kop: false });
+}
 function cetakDaftarHadir() {
     const list = filteredUsers().filter(u => u.role === 'siswa');
     if (!list.length) return toast('Tidak ada siswa pada filter ini', 'info');
@@ -3585,15 +3614,16 @@ function cetakDaftarHadir() {
     const keys = [...grup.keys()].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
     const halaman = keys.map((rg, gi) => {
         const ls = grup.get(rg);
-        const rows = ls.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${esc(u.name)}</td><td class="c">${esc(u.kelas || '-')}</td><td style="height:30px">${i % 2 === 0 ? `${i + 1}.` : ''}</td><td>${i % 2 === 1 ? `${i + 1}.` : ''}</td><td></td></tr>`).join('');
+        const pad = ls.length > 26, rh = ls.length <= 20 ? 27 : ls.length <= 24 ? 24 : ls.length <= 26 ? 22 : 17; // tinggi baris menyesuaikan jumlah peserta agar tetap satu halaman
+        const rows = ls.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${esc(u.name)}</td><td class="c">${esc(u.kelas || '-')}</td><td style="height:${rh}px">${i % 2 === 0 ? `${i + 1}.` : ''}</td><td>${i % 2 === 1 ? `${i + 1}.` : ''}</td><td></td></tr>`).join('');
         const kls = [...new Set(ls.map(u => u.kelas).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'id', { numeric: true })).join(', ');
         const metaKelas = adaRuang
-            ? `<tr><td>Ruang</td><td>: <b>${esc(rg)}</b></td></tr><tr><td>Kelas</td><td>: ${esc(kls || '..............')}</td></tr>`
-            : `<tr><td>Kelas / ruang</td><td>: ${esc(kelas || '..............')} / ..............</td></tr>`;
-        return `<div${gi < keys.length - 1 ? ' style="break-after:page"' : ''}>${kopSuratHtml()}<h1>DAFTAR HADIR PESERTA UJIAN</h1><p class="sub">Tahun Pelajaran ${esc(SEKOLAH.tahun_pelajaran || '….')}</p>
-        <table class="meta"><tr><td>Mata pelajaran</td><td>: ..............................................</td></tr>${metaKelas}<tr><td>Hari, tanggal</td><td>: ..............................................</td></tr><tr><td>Waktu</td><td>: .......... s.d. ..........</td></tr></table><br>
+            ? `<td>Ruang</td><td>: <b>${esc(rg)}</b></td></tr><tr><td>Mata pelajaran</td><td>: ........................................</td><td>Kelas</td><td>: ${esc(kls || '..............')}</td>`
+            : `<td>Kelas / ruang</td><td>: ${esc(kelas || '..........')} / ..........</td></tr><tr><td>Mata pelajaran</td><td>: ........................................</td><td></td><td></td>`;
+        return `<div${gi < keys.length - 1 ? ' style="break-after:page"' : ''}><style>.ttd-ruang{height:${pad ? 28 : 40}px}.ttd-wrap{margin-top:${pad ? 8 : 12}px}.sub{margin-bottom:6px}${pad ? '.data th,.data td{padding:1px 5px!important;font-size:9.5pt!important}' : ''}</style>${kopSuratHtml()}<h1>DAFTAR HADIR PESERTA UJIAN</h1><p class="sub">Tahun Pelajaran ${esc(SEKOLAH.tahun_pelajaran || '….')}</p>
+        <table class="meta"><tr><td>Hari, tanggal</td><td>: ........................................</td>${metaKelas}</tr><tr><td>Waktu</td><td>: ........ s.d. ........</td><td></td><td></td></tr></table><div style="height:6px"></div>
         <table class="data"><thead><tr><th style="width:34px">No</th><th>Nama peserta</th><th style="width:60px">Kelas</th><th colspan="2">Tanda tangan</th><th style="width:80px">Ket.</th></tr></thead><tbody>${rows}</tbody></table>
-        <p style="font-size:10.5pt;margin-top:8px">Jumlah peserta: ${ls.length} · Hadir: ........ · Tidak hadir: ........</p>
+        <p style="font-size:10.5pt;margin:6px 0 0">Jumlah peserta: ${ls.length} · Hadir: ........ · Tidak hadir: ........</p>
         ${ttdHtml({ kiri: { jabatan: 'Pengawas Ujian', nama: '', nip: '' } })}</div>`;
     });
     cetakDokumen('Daftar hadir ' + (adaRuang ? 'per ruang' : (kelas || '')), halaman.join(''), { kop: false });
