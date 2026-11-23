@@ -2333,8 +2333,8 @@ async function jpCetak(denganPengawas = true) {
     const hari = [...new Set(list.map(j => j.tanggal))];
     const nr = rooms.length, nJ = list.length;
     // Area cetak landscape (margin 8mm) ±733px: sisihkan judul, tanda tangan, dan header tabel; sisanya dibagi rata ke 2 baris pengawas per sesi
-    const rowPx = 570 / Math.max(1, nJ * 2), fzHit = ((rowPx - 2.5) / 2.3) * 0.75;
-    const fz = !denganPengawas ? 11 : Math.max(5, Math.min(nr <= 3 ? 10.5 : nr <= 5 ? 9.5 : 8.5, Math.round(fzHit * 10) / 10)), pad = rowPx > 30 ? 3 : 1;
+    const rowPx = 495 / Math.max(1, nJ * 2), fzHit = ((rowPx - 2.5) / 2.3) * 0.75;
+    const fz = !denganPengawas ? 11 : Math.max(5, Math.min(nr <= 3 ? 10 : nr <= 5 ? 9 : 7.5, Math.round(fzHit * 10) / 10)), pad = rowPx > 30 ? 3 : 1;
     let rows = '';
     hari.forEach(t => {
         const js = list.filter(j => j.tanggal === t), span = js.length * (denganPengawas ? 2 : 1);
@@ -2347,17 +2347,17 @@ async function jpCetak(denganPengawas = true) {
         });
     });
     const kepala = denganPengawas
-        ? `<tr><th rowspan="2" style="width:6.5%">HARI</th><th rowspan="2" style="width:8%">WAKTU (WITA)</th><th rowspan="2" style="width:9.5%">MATA PELAJARAN</th><th colspan="${nr}">PENGAWAS</th></tr><tr>${rooms.map(r => `<th>RUANG ${esc(String(r).replace(/^R\s*/i, ''))}</th>`).join('')}</tr>`
+        ? `<tr><th rowspan="2" style="width:6%">HARI</th><th rowspan="2" style="width:7.5%">WAKTU (WITA)</th><th rowspan="2" style="width:9%">MATA PELAJARAN</th><th colspan="${nr}">PENGAWAS</th></tr><tr>${rooms.map(r => `<th>RUANG ${esc(String(r).replace(/^R\s*/i, ''))}</th>`).join('')}</tr>`
         : `<tr><th style="width:18%">HARI / TANGGAL</th><th style="width:22%">WAKTU (WITA)</th><th>MATA PELAJARAN</th></tr>`;
     const body = `<style>
         *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
         ${denganPengawas ? '@page{size:A4 landscape;margin:8mm}' : ''}
-        .jt{text-align:center;font-weight:bold;line-height:1.25;margin:0 0 ${denganPengawas ? 6 : 10}px;font-size:${denganPengawas ? 12 : 14}pt}
+        .jt{text-align:center;font-weight:bold;line-height:1.25;margin:0 0 ${denganPengawas ? 4 : 10}px;font-size:${denganPengawas ? 11 : 14}pt}
         table.jd{width:99.6%;border-collapse:collapse;table-layout:${denganPengawas ? 'fixed' : 'auto'};font-size:${fz}pt}
         .jd th,.jd td{border:1px solid #000;padding:${pad}px 2px;text-align:center;vertical-align:middle}.jd th{background:#e8e8e8}
         .jd td.nm{font-size:${fz - 0.5}pt;line-height:1.15}.jd td.hr{font-size:${fz + 1}pt}.tg{font-size:${fz - 1}pt}
         .jd tr.akhir td{border-bottom:1.5px solid #000}.jd{margin-bottom:6px}
-        .ttd-ruang{height:${denganPengawas ? 26 : 44}px}.ttd-wrap{margin-top:${denganPengawas ? 6 : 14}px}
+        .ttd-ruang{height:${denganPengawas ? 20 : 44}px}.ttd-wrap{margin-top:${denganPengawas ? 4 : 14}px;${denganPengawas ? 'font-size:9pt;break-inside:avoid' : ''}}
     </style><div class="jt">${esc(judul.toUpperCase())}<br>${esc((SEKOLAH.nama_sekolah || '').toUpperCase())}<br>TAHUN PELAJARAN ${esc(SEKOLAH.tahun_pelajaran || '')}</div>
     <table class="jd"><thead>${kepala}</thead><tbody>${rows}</tbody></table>${ttdHtml()}`;
     cetakDokumen(denganPengawas ? 'Jadwal dan Pengawas Ruang' : 'Jadwal Ujian', body, { landscape: denganPengawas, kop: false });
