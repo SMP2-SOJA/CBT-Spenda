@@ -726,6 +726,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
             <button data-page="nilai" onclick="showPage('nilai')" class="nav-item"><i class="fa fa-chart-column"></i>Hasil &amp; analisis</button>
             <button data-page="users" onclick="showPage('users')" class="nav-item admin-only"><i class="fa fa-user-group"></i>Peserta &amp; guru</button>
             <button data-page="pengawas" onclick="showPage('pengawas')" class="nav-item admin-only"><i class="fa fa-user-shield"></i>Jadwal &amp; pengawas ruang</button>
+            <button data-page="khusus" onclick="showPage('khusus')" class="nav-item admin-only"><i class="fa fa-user-pen"></i>Soal khusus</button>
             <button data-page="wa" onclick="showPage('wa')" class="nav-item admin-only"><i class="fa fa-paper-plane"></i>Kirim hasil via WA</button>
             <button data-page="sekolah" onclick="showPage('sekolah')" class="nav-item admin-only"><i class="fa fa-school"></i>Profil sekolah</button>
             <button data-page="akun" onclick="showPage('akun')" class="nav-item"><i class="fa fa-key"></i>Akun saya</button>
@@ -752,6 +753,7 @@ body.tv .pod-name { font-size: 22px; } body.tv .pod.is-first .pod-name { font-si
                 <div id="page-nilai" class="page-content hidden"></div>
                 <div id="page-users" class="page-content hidden"></div>
                 <div id="page-pengawas" class="page-content hidden"></div>
+                <div id="page-khusus" class="page-content hidden"></div>
                 <div id="page-wa" class="page-content hidden"></div>
                 <div id="page-sekolah" class="page-content hidden"></div>
                 <div id="page-akun" class="page-content hidden"></div>
@@ -1876,7 +1878,7 @@ document.addEventListener('fullscreenchange', () => {
 // CBT SPENDA — PANEL ADMIN & GURU
 // ============================================================
 const isAdmin = () => activeUser && activeUser.role === 'admin';
-const PAGE_TITLE = { dashboard: 'Pemantauan', jadwal: 'Jadwal & PIN', banksoal: 'Bank soal', nilai: 'Hasil & analisis', users: 'Peserta & guru', akun: 'Akun saya', pengawas: 'Jadwal & pengawas ruang', wa: 'Kirim hasil via WA', sekolah: 'Profil sekolah' };
+const PAGE_TITLE = { dashboard: 'Pemantauan', jadwal: 'Jadwal & PIN', banksoal: 'Bank soal', nilai: 'Hasil & analisis', users: 'Peserta & guru', akun: 'Akun saya', pengawas: 'Jadwal & pengawas ruang', wa: 'Kirim hasil via WA', khusus: 'Soal khusus', sekolah: 'Profil sekolah' };
 let currentPage = 'dashboard', dashTimer = null;
 let allActivityData = [], allSchedules = [], allQuestions = [], allResults = [], allUsers = [];
 
@@ -1888,7 +1890,7 @@ function bukaPanelAdmin() {
     if (!isAdmin()) { $('role-badge').textContent = 'Guru'; $('role-badge').classList.remove('hidden'); }
     let start = 'dashboard';
     try { start = sessionStorage.getItem('cbt_page') || 'dashboard'; } catch (e) {}
-    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'wa', 'sekolah'].includes(start)) start = 'dashboard';
+    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'wa', 'khusus', 'sekolah'].includes(start)) start = 'dashboard';
     showPage(start);
     clearInterval(dashTimer);
     dashTimer = setInterval(() => { if (currentPage === 'dashboard' && document.visibilityState === 'visible') refreshDashboard(true); }, 5000);
@@ -1901,7 +1903,7 @@ function toggleAdminSidebar(force) {
 
 function showPage(p) {
     if (!activeUser || activeUser.role === 'siswa') return;
-    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'wa', 'sekolah'].includes(p)) p = 'dashboard';
+    if (!isAdmin() && ['jadwal', 'users', 'pengawas', 'wa', 'khusus', 'sekolah'].includes(p)) p = 'dashboard';
     currentPage = p;
     try { sessionStorage.setItem('cbt_page', p); } catch (e) {}
     document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
@@ -1909,7 +1911,7 @@ function showPage(p) {
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('is-active', b.dataset.page === p));
     $('page-title').textContent = PAGE_TITLE[p];
     toggleAdminSidebar(false);
-    ({ dashboard: initDashboard, jadwal: loadJadwal, banksoal: loadBankSoal, nilai: loadNilai, users: loadUsers, akun: renderAkun, pengawas: loadPengawas, wa: loadWa, sekolah: renderSekolah })[p]();
+    ({ dashboard: initDashboard, jadwal: loadJadwal, banksoal: loadBankSoal, nilai: loadNilai, users: loadUsers, akun: renderAkun, pengawas: loadPengawas, wa: loadWa, khusus: loadKhusus, sekolah: renderSekolah })[p]();
 }
 
 const pageHead = (title, sub, right = '') => `<div class="page-head"><div class="flex-1 min-w-[220px]"><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>${right}</div>`;
@@ -2198,6 +2200,10 @@ function jpIssues() {
         });
         if (kurang && rooms.length) warn.push(`${lb}: ${kurang} ruang belum lengkap 2 pengawas.`);
     });
+    // Peringatan: pengawas mendapat ruang yang sama berulang padahal masih ada ruang lain yang belum diawasi
+    const rw = {}; jpSorted().forEach(j => Object.entries(JP.tugas[j.id] || {}).forEach(([r, l]) => l.forEach(u => { (rw[u] = rw[u] || {})[r] = (rw[u][r] || 0) + 1; })));
+    const ulang = Object.entries(rw).filter(([u, m]) => Object.keys(m).length < Math.min(rooms.length, Object.values(m).reduce((x, y) => x + y, 0))).map(([u]) => (gm.get(u) || {}).name || u);
+    if (ulang.length) warn.push(`Ruang yang sama berulang untuk: ${ulang.slice(0, 6).join(', ')}${ulang.length > 6 ? ', dll.' : ''}. Klik "Susun otomatis" agar ruang bergantian.`);
     return { err: [...new Set(err)], warn };
 }
 
@@ -2262,27 +2268,40 @@ function jpSet(id, ruang, idx, val) {
     t[ruang] = l.filter(Boolean);
     JPdirty = true; jpRender();
 }
+// Penugasan minimum-biaya (algoritma Hungarian): baris = guru, kolom = slot pengawas (2 per ruang)
+function jpHungarian(a) {
+    const n = a.length, m = a[0].length, INF = 1e18, u = Array(n + 1).fill(0), v = Array(m + 1).fill(0), p = Array(m + 1).fill(0), way = Array(m + 1).fill(0);
+    for (let i = 1; i <= n; i++) {
+        p[0] = i; let j0 = 0; const minv = Array(m + 1).fill(INF), used = Array(m + 1).fill(false);
+        do {
+            used[j0] = true; const i0 = p[j0]; let delta = INF, j1 = 0;
+            for (let j = 1; j <= m; j++) if (!used[j]) { const cur = a[i0 - 1][j - 1] - u[i0] - v[j]; if (cur < minv[j]) { minv[j] = cur; way[j] = j0; } if (minv[j] < delta) { delta = minv[j]; j1 = j; } }
+            for (let j = 0; j <= m; j++) if (used[j]) { u[p[j]] += delta; v[j] -= delta; } else minv[j] -= delta;
+            j0 = j1;
+        } while (p[j0] !== 0);
+        do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
+    }
+    const res = Array(n).fill(-1); for (let j = 1; j <= m; j++) if (p[j]) res[p[j] - 1] = j - 1;
+    return res;
+}
 function jpAuto() {
     const rooms = jpRuang(), gurus = jpGurus();
     if (!rooms.length) return toast('Belum ada ruang pada data siswa', 'error');
     if (!JP.jadwal.length) return toast('Tambahkan jadwal terlebih dahulu', 'error');
-    const beban = {}; gurus.forEach(g => beban[g.username] = 0); const kurang = [];
-    jpSorted().forEach(j => {
-        const t = JP.tugas[j.id] = {}, used = new Set();
-        const ok = gurus.filter(g => !jpBlocked(g, j.tanggal));
-        rooms.forEach(r => {
-            t[r] = [];
-            for (let k = 0; k < 2; k++) {
-                const c = ok.filter(g => !used.has(g.username)).sort((a, b) => beban[a.username] - beban[b.username] || a.name.localeCompare(b.name, 'id'))[0];
-                if (!c) break;
-                t[r].push(c.username); used.add(c.username); beban[c.username]++;
-            }
-        });
-        if (ok.length < rooms.length * 2) kurang.push(`${jpTgl(j.tanggal)} sesi ${j.sesi}: butuh ${rooms.length * 2} guru, hanya ${ok.length} yang boleh mengawas.`);
+    const beban = {}, riwayat = {}; gurus.forEach(g => { beban[g.username] = 0; riwayat[g.username] = {}; }); const kurang = [], nr = rooms.length;
+    jpSorted().forEach((j, ji) => {
+        const t = JP.tugas[j.id] = {}; rooms.forEach(r => t[r] = []);
+        const ok = gurus.filter(g => !jpBlocked(g, j.tanggal)).sort((a, b) => beban[a.username] - beban[b.username] || a.name.localeCompare(b.name, 'id'));
+        const pilih = ok.slice(0, nr * 2);
+        // biaya: sering mengawas ruang itu sebelumnya = mahal (agar ruang selalu berganti); selisih kecil memutar ruang tiap sesi
+        const cost = pilih.map((g, gi) => Array.from({ length: nr * 2 }, (_, s) => { const r = Math.floor(s / 2); return (riwayat[g.username][rooms[r]] || 0) * 100 + (((gi + ji) % nr) === r ? 0 : 1); }));
+        const hasil = pilih.length ? jpHungarian(cost) : [];
+        pilih.forEach((g, gi) => { const r = rooms[Math.floor(hasil[gi] / 2)]; t[r].push(g.username); beban[g.username]++; riwayat[g.username][r] = (riwayat[g.username][r] || 0) + 1; });
+        if (ok.length < nr * 2) kurang.push(`${jpTgl(j.tanggal)} sesi ${j.sesi}: butuh ${nr * 2} guru, hanya ${ok.length} yang boleh mengawas.`);
     });
     JPdirty = true; jpRender();
     if (kurang.length) Swal.fire({ icon: 'warning', title: 'Guru tidak cukup', html: kurang.map(esc).join('<br>') + '<br><br>Sebagian ruang belum lengkap. Tambah akun guru atau kurangi jumlah ruang.' });
-    else toast('Pengawas tersusun otomatis. Periksa lalu klik Simpan.', 'success');
+    else toast('Pengawas tersusun otomatis dan ruangnya bergantian. Periksa lalu klik Simpan.', 'success');
 }
 async function jpSimpan() {
     const iss = jpIssues(); if (iss.err.length) return Swal.fire({ icon: 'error', title: 'Belum bisa disimpan', html: iss.err.map(esc).join('<br>') });
@@ -2312,7 +2331,10 @@ async function jpCetak(denganPengawas = true) {
     const warna = {}; dipakai.forEach((u, i) => { warna[u] = `hsl(${Math.round((i * 137.508) % 360)},70%,${84 + (i % 3) * 4}%)`; });
     const sel = u => u && gm.has(u) ? `<td class="nm" style="background:${warna[u]}">${esc(gm.get(u).name)}</td>` : '<td class="nm"></td>';
     const hari = [...new Set(list.map(j => j.tanggal))];
-    const nr = rooms.length, fz = !denganPengawas ? 11 : nr <= 3 ? 10.5 : nr <= 5 ? 9.5 : nr <= 7 ? 8.5 : 7.5;
+    const nr = rooms.length, nJ = list.length;
+    // Area cetak landscape (margin 8mm) ±733px: sisihkan judul, tanda tangan, dan header tabel; sisanya dibagi rata ke 2 baris pengawas per sesi
+    const rowPx = 570 / Math.max(1, nJ * 2), fzHit = ((rowPx - 2.5) / 2.3) * 0.75;
+    const fz = !denganPengawas ? 11 : Math.max(5, Math.min(nr <= 3 ? 10.5 : nr <= 5 ? 9.5 : 8.5, Math.round(fzHit * 10) / 10)), pad = rowPx > 30 ? 3 : 1;
     let rows = '';
     hari.forEach(t => {
         const js = list.filter(j => j.tanggal === t), span = js.length * (denganPengawas ? 2 : 1);
@@ -2325,24 +2347,19 @@ async function jpCetak(denganPengawas = true) {
         });
     });
     const kepala = denganPengawas
-        ? `<tr><th rowspan="2" style="width:8%">HARI</th><th rowspan="2" style="width:10%">WAKTU (WITA)</th><th rowspan="2" style="width:12%">MATA PELAJARAN</th><th colspan="${nr}">PENGAWAS</th></tr><tr>${rooms.map(r => `<th>RUANG ${esc(String(r).replace(/^R\s*/i, ''))}</th>`).join('')}</tr>`
+        ? `<tr><th rowspan="2" style="width:6.5%">HARI</th><th rowspan="2" style="width:8%">WAKTU (WITA)</th><th rowspan="2" style="width:9.5%">MATA PELAJARAN</th><th colspan="${nr}">PENGAWAS</th></tr><tr>${rooms.map(r => `<th>RUANG ${esc(String(r).replace(/^R\s*/i, ''))}</th>`).join('')}</tr>`
         : `<tr><th style="width:18%">HARI / TANGGAL</th><th style="width:22%">WAKTU (WITA)</th><th>MATA PELAJARAN</th></tr>`;
     const body = `<style>
         *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        .jt{text-align:center;font-weight:bold;line-height:1.35;margin:0 0 10px;font-size:14pt}
-        table.jd{width:100%;border-collapse:collapse;table-layout:${denganPengawas ? 'fixed' : 'auto'};font-size:${fz}pt}
-        .jd th,.jd td{border:1px solid #000;padding:${nr > 4 ? 1.5 : 3}px 3px;text-align:center;vertical-align:middle}.jd th{background:#e8e8e8}
+        ${denganPengawas ? '@page{size:A4 landscape;margin:8mm}' : ''}
+        .jt{text-align:center;font-weight:bold;line-height:1.25;margin:0 0 ${denganPengawas ? 6 : 10}px;font-size:${denganPengawas ? 12 : 14}pt}
+        table.jd{width:99.6%;border-collapse:collapse;table-layout:${denganPengawas ? 'fixed' : 'auto'};font-size:${fz}pt}
+        .jd th,.jd td{border:1px solid #000;padding:${pad}px 2px;text-align:center;vertical-align:middle}.jd th{background:#e8e8e8}
         .jd td.nm{font-size:${fz - 0.5}pt;line-height:1.15}.jd td.hr{font-size:${fz + 1}pt}.tg{font-size:${fz - 1}pt}
         .jd tr.akhir td{border-bottom:1.5px solid #000}.jd{margin-bottom:6px}
-        .ttd-ruang{height:44px}.ttd-wrap{margin-top:14px}
-    </style><div id="fitbox"><div id="fit"><div class="jt">${esc(judul.toUpperCase())}<br>${esc((SEKOLAH.nama_sekolah || '').toUpperCase())}<br>TAHUN PELAJARAN ${esc(SEKOLAH.tahun_pelajaran || '')}</div>
-    <table class="jd"><thead>${kepala}</thead><tbody>${rows}</tbody></table>${ttdHtml()}</div></div>
-    <script>
-        // Perkecil otomatis agar seluruh jadwal muat dalam 1 lembar (tinggi area cetak: landscape ±703px, portrait ±1032px)
-        (function () { var f = document.getElementById('fit'), b = document.getElementById('fitbox'), H = ${denganPengawas ? 700 : 1028}, s = 1;
-            for (var i = 0; i < 40; i++) { f.style.width = (100 / s) + '%'; if (f.offsetHeight * s <= H || s <= 0.45) break; s -= 0.02; }
-            if (s < 1) { f.style.transformOrigin = '0 0'; f.style.transform = 'scale(' + s + ')'; b.style.height = (f.offsetHeight * s) + 'px'; b.style.overflow = 'hidden'; } })();
-    <\/script>`;
+        .ttd-ruang{height:${denganPengawas ? 26 : 44}px}.ttd-wrap{margin-top:${denganPengawas ? 6 : 14}px}
+    </style><div class="jt">${esc(judul.toUpperCase())}<br>${esc((SEKOLAH.nama_sekolah || '').toUpperCase())}<br>TAHUN PELAJARAN ${esc(SEKOLAH.tahun_pelajaran || '')}</div>
+    <table class="jd"><thead>${kepala}</thead><tbody>${rows}</tbody></table>${ttdHtml()}`;
     cetakDokumen(denganPengawas ? 'Jadwal dan Pengawas Ruang' : 'Jadwal Ujian', body, { landscape: denganPengawas, kop: false });
 }
 
@@ -2470,6 +2487,39 @@ async function waKirim() {
     WAsel = new Set(); waRender();
     const nm = u => (allUsers.find(x => x.username === u) || {}).name || u;
     Swal.fire({ icon: gagal.length ? 'warning' : 'success', title: `${ok} terkirim${gagal.length ? ', ' + gagal.length + ' gagal' : ''}`, html: gagal.slice(0, 15).map(g => esc(nm(g.username)) + ': ' + esc(g.reason || '')).join('<br>') });
+}
+
+// ============ SOAL KHUSUS (paket soal berbeda untuk siswa tertentu) ============
+let SK = { siswa: [], map: {} }, SKpaket = [], SKkelas = '', SKcari = '', SKdirty = false;
+async function loadKhusus() {
+    $('page-khusus').innerHTML = pageHead('Soal khusus', 'Siswa tertentu mengerjakan paket soal yang berbeda.') + '<p class="text-sm text-muted p-4">Memuat…</p>';
+    const [k, ex, us] = await Promise.all([api('/admin/soal-khusus'), api('/admin/available-exams?withCount=1'), api('/admin/users')]);
+    SK = { siswa: (k && k.siswa) || [], map: (k && k.map) || {} };
+    SKpaket = Object.keys(ex || {}).sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    allUsers = us || allUsers; SKdirty = false; skRender();
+}
+function skRender() {
+    const sis = allUsers.filter(u => u.role === 'siswa'), kelasList = [...new Set(sis.map(u => u.kelas).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+    const q = SKcari.toLowerCase(), tampil = sis.filter(u => (!SKkelas || u.kelas === SKkelas) && (!q || u.name.toLowerCase().includes(q) || String(u.username).toLowerCase().includes(q)))
+        .sort((a, b) => (a.kelas || '').localeCompare(b.kelas || '', 'id', { numeric: true }) || a.name.localeCompare(b.name, 'id'));
+    const sel = new Set(SK.siswa);
+    $('page-khusus').innerHTML = pageHead('Soal khusus', 'Siswa yang ditandai mengerjakan paket soal khusus pada mapel yang diatur. Waktu, ruang, dan jadwal tetap sama dengan siswa lain.',
+        `<button class="btn btn-sm btn-primary" onclick="skSimpan()"><i class="fa fa-floppy-disk"></i> Simpan${SKdirty ? ' *' : ''}</button>`)
+    + `<div class="grid lg:grid-cols-2 gap-5 items-start">
+      <div class="card p-5"><h3 class="section-title">1. Paket soal khusus per mapel</h3>
+        <p class="text-sm text-muted mb-3">Buat dulu paketnya lewat menu bank soal (misalnya kode <b>MTK-7A-2026-K</b>), lalu pilih di sini sebagai pasangan paket biasa. Satu paket khusus dipakai bersama oleh semua siswa yang ditandai. Nilai tetap tercatat pada paket biasa sehingga ikut rekap kelas.</p>
+        <div class="space-y-2">${SKpaket.map(p => `<div class="grid grid-cols-[1fr_1fr] gap-2 items-center"><span class="text-sm font-semibold">${esc(p)}</span>
+          <select class="field" onchange="skMap('${esc(p)}',this.value)"><option value="">— tidak ada —</option>${SKpaket.filter(x => x !== p).map(x => `<option value="${esc(x)}"${SK.map[p] === x ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`).join('') || '<p class="text-sm text-muted">Belum ada paket soal.</p>'}</div></div>
+      <div class="card p-5"><h3 class="section-title">2. Siswa yang memakai soal khusus <span class="text-sm font-normal text-muted">(${sel.size} dipilih)</span></h3>
+        <div class="flex gap-2 my-3 flex-wrap"><select class="field" style="max-width:140px" onchange="SKkelas=this.value;skRender()"><option value="">Semua kelas</option>${kelasList.map(k => `<option value="${esc(k)}"${k === SKkelas ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>
+          <input class="field flex-1" style="min-width:140px" placeholder="Cari nama/username…" value="${esc(SKcari)}" onchange="SKcari=this.value;skRender()"></div>
+        <div class="border border-line rounded-xl max-h-[420px] overflow-y-auto divide-y divide-line">${tampil.map(u => `<label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-paper"><input type="checkbox" class="w-4 h-4 accent-[#14306B]" ${sel.has(u.username) ? 'checked' : ''} onchange="skToggle('${esc(u.username)}',this.checked)"><span class="text-sm font-semibold flex-1">${esc(u.name)}</span><span class="text-xs text-muted">${esc(u.kelas || '')}</span></label>`).join('') || '<p class="p-3 text-sm text-muted">Tidak ada siswa.</p>'}</div></div></div>`;
+}
+function skMap(p, v) { if (v) SK.map[p] = v; else delete SK.map[p]; SKdirty = true; skRender(); }
+function skToggle(u, on) { SK.siswa = SK.siswa.filter(x => x !== u); if (on) SK.siswa.push(u); SKdirty = true; skRender(); }
+async function skSimpan() {
+    const r = await api('/admin/soal-khusus', { method: 'PUT', body: SK });
+    if (r && r.status === 'success') { SKdirty = false; skRender(); toast('Tersimpan', 'success'); } else Swal.fire({ icon: 'error', title: 'Gagal menyimpan', text: (r && r.message) || 'Kesalahan' });
 }
 
 async function loadJadwal() {

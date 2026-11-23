@@ -88,11 +88,13 @@ function scoreQuestion(q, ans) {
         const kArr = kunci.replace(/\s/g, '').toLowerCase().split(',').filter(x => x);
         const aArr = ans.replace(/\s/g, '').toLowerCase().split(',').filter(x => x);
         if (!kArr.length) return { status: 'Salah', poin: 0, maks: 0, hit: false };
+        // Aturan: memilih satu saja jawaban yang salah (termasuk memilih lebih banyak dari kunci) → poin 0.
+        // Semua pilihan sesuai kunci → poin penuh. Pilihan benar tetapi belum lengkap → poin sebanding.
         let betul = 0, salah = 0; aArr.forEach(a => { if (kArr.includes(a)) betul++; else salah++; });
-        const poin = Math.max(0, (betul - salah) * bobot), maks = bobot * kArr.length;
-        if (betul === kArr.length && salah === 0) return { status: 'Benar', poin, maks, hit: true };
-        if (poin > 0) return { status: `Sebagian Benar (${betul}/${kArr.length}${salah > 0 ? ', -' + salah + ' salah' : ''})`, poin, maks, hit: true };
-        return { status: 'Salah' + (salah > 0 ? ` (-${salah} salah)` : ''), poin: 0, maks, hit: false };
+        if (salah > 0) return { status: `Salah (${salah} pilihan keliru)`, poin: 0, maks: bobot, hit: false };
+        if (betul === kArr.length) return { status: 'Benar', poin: bobot, maks: bobot, hit: true };
+        if (betul > 0) return { status: `Sebagian Benar (${betul}/${kArr.length})`, poin: (betul / kArr.length) * bobot, maks: bobot, hit: true };
+        return { status: 'Salah', poin: 0, maks: bobot, hit: false };
     }
     if (MATRIX_TYPES.includes(q.tipe)) {
         let kArr = kunci.replace(/\s/g, '').toUpperCase().split(',').filter(x => x);
@@ -112,15 +114,40 @@ function scoreQuestion(q, ans) {
         return { status: 'Salah', poin: 0, maks: bobot, hit: false };
     }
     if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') {
-        const kWords = kunci.toLowerCase().match(/[a-z0-9]+/gi) || [];
-        if (!kWords.length) return { status: 'Menunggu Koreksi', poin: 0, maks: 0, hit: null };
-        const aUnique = [...new Set(ans.toLowerCase().match(/[a-z0-9]+/gi) || [])];
-        let m = 0; kWords.forEach(kw => { if (aUnique.includes(kw)) m++; });
-        if (m === kWords.length) return { status: 'Benar', poin: bobot, maks: bobot, hit: true };
-        if (m > 0) return { status: `Sebagian Benar (${m}/${kWords.length})`, poin: (m / kWords.length) * bobot, maks: bobot, hit: true };
+        // Kunci boleh berisi beberapa alternatif dipisah ";" atau "|" (mis. "1/2 ; 0,5"). Angka dibandingkan nilainya: 1/2 = 0,5 = 2/4 = ½
+        const alts = String(kunci).split(/\s*[;|\n]\s*/).map(x => x.trim()).filter(Boolean);
+        const at = tokIsian(ans); let best = null;
+        for (const alt of alts) {
+            const kt = tokIsian(alt), total = kt.nums.length + kt.words.length;
+            if (!total) continue;
+            const pool = at.nums.slice(); let m = 0;
+            kt.nums.forEach(n => { const ix = pool.findIndex(x => Math.abs(x - n) <= 1e-9 * Math.max(1, Math.abs(n), Math.abs(x))); if (ix >= 0) { pool.splice(ix, 1); m++; } });
+            kt.words.forEach(w => { if (at.words.includes(w)) m++; });
+            if (!best || m / total > best.m / best.total) best = { m, total };
+        }
+        if (!best) return { status: 'Menunggu Koreksi', poin: 0, maks: 0, hit: null };
+        if (best.m === best.total) return { status: 'Benar', poin: bobot, maks: bobot, hit: true };
+        if (best.m > 0) return { status: `Sebagian Benar (${best.m}/${best.total})`, poin: (best.m / best.total) * bobot, maks: bobot, hit: true };
         return { status: 'Salah', poin: 0, maks: bobot, hit: false };
     }
     return { status: 'Menunggu Koreksi', poin: 0, maks: 0, hit: null };
+}
+
+// Memecah jawaban isian menjadi angka (pecahan, desimal, campuran, ½, \frac{a}{b}) dan kata
+const UF_PECAHAN = { '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3', '⅕': '1/5', '⅖': '2/5', '⅗': '3/5', '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8', '⅝': '5/8', '⅞': '7/8' };
+function tokIsian(str) {
+    let s = String(str || '').toLowerCase().replace(/[−–—]/g, '-').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '$1/$2').replace(/\\dfrac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '$1/$2')
+        .replace(/[½¼¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, m => ' ' + UF_PECAHAN[m] + ' ').replace(/÷/g, '/');
+    const nums = [];
+    s = s.replace(/(?<![\w.,/])(-?)(\d+)\s+(\d+)\s*\/\s*(\d+)(?![\d/])/g, (m, sg, a, b, c) => { if (+c) { nums.push((sg ? -1 : 1) * (+a + +b / +c)); return ' '; } return m; }); // pecahan campuran "1 1/2"
+    s = s.replace(/(?<![\w.,])-?\d+(?:\.\d{3})+(?![\d.,])|(?<![\w.,])-?\d+(?:[.,]\d+)?(?:\s*\/\s*\d+(?:[.,]\d+)?)?(?![\d])/g, m => {
+        const t = m.replace(/\s+/g, '');
+        const num = x => /^-?\d+(?:\.\d{3})+$/.test(x) ? parseFloat(x.replace(/\./g, '')) : parseFloat(x.replace(',', '.'));
+        if (t.includes('/')) { const [p, q] = t.split('/'); const d = num(q); if (d) nums.push(num(p) / d); }
+        else nums.push(num(t));
+        return ' ';
+    });
+    return { nums: nums.filter(Number.isFinite), words: [...new Set(s.match(/[a-z]+/g) || [])] };
 }
 
 // answers: { [question_id]: "jawaban" }
@@ -274,6 +301,26 @@ async function getQuestions(mapelStr) {
     return data || [];
 }
 const clearQCache = () => qCache.clear();
+// Soal khusus: siswa tertentu mengerjakan paket lain (satu paket khusus per mapel, dipakai bersama). Nilai tetap tersimpan di paket biasa.
+const khususCache = { until: 0, data: { siswa: [], map: {} } };
+async function getKhusus() {
+    if (khususCache.until > Date.now()) return khususCache.data;
+    let d = { siswa: [], map: {} };
+    try { const { data: row } = await supabase.from('config').select('*').eq('key', 'soal_khusus').maybeSingle(); if (row && row.value) { const v = JSON.parse(row.value); d = { siswa: Array.isArray(v.siswa) ? v.siswa : [], map: v.map && typeof v.map === 'object' ? v.map : {} }; } } catch (e) { /* belum ada */ }
+    khususCache.data = d; khususCache.until = Date.now() + 20 * 1000;
+    return d;
+}
+async function getQuestionsSiswa(username, mapelStr) {
+    const k = await getKhusus();
+    if (!k.siswa.includes(username) || !Object.keys(k.map).length) return getQuestions(mapelStr);
+    const out = [];
+    for (const id of mapelStr.split(',').map(m => m.trim()).filter(Boolean)) {
+        let qs = k.map[id] ? await getQuestions(k.map[id]) : [];
+        if (!qs.length) qs = await getQuestions(id); // paket khusus kosong → pakai paket biasa
+        out.push(...qs);
+    }
+    return out;
+}
 
 // Insert/update dengan fallback jika kolom opsional belum ada di database
 async function withOptionalCols(run, payload, optionalCols) {
@@ -415,7 +462,7 @@ app.post('/api/siswa/cek-pin', SISWA, wrap(async (req, res) => {
         if (actData.some(a => a.status === 'Selesai')) return res.json({ status: 'finished', message: 'Anda sudah menyelesaikan ujian ini. Hasil telah tersimpan.' });
     }
 
-    const questions = await getQuestions(mapel);
+    const questions = await getQuestionsSiswa(req.user.username, mapel);
     if (!questions.length) return res.json({ status: 'error', message: 'Paket soal untuk kelas Anda belum tersedia pada PIN ini.' });
 
     const durasi = data.reduce((s, d) => s + parseInt(d.durasi || 0), 0) || 60;
@@ -476,7 +523,7 @@ app.post('/api/siswa/get-soal', SISWA, wrap(async (req, res) => {
         if (cek.sesi) await supabase.from('exam_sessions').update(row).eq('id', cek.sesi.id);
         else { const { error } = await supabase.from('exam_sessions').insert([row]); if (error && /exam_sessions/.test(error.message || '')) SESI_AKTIF = false; }
     }
-    const questions = await getQuestions(tk.mapel);
+    const questions = await getQuestionsSiswa(req.user.username, tk.mapel);
     res.json({ status: 'success', questions: questions.map(sanitizeQuestion) });
 }));
 
@@ -489,7 +536,7 @@ app.post('/api/siswa/ping', SISWA, wrap(async (req, res) => {
     const curStatus = (cur && cur.status) || '';
     if (curStatus.includes('Terkunci') || curStatus === 'Selesai') return res.json({ status: 'protected', state: curStatus });
 
-    const questions = await getQuestions(tk.mapel);
+    const questions = await getQuestionsSiswa(req.user.username, tk.mapel);
     const r = scoreExam(questions, req.body.answers || {});
     const elapsed = Math.max(0, parseInt(req.body.elapsed || 0));
     const keepWarning = curStatus.includes('Peringatan') || curStatus.includes('Curang');
@@ -508,7 +555,7 @@ app.post('/api/siswa/submit', SISWA, wrap(async (req, res) => {
     }
     const name = req.user.name;
     const isCurang = req.body.is_curang === true || req.body.is_curang === 'true';
-    const questions = await getQuestions(tk.mapel);
+    const questions = await getQuestionsSiswa(req.user.username, tk.mapel);
     const r = scoreExam(questions, req.body.answers || {});
     const elapsed = Math.max(0, parseInt(req.body.elapsed || 0));
     const durasiTxt = `${fmtDur(elapsed)} | ${r.terjawab}/${r.total} Soal`;
@@ -537,7 +584,7 @@ app.post('/api/siswa/flag-curang', SISWA, wrap(async (req, res) => {
     const upd = { status: statusText };
     if (req.body.answers) {
         // sertakan progres terakhir agar pengawas melihat kondisi saat pelanggaran
-        const r = scoreExam(await getQuestions(tk.mapel), req.body.answers);
+        const r = scoreExam(await getQuestionsSiswa(req.user.username, tk.mapel), req.body.answers);
         upd.score = r.nilai;
         upd.last_seen = `${nowTime()} (${fmtDur(Math.max(0, parseInt(req.body.elapsed || 0)))} | ${r.terjawab}/${r.total} Soal)`;
     }
@@ -1321,6 +1368,22 @@ app.post('/api/admin/wa-kirim', ADMIN, wrap(async (req, res) => {
     }
     if (!b.dryRun && !b.tes) await setCfg('wa_log', log);
     res.json({ status: 'success', hasil });
+}));
+
+
+app.get('/api/admin/soal-khusus', ADMIN, wrap(async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    khususCache.until = 0; res.json(await getKhusus());
+}));
+app.put('/api/admin/soal-khusus', ADMIN, wrap(async (req, res) => {
+    const b = req.body || {};
+    const siswa = [...new Set((Array.isArray(b.siswa) ? b.siswa : []).map(x => String(x).trim()).filter(Boolean))].slice(0, 2000);
+    const map = {};
+    Object.entries(b.map && typeof b.map === 'object' ? b.map : {}).forEach(([k, v]) => { const a = String(k).trim().slice(0, 80), z = String(v || '').trim().slice(0, 80); if (a && z && a !== z) map[a] = z; });
+    const { error } = await supabase.from('config').upsert({ key: 'soal_khusus', value: JSON.stringify({ siswa, map }) }, { onConflict: 'key' });
+    if (error) return res.json({ status: 'error', message: error.message });
+    khususCache.until = 0; clearQCache();
+    res.json({ status: 'success' });
 }));
 
 module.exports = app;
