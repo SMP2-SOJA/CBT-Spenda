@@ -114,29 +114,59 @@ function scoreQuestion(q, ans) {
         return { status: 'Salah', poin: 0, maks: bobot, hit: false };
     }
     if (q.tipe === 'ISIAN' || q.tipe === 'ESAI') {
-        // Kunci boleh berisi beberapa alternatif dipisah ";" atau "|" (mis. "1/2 ; 0,5"). Angka dibandingkan nilainya: 1/2 = 0,5 = 2/4 = ½
+        // Penilaian otomatis yang toleran:
+        //  • angka dibandingkan nilainya (1/2 = 0,5), kata dicocokkan dengan toleransi salah ketik & imbuhan (menabung ≈ tabungan)
+        //  • kata penghubung (yang, dan, untuk, …) diabaikan
+        //  • ≥ 80% kata kunci ditemukan → poin penuh; 40–79% → setengah poin; di bawah itu → 0
+        //  • kunci boleh berisi beberapa alternatif jawaban dipisah ";" atau "|"
         const alts = String(kunci).split(/\s*[;|\n]\s*/).map(x => x.trim()).filter(Boolean);
         const at = tokIsian(ans); let best = null;
         for (const alt of alts) {
-            const kt = tokIsian(alt), total = kt.nums.length + kt.words.length;
+            const kt = tokIsian(alt);
+            let kw = kt.words.filter(w => !STOP_ID.has(w)); if (!kw.length) kw = kt.words;
+            const total = kt.nums.length + kw.length;
             if (!total) continue;
-            const pool = at.nums.slice(); let m = 0;
+            const pool = at.nums.slice(), wpool = at.words.slice(); let m = 0;
             kt.nums.forEach(n => { const ix = pool.findIndex(x => Math.abs(x - n) <= 1e-9 * Math.max(1, Math.abs(n), Math.abs(x))); if (ix >= 0) { pool.splice(ix, 1); m++; } });
-            kt.words.forEach(w => { if (at.words.includes(w)) m++; });
-            if (!best || m / total > best.m / best.total) best = { m, total };
+            kw.forEach(w => { const ix = wpool.findIndex(x => kataMirip(w, x)); if (ix >= 0) { wpool.splice(ix, 1); m++; } });
+            let ratio = m / total;
+            const na = normIsian(alt), nb = normIsian(ans); // jawaban hampir sama persis dengan kunci (mis. salah ketik 1-2 huruf)
+            if (na && nb && na.length <= 300 && nb.length <= 300 && 1 - lev(na, nb) / Math.max(na.length, nb.length) >= 0.88) ratio = 1;
+            if (!best || ratio > best.ratio) best = { ratio, m, total };
         }
         if (!best) return { status: 'Menunggu Koreksi', poin: 0, maks: 0, hit: null };
-        if (best.m === best.total) return { status: 'Benar', poin: bobot, maks: bobot, hit: true };
-        if (best.m > 0) return { status: `Sebagian Benar (${best.m}/${best.total})`, poin: (best.m / best.total) * bobot, maks: bobot, hit: true };
+        if (best.ratio >= 0.8) return { status: 'Benar', poin: bobot, maks: bobot, hit: true };
+        if (best.ratio >= 0.4) return { status: `Sebagian Benar (${best.m}/${best.total})`, poin: bobot / 2, maks: bobot, hit: true };
         return { status: 'Salah', poin: 0, maks: bobot, hit: false };
     }
     return { status: 'Menunggu Koreksi', poin: 0, maks: 0, hit: null };
 }
 
+// ---- Bantuan penilaian isian/esai: kata penghubung, jarak edit, kemiripan kata ----
+const STOP_ID = new Set(['yang', 'dan', 'di', 'ke', 'dari', 'untuk', 'dengan', 'pada', 'adalah', 'ialah', 'itu', 'ini', 'atau', 'dalam', 'sebagai', 'karena', 'agar', 'supaya', 'oleh', 'akan', 'juga', 'para', 'sebuah', 'suatu', 'dapat', 'bisa', 'telah', 'sudah', 'saya', 'kita', 'kami', 'nya', 'si', 'sang', 'tersebut', 'bahwa', 'serta', 'maka', 'jadi', 'lebih', 'sangat']);
+function lev(a, b) {
+    if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) { const cur = [i]; for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+    return prev[b.length];
+}
+function stemId(w) {
+    if (w.length < 6) return w;
+    let r = w.replace(/(nya|kan|lah|kah|an|i)$/, ''); if (r.length < 4) r = w;
+    const p = r.replace(/^(meng|meny|mem|men|me|peng|peny|pem|pen|pe|ber|ter|per|di|ke|se)/, ''); return p.length >= 4 ? p : r;
+}
+function kataMirip(k, a) {
+    if (k === a) return true;
+    const sk = stemId(k), sa = stemId(a); if (sk === sa) return true;
+    const L = Math.min(sk.length, sa.length); if (L < 5) return false; // kata pendek harus persis
+    return lev(sk, sa) <= (L >= 7 ? 2 : 1);
+}
+const normIsian = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s/,.-]/g, ' ').replace(/\s+/g, ' ').trim();
+
 // Memecah jawaban isian menjadi angka (pecahan, desimal, campuran, ½, \frac{a}{b}) dan kata
 const UF_PECAHAN = { '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3', '⅕': '1/5', '⅖': '2/5', '⅗': '3/5', '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8', '⅝': '5/8', '⅞': '7/8' };
 function tokIsian(str) {
-    let s = String(str || '').toLowerCase().replace(/[−–—]/g, '-').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '$1/$2').replace(/\\dfrac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '$1/$2')
+    let s = String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[−–—]/g, '-').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '$1/$2').replace(/\\dfrac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '$1/$2')
         .replace(/[½¼¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, m => ' ' + UF_PECAHAN[m] + ' ').replace(/÷/g, '/');
     const nums = [];
     s = s.replace(/(?<![\w.,/])(-?)(\d+)\s+(\d+)\s*\/\s*(\d+)(?![\d/])/g, (m, sg, a, b, c) => { if (+c) { nums.push((sg ? -1 : 1) * (+a + +b / +c)); return ' '; } return m; }); // pecahan campuran "1 1/2"
