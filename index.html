@@ -2996,7 +2996,7 @@ function renderImportTab() {
             <div class="flex-1"><h3 class="section-title">Excel (.xlsx)</h3><p class="text-sm text-muted">Cara paling andal. Mendukung semua tipe soal.</p></div>
             <button class="btn btn-xs btn-outline" onclick="downloadTemplateSoal()"><i class="fa fa-download"></i> Template Excel</button></div>
             <label class="field-label" for="ex_judul">Kode paket</label><input id="ex_judul" class="field mb-3" placeholder="Contoh: MTK-7A">
-            <label class="dropzone mb-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file Excel</b><br><span class="text-muted" id="ex_name">Kolom: Tipe, Pertanyaan, Opsi_A–E, Kunci, Skor, Link_Gambar, Teks_Bacaan, Pilih</span></span><input type="file" id="ex_file" accept=".xlsx,.xls" class="sr-only" onchange="$('ex_name').textContent=this.files[0]?.name||''"></label>
+            <label class="dropzone mb-4"><i class="fa fa-cloud-arrow-up text-xl text-muted"></i><span class="text-sm flex-1"><b>Pilih file Excel</b><br><span class="text-muted" id="ex_name">Kolom: Tipe, Pertanyaan, Opsi_A–E, Kunci, Skor, Gambar_Soal, Teks_Bacaan, Pilih · gambar cukup disisipkan langsung di Excel</span></span><input type="file" id="ex_file" accept=".xlsx,.xls" class="sr-only" onchange="$('ex_name').textContent=this.files[0]?.name||''"></label>
             <button onclick="importExcelSoal()" class="btn btn-ok w-full"><i class="fa fa-file-import"></i> Baca & pratinjau</button>
         </div>
         <div class="card p-5">
@@ -3019,20 +3019,20 @@ function unduhTemplateWord() {
 function downloadTemplateSoal() {
     if (typeof XLSX === 'undefined') return toast('Library Excel belum termuat, coba lagi', 'error');
     const rows = [
-        { Tipe: 'PG', Pertanyaan: 'Hasil dari 15 + (−8) × 2 adalah …', Opsi_A: '−1', Opsi_B: '1', Opsi_C: '14', Opsi_D: '46', Opsi_E: '', Kunci: 'A', Skor: 1, Link_Gambar: '' },
-        { Tipe: 'PGK', Pertanyaan: 'Manakah yang termasuk bilangan prima?', Opsi_A: '2', Opsi_B: '9', Opsi_C: '11', Opsi_D: '15', Opsi_E: '17', Kunci: 'A,C,E', Skor: 1, Link_Gambar: '' },
-        { Tipe: 'BS', Pertanyaan: 'Tentukan benar atau salah.', Opsi_A: 'Setiap bilangan genap habis dibagi 2', Opsi_B: '0 adalah bilangan asli', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'B,S', Skor: 2, Link_Gambar: '' },
-        { Tipe: 'JODOH', Pertanyaan: 'Pasangkan istilah berikut.\n1. Faktor\n2. Kelipatan', Opsi_A: 'Hasil kali dengan bilangan asli', Opsi_B: 'Pembagi habis suatu bilangan', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: '1B,2A', Skor: 2, Link_Gambar: '' },
-        { Tipe: 'ISIAN', Pertanyaan: 'KPK dari 12 dan 18 adalah …', Opsi_A: '', Opsi_B: '', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: '36', Skor: 1, Link_Gambar: '' },
-        { Tipe: 'ESAI', Pertanyaan: 'Jelaskan cara menentukan FPB dengan faktorisasi prima!', Opsi_A: '', Opsi_B: '', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'faktorisasi prima', Skor: 3, Link_Gambar: '' },
+        { Tipe: 'PG', Pertanyaan: 'Hasil dari 15 + (−8) × 2 adalah …', Opsi_A: '−1', Opsi_B: '1', Opsi_C: '14', Opsi_D: '46', Opsi_E: '', Kunci: 'A', Skor: 1, Gambar_Soal: '' },
+        { Tipe: 'PGK', Pertanyaan: 'Manakah yang termasuk bilangan prima?', Opsi_A: '2', Opsi_B: '9', Opsi_C: '11', Opsi_D: '15', Opsi_E: '17', Kunci: 'A,C,E', Skor: 1, Gambar_Soal: '' },
+        { Tipe: 'BS', Pertanyaan: 'Tentukan benar atau salah.', Opsi_A: 'Setiap bilangan genap habis dibagi 2', Opsi_B: '0 adalah bilangan asli', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'B,S', Skor: 2, Gambar_Soal: '' },
+        { Tipe: 'JODOH', Pertanyaan: 'Pasangkan istilah berikut.\n1. Faktor\n2. Kelipatan', Opsi_A: 'Hasil kali dengan bilangan asli', Opsi_B: 'Pembagi habis suatu bilangan', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: '1B,2A', Skor: 2, Gambar_Soal: '' },
+        { Tipe: 'ISIAN', Pertanyaan: 'KPK dari 12 dan 18 adalah …', Opsi_A: '', Opsi_B: '', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: '36', Skor: 1, Gambar_Soal: '' },
+        { Tipe: 'ESAI', Pertanyaan: 'Jelaskan cara menentukan FPB dengan faktorisasi prima!', Opsi_A: '', Opsi_B: '', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'faktorisasi prima', Skor: 3, Gambar_Soal: '' },
     ];
     // Kolom teks bacaan (stimulus) & jumlah pilihan PGK
     const stim1 = 'Perhatikan tabel berikut untuk menjawab soal nomor 7 dan 8!\n# Tabungan Kelas IX A\n[tabel]\nBulan | Tabungan\nJanuari | Rp50.000\nFebruari | Rp65.000\nMaret | Rp80.000\n[/tabel]\nSumber: Tim penulis soal, 2026';
     rows.forEach(r => { r.Teks_Bacaan = ''; r.Pilih = ''; });
     rows[1].Pilih = 3;
     rows.push(
-        { Tipe: 'PG', Pertanyaan: 'Kenaikan tabungan setiap bulan adalah …', Opsi_A: 'Rp10.000', Opsi_B: 'Rp15.000', Opsi_C: 'Rp20.000', Opsi_D: 'Rp25.000', Opsi_E: '', Kunci: 'B', Skor: 1, Link_Gambar: '', Teks_Bacaan: stim1, Pilih: '' },
-        { Tipe: 'BS', Pertanyaan: 'Tentukan benar atau salah pernyataan berikut!', Opsi_A: 'Tabungan April diperkirakan Rp95.000', Opsi_B: 'Jumlah tabungan tiga bulan Rp185.000', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'B,S', Skor: 2, Link_Gambar: '', Teks_Bacaan: 'SAMA', Pilih: '' },
+        { Tipe: 'PG', Pertanyaan: 'Kenaikan tabungan setiap bulan adalah …', Opsi_A: 'Rp10.000', Opsi_B: 'Rp15.000', Opsi_C: 'Rp20.000', Opsi_D: 'Rp25.000', Opsi_E: '', Kunci: 'B', Skor: 1, Gambar_Soal: '', Teks_Bacaan: stim1, Pilih: '' },
+        { Tipe: 'BS', Pertanyaan: 'Tentukan benar atau salah pernyataan berikut!', Opsi_A: 'Tabungan April diperkirakan Rp95.000', Opsi_B: 'Jumlah tabungan tiga bulan Rp185.000', Opsi_C: '', Opsi_D: '', Opsi_E: '', Kunci: 'B,S', Skor: 2, Gambar_Soal: '', Teks_Bacaan: 'SAMA', Pilih: '' },
     );
     const guide = [['Tipe', 'Arti', 'Format kunci'], ['PG', 'Pilihan ganda', 'A'], ['PGK', 'PG kompleks', 'A,C'], ['BS', 'Benar/Salah (tabel)', 'B,S,B'], ['TS', 'Sesuai/Tidak sesuai', 'A,B,A'], ['NK', 'Numerik/Kategorik', 'A,B'], ['SIFAT', 'Sifat operasi', 'A,B,C'], ['JODOH', 'Menjodohkan', '1B,2A'], ['ISIAN', 'Isian singkat', 'kata kunci'], ['ESAI', 'Uraian', 'kata kunci / kosong'], ['GFORM', 'Link Google Form', '(tulis link di Pertanyaan)']];
     const wb = XLSX.utils.book_new();
@@ -3041,8 +3041,21 @@ function downloadTemplateSoal() {
         ['Teks_Bacaan', 'Teks bacaan / stimulus (cerita, artikel, puisi, tabel data). Tampil di samping soal.', 'Baris "# Judul" = judul tebal di tengah; "Sumber: …" = sumber; [tabel] … [/tabel] = tabel (kolom dipisah |)'],
         ['Teks_Bacaan = SAMA', 'Memakai teks bacaan baris di atasnya (satu teks untuk beberapa soal)', 'SAMA'],
         ['Pilih', 'Khusus PGK: siswa wajib memilih tepat sejumlah ini', '2'],
-        ['Format teks', '[b]tebal[/b]  [i]miring[/i]  [u]garis bawah[/u]', 'Tekan Alt+Enter di Excel untuk baris baru dalam sel']);
+        ['Format teks', '[b]tebal[/b]  [i]miring[/i]  [u]garis bawah[/u]', 'Tekan Alt+Enter di Excel untuk baris baru dalam sel'],
+        ['Gambar_Soal', 'TIDAK PERLU upload/link. Sisipkan gambar langsung di Excel pada baris soal (lihat sheet Petunjuk Gambar). Kolom ini boleh dikosongkan; bila diisi link gambar, link dipakai.', '(kosong)']);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), 'Panduan');
+    const pg = [['PETUNJUK MEMASANG GAMBAR LANGSUNG DI EXCEL (tanpa upload / link)'], [],
+        ['1', 'Isi soal pada sheet "Soal" seperti biasa (satu soal = satu baris).'],
+        ['2', 'Untuk gambar SOAL: klik sel mana saja pada baris soal tersebut (disarankan kolom Gambar_Soal), lalu menu Insert/Sisipkan > Pictures/Gambar > This Device/Perangkat Ini, pilih file gambar (PNG/JPG).'],
+        ['3', 'Untuk gambar PILIHAN JAWABAN: sisipkan gambar pada kolom Opsi_A / Opsi_B / dst di baris soal itu, dan kosongkan teks opsinya. Pilihan akan tampil sebagai gambar.'],
+        ['4', 'Gambar boleh "Place in Cell/Tempatkan di Sel" ataupun mengambang. Pastikan gambar berada di dalam baris soal yang benar (bagian kiri-atas gambar menentukan barisnya).'],
+        ['5', 'Satu baris boleh punya lebih dari satu gambar: gambar pertama menjadi gambar soal, gambar berikutnya muncul di bawah teks soal.'],
+        ['6', 'Jangan menyisipkan gambar pada sheet Panduan / Petunjuk. Jangan menggunakan fitur Sort/Filter setelah gambar dipasang agar gambar tidak bergeser dari barisnya.'],
+        ['7', 'Gunakan PNG atau JPG. Ukuran gambar otomatis diperkecil saat diimpor. Format lain (EMF, WMF, SVG) dilewati.'],
+        ['8', 'Simpan sebagai .xlsx, lalu impor di menu Bank Soal > Excel > Baca & pratinjau. Periksa pratinjau sebelum menyimpan.'],
+        [], ['Rumus gambar (contoh)', 'Soal bergambar: Pertanyaan = "Perhatikan gambar berikut! Luas bangun adalah …" + gambar di kolom Gambar_Soal.']];
+    const wsP = XLSX.utils.aoa_to_sheet(pg); wsP['!cols'] = [{ wch: 22 }, { wch: 120 }];
+    XLSX.utils.book_append_sheet(wb, wsP, 'Petunjuk Gambar');
     XLSX.writeFile(wb, 'TEMPLATE_SOAL_CBT.xlsx');
 }
 
@@ -3855,6 +3868,69 @@ async function konfirmasiSimpanImpor(questions, kodeUjian, onDone) {
     };
 }
 
+
+// ── Gambar langsung di Excel: baca gambar yang disisipkan guru (Insert > Pictures) ──
+// Mendukung gambar mengambang (drawing) dan "Place in Cell" (richData). Hasil: { barisExcel(0-based) -> [{kol, bytes, mime}] }
+async function bacaGambarExcel(buf, namaSheet) {
+    const out = {};
+    if (typeof JSZip === 'undefined') return out;
+    let zip; try { zip = await JSZip.loadAsync(buf); } catch (e) { return out; }
+    const txt = async p => { const f = zip.file(p); return f ? await f.async('string') : ''; };
+    const dom = x => new DOMParser().parseFromString(x, 'application/xml');
+    const relMap = async relPath => { const m = {}; const x = await txt(relPath); if (!x) return m; dom(x).querySelectorAll('Relationship').forEach(r => { m[r.getAttribute('Id')] = r.getAttribute('Target'); }); return m; };
+    const resolve = (base, t) => { if (t.startsWith('/')) return t.slice(1); const parts = base.split('/'); parts.pop(); t.split('/').forEach(seg => { if (seg === '..') parts.pop(); else if (seg !== '.') parts.push(seg); }); return parts.join('/'); };
+    const mimeDari = p => /\.png$/i.test(p) ? 'image/png' : /\.je?pg$/i.test(p) ? 'image/jpeg' : /\.gif$/i.test(p) ? 'image/gif' : /\.webp$/i.test(p) ? 'image/webp' : /\.bmp$/i.test(p) ? 'image/bmp' : '';
+    const ambil = async p => { const f = zip.file(p); if (!f) return null; const mime = mimeDari(p); if (!mime) return { skip: true }; return { bytes: await f.async('uint8array'), mime }; };
+    const tambah = (row, kol, g) => { (out[row] = out[row] || []).push({ kol, ...g }); };
+
+    // Cari file sheet dari nama sheet
+    const wbx = dom(await txt('xl/workbook.xml')); const wbRel = await relMap('xl/_rels/workbook.xml.rels');
+    let sheetPath = '';
+    wbx.querySelectorAll('sheet').forEach(sh => { if (sh.getAttribute('name') === namaSheet) { const rid = sh.getAttribute('r:id') || sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'); if (wbRel[rid]) sheetPath = resolve('xl/workbook.xml', wbRel[rid]); } });
+    if (!sheetPath) return out;
+    const sheetRelPath = sheetPath.replace(/([^/]+)$/, '_rels/$1.rels');
+
+    // 1) Gambar mengambang
+    const sRel = await relMap(sheetRelPath);
+    for (const rid in sRel) {
+        if (!/drawings\/[^/]*\.xml$/i.test(sRel[rid])) continue;
+        const dPath = resolve(sheetPath, sRel[rid]); const dx = await txt(dPath); if (!dx) continue;
+        const dRel = await relMap(dPath.replace(/([^/]+)$/, '_rels/$1.rels'));
+        const anchors = dom(dx).querySelectorAll('twoCellAnchor, oneCellAnchor, absoluteAnchor');
+        for (const a of anchors) {
+            const from = a.querySelector('from'); const blip = a.querySelector('blip'); if (!from || !blip) continue;
+            const rEmb = blip.getAttribute('r:embed') || blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
+            if (!dRel[rEmb]) continue;
+            let row = parseInt(from.querySelector('row')?.textContent || '0'), col = parseInt(from.querySelector('col')?.textContent || '0');
+            const g = await ambil(resolve(dPath, dRel[rEmb])); if (!g) continue;
+            tambah(row, col, g.skip ? { skip: true } : g);
+        }
+    }
+
+    // 2) "Place in Cell" (Excel 365): sel dengan atribut vm -> richData
+    try {
+        const sx = await txt(sheetPath); const vmCells = [];
+        if (/\svm="/.test(sx)) {
+            dom(sx).querySelectorAll('c[vm]').forEach(c => vmCells.push({ ref: c.getAttribute('r'), vm: parseInt(c.getAttribute('vm')) }));
+        }
+        if (vmCells.length) {
+            const meta = dom(await txt('xl/metadata.xml'));
+            const rvMeta = [...meta.querySelectorAll('futureMetadata[name="XLRICHVALUE"] bk')].map(b => parseInt(b.querySelector('rvb')?.getAttribute('i')));
+            const vBk = [...meta.querySelectorAll('valueMetadata bk')].map(b => parseInt(b.querySelector('rc')?.getAttribute('v')));
+            const rvs = [...dom(await txt('xl/richData/rdrichvalue.xml')).querySelectorAll('rv')].map(r => [...r.querySelectorAll('v')].map(v => v.textContent));
+            const relList = [...dom(await txt('xl/richData/richValueRel.xml')).querySelectorAll('rel')].map(r => r.getAttribute('r:id') || r.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+            const rvRel = await relMap('xl/richData/_rels/richValueRel.xml.rels');
+            for (const c of vmCells) {
+                const rvIdx = rvMeta[vBk[c.vm - 1]]; const rv = rvs[rvIdx]; if (!rv) continue;
+                const rid = relList[parseInt(rv[0])]; if (!rvRel[rid]) continue;
+                const g = await ambil(resolve('xl/richData/richValueRel.xml', rvRel[rid])); if (!g) continue;
+                const d = XLSX.utils.decode_cell(c.ref); tambah(d.r, d.c, g.skip ? { skip: true } : g);
+            }
+        }
+    } catch (e) { /* abaikan jika struktur richData tidak dikenali */ }
+    return out;
+}
+
 async function importExcelSoal() {
     const kodeUjian = (document.getElementById('ex_judul')?.value || '').trim();
     const fileInput = document.getElementById('ex_file');
@@ -3879,6 +3955,21 @@ async function importExcelSoal() {
             if (!targetSheet) return Swal.fire('Gagal', 'Sheet soal tidak ditemukan. Pastikan sheet utama berisi tabel dengan minimal 3 kolom.', 'error');
 
             const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheet], { defval: '' });
+            // Gambar yang disisipkan langsung di Excel -> dikompres jadi data URL (diunggah saat simpan)
+            const gbrExcel = {}; let gbrDilewati = 0, gbrTotal = 0;
+            try {
+                const mentah = await bacaGambarExcel(e.target.result, targetSheet);
+                const wsT = workbook.Sheets[targetSheet]; const r0 = XLSX.utils.decode_range(wsT['!ref']);
+                for (const rowKey of Object.keys(mentah)) {
+                    for (const g of mentah[rowKey]) {
+                        if (g.skip) { gbrDilewati++; continue; }
+                        try {
+                            const d = await compressImage(new Blob([g.bytes], { type: g.mime }));
+                            (gbrExcel[rowKey] = gbrExcel[rowKey] || []).push({ kol: g.kol - r0.s.c, d }); gbrTotal++;
+                        } catch (er) { gbrDilewati++; }
+                    }
+                }
+            } catch (er) { console.warn('Gambar Excel:', er); }
             if (!rawData.length) return Swal.fire('Gagal', 'Sheet kosong atau tidak ada data.', 'error');
 
             // Normalisasi header: lowercase + hapus spasi/underscore untuk matching fleksibel
@@ -3917,6 +4008,8 @@ async function importExcelSoal() {
                 const kSkor   = findKey(row, 'Skor', 'Bobot', 'Nilai', 'Poin', 'Score');
                 const kGambar = findKey(row, 'Link_Gambar', 'LinkGambar', 'Gambar', 'Image', 'Foto', 'Link', 'gform_url');
                 const kOpsiGbg= findKey(row, 'Opsi', 'Pilihan', 'OpsiJson', 'opsi_json'); // kolom gabungan (fallback)
+                const gbrBaris = (gbrExcel[row.__rowNum__] || []).slice().sort((x, y) => x.kol - y.kol);
+                const kolHdr = Object.keys(row).filter(k => k !== '__rowNum__');
 
                 let tanya = String(row[kTanya] || '').trim();
                 if (!tanya) return; // skip baris kosong
@@ -3929,10 +4022,19 @@ async function importExcelSoal() {
                 if (nPilih > 0) tanya += ` [pilih ${nPilih}]`;
                 tanya = gabungStimulus(stim, tanya);
 
-                // Kumpulkan opsi dari kolom terpisah
-                const opsiArr = [kA, kB, kC, kD, kE, kF, kG]
-                    .map(k => k ? String(row[k] || '').trim() : '')
-                    .filter(v => v);
+                // Kumpulkan opsi dari kolom terpisah (gambar di kolom Opsi_X menjadi pilihan bergambar)
+                const gbrSoal = [];
+                const opsiKolom = [kA, kB, kC, kD, kE, kF, kG].map(k => {
+                    let t = k ? String(row[k] || '').trim() : '';
+                    const idx = k ? kolHdr.indexOf(k) : -1;
+                    if (idx >= 0) {
+                        const g = gbrBaris.find(x => x.kol === idx);
+                        if (g) { if (!t) t = g.d; else gbrSoal.push(g.d); g.dipakai = true; }
+                    }
+                    return t;
+                });
+                gbrBaris.forEach(g => { if (!g.dipakai) gbrSoal.push(g.d); });
+                const opsiArr = opsiKolom.filter(v => v);
 
                 // Fallback: jika tidak ada kolom Opsi_A dst, cek kolom gabungan 'opsi'/'pilihan'
                 let opsiJson = '';
@@ -3957,7 +4059,12 @@ async function importExcelSoal() {
 
                 const kunci   = String(row[kKunci]  || '').trim().toUpperCase().replace(/\s+/g,'');
                 const skor    = parseFloat(String(row[kSkor] || '1').replace(',','.')) || 1;
-                const gambar  = String(row[kGambar] || '').trim();
+                let gambar    = String(row[kGambar] || '').trim();
+                // Gambar yang disisipkan di baris soal: pertama = gambar soal, sisanya disisipkan di dalam teks soal
+                if (gbrSoal.length) {
+                    if (!gambar) gambar = gbrSoal.shift();
+                    gbrSoal.forEach(d => { tanya += `\n[gambar]${d}[/gambar]`; });
+                }
 
                 // ── TS/BS: auto-inject HEADER[...] jika opsi ke-1 & ke-2 adalah header pendek ──
                 if ((tipeRaw === 'TS' || tipeRaw === 'BS') && opsiJson) {
@@ -3977,7 +4084,7 @@ async function importExcelSoal() {
                     opsi_json: opsiJson,
                     kunci    : kunci,
                     skor     : skor,
-                    gform_url: gambar,
+                    gform_url: gambar.startsWith('data:') ? '' : gambar,
                     media_path: gambar
                 });
             });
@@ -3987,6 +4094,8 @@ async function importExcelSoal() {
             }
 
             Swal.close();
+            if (gbrTotal) toast(`${gbrTotal} gambar dari Excel terbaca dan dipasang ke soal`, 'success');
+            if (gbrDilewati) toast(`${gbrDilewati} gambar dilewati (format tidak didukung, gunakan PNG/JPG)`, 'warning');
             konfirmasiSimpanImpor(questions, kodeUjian, () => { fileInput.value = ''; $('ex_judul').value = ''; });
         } catch (err) {
             Swal.fire('Error Lokal', 'Gagal memproses file: ' + err.message, 'error');
