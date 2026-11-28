@@ -1212,7 +1212,7 @@ app.post('/api/account/password', auth(), wrap(async (req, res) => {
 //  1. Maksimal 2 jadwal mapel per hari
 //  2. Guru yang mapelnya diujikan pada hari itu tidak boleh mengawas (seluruh sesi hari itu)
 //  3. Satu guru tidak boleh mengawas dua ruang pada jadwal yang sama
-//  4. Tiap ruang memiliki 2 pengawas yang berbeda
+//  4. Tiap ruang memiliki N pengawas yang berbeda (N = pengaturan 'perRuang', 1–4, bawaan 2)
 // ============================================================
 const JP_KEY = 'jadwal_pengawas';
 const JP_ALIAS = [['mtk','matematika','mat','math'],['ipa','ilmupengetahuanalam','sains'],['ips','ilmupengetahuansosial'],['bin','bind','bindo','bahasaindonesia','indo'],['bing','big','ing','bahasainggris','inggris'],['pkn','ppkn','pancasila','pendidikankewarganegaraan'],['pai','pabp','agamaislam','pendidikanagamaislam'],['pak','agamakristen','pendidikanagamakristen','pakris'],['inf','tik','informatika'],['sbk','sbdp','senibudaya','seni','senbud'],['pjok','pjkr','penjas','penjaskes','olahraga'],['prk','prakarya'],['mulok','muatanlokal']];
@@ -1226,11 +1226,13 @@ async function getJP() {
     try {
         const { data: row } = await supabase.from('config').select('*').eq('key', JP_KEY).maybeSingle();
         const v = row && row.value ? JSON.parse(row.value) : null;
-        if (v && Array.isArray(v.jadwal)) return { jadwal: v.jadwal, tugas: v.tugas && typeof v.tugas === 'object' ? v.tugas : {} };
+        if (v && Array.isArray(v.jadwal)) return { jadwal: v.jadwal, tugas: v.tugas && typeof v.tugas === 'object' ? v.tugas : {}, perRuang: jpPerRuang(v.perRuang) };
     } catch (e) { /* belum ada */ }
-    return { jadwal: [], tugas: {} };
+    return { jadwal: [], tugas: {}, perRuang: 2 };
 }
+const jpPerRuang = v => Math.min(4, Math.max(1, parseInt(v) || 2));
 function bersihJP(b) {
+    const perRuang = jpPerRuang(b.perRuang);
     const mentah = Array.isArray(b.jadwal) ? b.jadwal : [];
     const jam = v => /^\d{1,2}:\d{2}$/.test(String(v || '')) ? String(v).padStart(5, '0') : '';
     const jadwal = mentah.map(j => ({
@@ -1253,11 +1255,11 @@ function bersihJP(b) {
         const out = {};
         Object.keys(src).slice(0, 300).forEach(r => {
             const ruang = String(r).trim().slice(0, 40);
-            if (ruang) out[ruang] = (Array.isArray(src[r]) ? src[r] : []).map(x => String(x || '').trim()).filter(Boolean).slice(0, 3);
+            if (ruang) out[ruang] = (Array.isArray(src[r]) ? src[r] : []).map(x => String(x || '').trim()).filter(Boolean).slice(0, perRuang);
         });
         tugas[j.id] = out;
     });
-    return { jadwal, tugas };
+    return { jadwal, tugas, perRuang };
 }
 function validasiJP(jp, gurus) {
     const err = [], warn = [];
@@ -1275,7 +1277,7 @@ function validasiJP(jp, gurus) {
         const dipakai = new Map();
         let kurang = 0;
         Object.entries(jp.tugas[j.id] || {}).forEach(([ruang, list]) => {
-            if (list.length > 2) err.push(`${label} · ${ruang}: maksimal 2 pengawas per ruang.`);
+            if (list.length > jp.perRuang) err.push(`${label} · ${ruang}: maksimal ${jp.perRuang} pengawas per ruang.`);
             if (new Set(list).size !== list.length) err.push(`${label} · ${ruang}: pengawas yang sama dipilih dua kali.`);
             list.forEach(u => {
                 const g = guruMap.get(u);
@@ -1284,9 +1286,9 @@ function validasiJP(jp, gurus) {
                 if (dipakai.has(u) && dipakai.get(u) !== ruang) err.push(`${label}: ${g.name} mengawas dua ruang (${dipakai.get(u)} dan ${ruang}).`);
                 dipakai.set(u, ruang);
             });
-            if (list.length < 2) kurang++;
+            if (list.length < jp.perRuang) kurang++;
         });
-        if (kurang) warn.push(`${label}: ${kurang} ruang belum memiliki 2 pengawas.`);
+        if (kurang) warn.push(`${label}: ${kurang} ruang belum memiliki ${jp.perRuang} pengawas.`);
     });
     return { err: [...new Set(err)], warn };
 }
