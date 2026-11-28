@@ -2312,25 +2312,31 @@ function jpAuto() {
         pilih.forEach((g, gi) => { const r = rooms[Math.floor(hasil[gi] / N)]; t[r].push(g.username); beban[g.username]++; riwayat[g.username][r] = (riwayat[g.username][r] || 0) + 1; });
         if (ok.length < slot) kurang.push(`${jpTgl(j.tanggal)} sesi ${j.sesi}: butuh ${slot} guru, hanya ${ok.length} yang boleh mengawas.`);
     });
-    // Pemerataan: pindahkan penugasan dari guru terbanyak ke guru tersedikit selama selisihnya lebih dari 1
-    const gm = new Map(gurus.map(g => [g.username, g]));
-    for (let it = 0; it < 2000; it++) {
-        const us = gurus.map(g => g.username).sort((a, b) => beban[a] - beban[b]), lo = us[0], hi = us[us.length - 1];
-        if (!us.length || beban[hi] - beban[lo] <= 1) break;
-        const cand = us.filter(u => beban[u] === beban[lo]); let done = false;
-        for (const j of urut) {
-            const t = JP.tugas[j.id]; const sudah = new Set(Object.values(t).flat());
-            for (const r of rooms) {
-                const idx = t[r].findIndex(u => beban[u] - beban[lo] > 1);
-                if (idx < 0) continue;
-                const pengganti = cand.find(u => !sudah.has(u) && !jpBlocked(gm.get(u), j.tanggal));
-                if (!pengganti) continue;
-                const asal = t[r][idx]; t[r][idx] = pengganti; beban[asal]--; beban[pengganti]++; done = true; break;
+    // Pemerataan: geser penugasan dari guru terbanyak ke guru tersedikit (boleh lewat beberapa guru perantara)
+    // sampai selisih paling banyak 1×, selama aturan mapel/hari & satu ruang per sesi terpenuhi
+    const gm = new Map(gurus.map(g => [g.username, g])), us = gurus.map(g => g.username);
+    const geser = () => {
+        if (!us.length) return false;
+        const maxB = Math.max(...us.map(u => beban[u])), minB = Math.min(...us.map(u => beban[u]));
+        if (maxB - minB <= 1) return false;
+        for (const h of us.filter(u => beban[u] === maxB)) {
+            const prev = { [h]: null }, q = [h];
+            while (q.length) {
+                const a = q.shift();
+                if (a !== h && beban[a] <= maxB - 2) {
+                    for (let n = a; prev[n]; n = prev[n].dari) { const { j, r, dari } = prev[n]; const l = JP.tugas[j.id][r]; l[l.indexOf(dari)] = n; }
+                    beban[h]--; beban[a]++; return true;
+                }
+                for (const j of urut) {
+                    const t = JP.tugas[j.id], r = rooms.find(x => t[x].includes(a)); if (!r) continue;
+                    const sudah = new Set(Object.values(t).flat());
+                    for (const x of us) { if (x in prev || sudah.has(x) || jpBlocked(gm.get(x), j.tanggal)) continue; prev[x] = { dari: a, j, r }; q.push(x); }
+                }
             }
-            if (done) break;
         }
-        if (!done) break;
-    }
+        return false;
+    };
+    for (let it = 0; it < 3000 && geser(); it++);
     JPdirty = true; jpRender();
     const v = gurus.map(g => beban[g.username]), mn = v.length ? Math.min(...v) : 0, mx = v.length ? Math.max(...v) : 0;
     const ringkas = `Setiap guru mengawas ${mn === mx ? mn + '×' : mn + '–' + mx + '×'}${mx - mn > 1 ? ' (tidak bisa lebih merata karena batasan mapel/hari)' : ''}.`;
